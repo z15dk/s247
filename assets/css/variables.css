@@ -1,0 +1,101 @@
+/* =================================================================
+   Studie 247 — Design tokens
+   Source: Brand Guidelines
+   ================================================================= */
+
+:root {
+	/* Colors — exact from brand guide */
+	--s247-red:    #9E2B25;  /* Brown Red — primær */
+	--s247-bone:   #F4E9DD;  /* Bone — baggrund */
+	--s247-black:  #282828;  /* Old Black — kanter/kontrast */
+
+	/* Derivatives */
+	--s247-red-20:    rgba(158, 43, 37, 0.2);
+	--s247-red-10:    rgba(158, 43, 37, 0.1);
+	--s247-bone-80:   rgba(244, 233, 221, 0.8);
+	--s247-black-80:  rgba(40, 40, 40, 0.8);
+	--s247-black-60:  rgba(40, 40, 40, 0.6);
+	--s247-black-20:  rgba(40, 40, 40, 0.2);
+	--s247-black-08:  rgba(40, 40, 40, 0.08);
+
+	/* Semantic */
+	--color-bg:        var(--s247-bone);
+	--color-surface:   #FBF5EC;            /* lidt lysere bone til kort */
+	--color-ink:       var(--s247-black);
+	--color-ink-soft:  var(--s247-black-80);
+	--color-ink-mute:  var(--s247-black-60);
+	--color-accent:    var(--s247-red);
+	--color-border:    var(--s247-black-20);
+	--color-border-strong: var(--s247-black);
+	--color-bg-dark:   var(--s247-black);
+	--color-ink-on-dark: var(--s247-bone);
+
+	/* Typography */
+	--font-sans:   "Aileron", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+	--font-serif:  "Migra", "Playfair Display", "Cormorant Garamond", Georgia, serif;
+	--font-mono:   ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+	/* Type scale (mobile-first, fluid) */
+	--fs-xs:   clamp(0.78rem, 0.76rem + 0.1vw, 0.82rem);
+	--fs-sm:   clamp(0.88rem, 0.85rem + 0.15vw, 0.95rem);
+	--fs-base: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+	--fs-md:   clamp(1.125rem, 1.05rem + 0.4vw, 1.35rem);
+	--fs-lg:   clamp(1.35rem, 1.2rem + 0.8vw, 1.75rem);
+	--fs-xl:   clamp(1.75rem, 1.5rem + 1.2vw, 2.5rem);
+	--fs-2xl:  clamp(2.25rem, 1.9rem + 1.8vw, 3.5rem);
+	--fs-3xl:  clamp(3rem, 2.4rem + 3vw, 5rem);
+	--fs-4xl:  clamp(3.75rem, 2.8rem + 4.5vw, 7rem);
+
+	--lh-tight: 1.05;
+	--lh-snug:  1.2;
+	--lh-base:  1.55;
+	--lh-loose: 1.75;
+
+	/* Spacing scale (4px base) */
+	--sp-1:  0.25rem;
+	--sp-2:  0.5rem;
+	--sp-3:  0.75rem;
+	--sp-4:  1rem;
+	--sp-5:  1.25rem;
+	--sp-6:  1.5rem;
+	--sp-8:  2rem;
+	--sp-10: 2.5rem;
+	--sp-12: 3rem;
+	--sp-16: 4rem;
+	--sp-20: 5rem;
+	--sp-24: 6rem;
+	--sp-32: 8rem;
+
+	/* Layout */
+	--wrap:       1200px;
+	--wrap-wide:  1440px;
+	--wrap-tight: 880px;
+	--gutter:     clamp(1rem, 4vw, 2.5rem);
+
+	/* Radius — brand uses rounded cards */
+	--radius-sm: 8px;
+	--radius:    16px;
+	--radius-lg: 24px;
+	--radius-xl: 32px;
+
+	/* Shadows — subtle, bone-tinted */
+	--shadow-sm: 0 1px 2px rgba(40, 40, 40, 0.06);
+	--shadow:    0 8px 24px -8px rgba(40, 40, 40, 0.15);
+	--shadow-lg: 0 24px 48px -16px rgba(40, 40, 40, 0.22);
+
+	/* Motion */
+	--ease:       cubic-bezier(0.4, 0, 0.2, 1);
+	--ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+	--dur-fast:   150ms;
+	--dur:        250ms;
+	--dur-slow:   450ms;
+
+	/* Header */
+	--header-h: 72px;
+}
+
+@media (min-width: 1024px) {
+	:root {
+		--header-h: 88px;
+	}
+}

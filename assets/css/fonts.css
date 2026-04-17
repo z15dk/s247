@@ -1,0 +1,43 @@
+/* =================================================================
+   Font-face declarations
+   Download Aileron: https://fontsquirrel.com/fonts/aileron (free)
+   Migra is commercial (pangrampangram.com) — placeholder uses
+   Playfair Display Italic via Google Fonts until license is bought.
+   Drop .woff2 files into assets/fonts/aileron/ and assets/fonts/migra/.
+   ================================================================= */
+
+/* Aileron Regular */
+@font-face {
+	font-family: "Aileron";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("../fonts/aileron/Aileron-Regular.woff2") format("woff2");
+}
+
+/* Aileron Bold */
+@font-face {
+	font-family: "Aileron";
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url("../fonts/aileron/Aileron-Bold.woff2") format("woff2");
+}
+
+/* Migra Italic Extralight */
+@font-face {
+	font-family: "Migra";
+	font-style: italic;
+	font-weight: 200;
+	font-display: swap;
+	src: url("../fonts/migra/Migra-ExtralightItalic.woff2") format("woff2");
+}
+
+/* Migra Italic Extrabold */
+@font-face {
+	font-family: "Migra";
+	font-style: italic;
+	font-weight: 800;
+	font-display: swap;
+	src: url("../fonts/migra/Migra-ExtraboldItalic.woff2") format("woff2");
+}
