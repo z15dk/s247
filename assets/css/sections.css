@@ -382,7 +382,7 @@
 .hero__display--image {
 	display: flex;
 	align-items: center;
-	justify-content: flex-start;
+	justify-content: center;
 	padding-block: 0;
 	margin: auto 0;
 	min-height: 0;
