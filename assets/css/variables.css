@@ -9,47 +9,73 @@
 	--s247-bone:   #F4E9DD;  /* Bone — baggrund */
 	--s247-black:  #282828;  /* Old Black — kanter/kontrast */
 
-	/* Derivatives */
+	/* Extended neutrals for premium depth */
+	--s247-bone-deep:  #EADDCB;  /* dybere sandtone til kort/accenter */
+	--s247-bone-rich:  #FBF5EC;  /* lysere bone til hover/surface */
+	--s247-black-rich: #1E1E1E;  /* dybere sort til heroer */
+	--s247-red-deep:   #7E2019;  /* dybere rød til hover */
+
+	/* Opacities */
 	--s247-red-20:    rgba(158, 43, 37, 0.2);
 	--s247-red-10:    rgba(158, 43, 37, 0.1);
+	--s247-red-05:    rgba(158, 43, 37, 0.05);
 	--s247-bone-80:   rgba(244, 233, 221, 0.8);
+	--s247-bone-60:   rgba(244, 233, 221, 0.6);
+	--s247-bone-40:   rgba(244, 233, 221, 0.4);
+	--s247-bone-20:   rgba(244, 233, 221, 0.2);
+	--s247-bone-10:   rgba(244, 233, 221, 0.1);
 	--s247-black-80:  rgba(40, 40, 40, 0.8);
 	--s247-black-60:  rgba(40, 40, 40, 0.6);
+	--s247-black-40:  rgba(40, 40, 40, 0.4);
 	--s247-black-20:  rgba(40, 40, 40, 0.2);
-	--s247-black-08:  rgba(40, 40, 40, 0.08);
+	--s247-black-10:  rgba(40, 40, 40, 0.1);
+	--s247-black-05:  rgba(40, 40, 40, 0.05);
 
 	/* Semantic */
-	--color-bg:        var(--s247-bone);
-	--color-surface:   #FBF5EC;            /* lidt lysere bone til kort */
-	--color-ink:       var(--s247-black);
-	--color-ink-soft:  var(--s247-black-80);
-	--color-ink-mute:  var(--s247-black-60);
-	--color-accent:    var(--s247-red);
-	--color-border:    var(--s247-black-20);
-	--color-border-strong: var(--s247-black);
-	--color-bg-dark:   var(--s247-black);
-	--color-ink-on-dark: var(--s247-bone);
+	--color-bg:           var(--s247-bone);
+	--color-surface:      var(--s247-bone-rich);
+	--color-surface-deep: var(--s247-bone-deep);
+	--color-ink:          var(--s247-black);
+	--color-ink-soft:     var(--s247-black-80);
+	--color-ink-mute:     var(--s247-black-60);
+	--color-ink-faint:    var(--s247-black-40);
+	--color-accent:       var(--s247-red);
+	--color-accent-deep:  var(--s247-red-deep);
+	--color-border:       var(--s247-black-10);
+	--color-border-soft:  var(--s247-black-05);
+	--color-border-strong:var(--s247-black);
+	--color-bg-dark:      var(--s247-black);
+	--color-bg-dark-rich: var(--s247-black-rich);
+	--color-ink-on-dark:  var(--s247-bone);
 
 	/* Typography */
 	--font-sans:   "Aileron", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 	--font-serif:  "Migra", "Playfair Display", "Cormorant Garamond", Georgia, serif;
 	--font-mono:   ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-	/* Type scale (mobile-first, fluid) */
-	--fs-xs:   clamp(0.78rem, 0.76rem + 0.1vw, 0.82rem);
-	--fs-sm:   clamp(0.88rem, 0.85rem + 0.15vw, 0.95rem);
-	--fs-base: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
-	--fs-md:   clamp(1.125rem, 1.05rem + 0.4vw, 1.35rem);
-	--fs-lg:   clamp(1.35rem, 1.2rem + 0.8vw, 1.75rem);
-	--fs-xl:   clamp(1.75rem, 1.5rem + 1.2vw, 2.5rem);
-	--fs-2xl:  clamp(2.25rem, 1.9rem + 1.8vw, 3.5rem);
-	--fs-3xl:  clamp(3rem, 2.4rem + 3vw, 5rem);
-	--fs-4xl:  clamp(3.75rem, 2.8rem + 4.5vw, 7rem);
+	/* Type scale — DRAMATIC editorial display */
+	--fs-micro:     clamp(0.72rem, 0.7rem + 0.08vw, 0.75rem);
+	--fs-xs:        clamp(0.78rem, 0.76rem + 0.1vw, 0.82rem);
+	--fs-sm:        clamp(0.88rem, 0.85rem + 0.15vw, 0.95rem);
+	--fs-base:      clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+	--fs-md:        clamp(1.125rem, 1.05rem + 0.4vw, 1.35rem);
+	--fs-lg:        clamp(1.35rem, 1.2rem + 0.8vw, 1.75rem);
+	--fs-xl:        clamp(1.75rem, 1.4rem + 1.6vw, 2.75rem);
+	--fs-2xl:       clamp(2.5rem, 1.8rem + 3vw, 4.25rem);
+	--fs-3xl:       clamp(3.5rem, 2.4rem + 4.8vw, 6.5rem);
+	--fs-4xl:       clamp(4.5rem, 2.8rem + 7vw, 9rem);
+	--fs-display:   clamp(5rem, 3rem + 10vw, 14rem);
 
-	--lh-tight: 1.05;
-	--lh-snug:  1.2;
-	--lh-base:  1.55;
-	--lh-loose: 1.75;
+	--lh-tight:  1.02;
+	--lh-snug:   1.1;
+	--lh-base:   1.6;
+	--lh-loose:  1.8;
+
+	--tracking-tight:   -0.03em;
+	--tracking-snug:    -0.015em;
+	--tracking-normal:   0em;
+	--tracking-wide:     0.02em;
+	--tracking-caps:     0.14em;
 
 	/* Spacing scale (4px base) */
 	--sp-1:  0.25rem;
@@ -65,33 +91,41 @@
 	--sp-20: 5rem;
 	--sp-24: 6rem;
 	--sp-32: 8rem;
+	--sp-40: 10rem;
 
 	/* Layout */
-	--wrap:       1200px;
-	--wrap-wide:  1440px;
+	--wrap:       1240px;
+	--wrap-wide:  1480px;
 	--wrap-tight: 880px;
-	--gutter:     clamp(1rem, 4vw, 2.5rem);
+	--gutter:     clamp(1.25rem, 4vw, 3rem);
 
-	/* Radius — brand uses rounded cards */
-	--radius-sm: 8px;
-	--radius:    16px;
-	--radius-lg: 24px;
-	--radius-xl: 32px;
+	/* Radius — brand uses rounded cards but premium leans smaller/sharper */
+	--radius-sm: 6px;
+	--radius:    14px;
+	--radius-lg: 20px;
+	--radius-xl: 28px;
+	--radius-pill: 999px;
 
-	/* Shadows — subtle, bone-tinted */
-	--shadow-sm: 0 1px 2px rgba(40, 40, 40, 0.06);
-	--shadow:    0 8px 24px -8px rgba(40, 40, 40, 0.15);
-	--shadow-lg: 0 24px 48px -16px rgba(40, 40, 40, 0.22);
+	/* Shadows — deep, bone-tinted, editorial */
+	--shadow-xs: 0 1px 2px rgba(40, 40, 40, 0.05);
+	--shadow-sm: 0 2px 8px -2px rgba(40, 40, 40, 0.08);
+	--shadow:    0 12px 32px -12px rgba(40, 40, 40, 0.18);
+	--shadow-lg: 0 28px 64px -20px rgba(40, 40, 40, 0.25);
 
 	/* Motion */
-	--ease:       cubic-bezier(0.4, 0, 0.2, 1);
-	--ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
-	--dur-fast:   150ms;
-	--dur:        250ms;
-	--dur-slow:   450ms;
+	--ease:         cubic-bezier(0.4, 0, 0.2, 1);
+	--ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-smooth:  cubic-bezier(0.22, 1, 0.36, 1);
+	--dur-fast:     180ms;
+	--dur:          320ms;
+	--dur-slow:     600ms;
+	--dur-cinema:   1200ms;
 
 	/* Header */
 	--header-h: 72px;
+
+	/* Noise / grain intensity */
+	--grain-opacity: 0.035;
 }
 
 @media (min-width: 1024px) {

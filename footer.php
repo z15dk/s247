@@ -9,11 +9,22 @@
 
 <footer class="site-footer" role="contentinfo">
 	<div class="wrap wrap--wide">
+		<div class="site-footer__top" data-reveal>
+			<p class="site-footer__big">
+				<?php esc_html_e( 'Optag.', 'studie247' ); ?>
+				<em><?php esc_html_e( 'Skab.', 'studie247' ); ?></em>
+				<?php esc_html_e( 'Udgiv', 'studie247' ); ?>
+				<em style="font-family:var(--font-serif);font-style:italic;color:var(--color-accent);">247.</em>
+			</p>
+		</div>
+
 		<div class="site-footer__grid">
 			<div class="site-footer__col">
-				<?php studie247_logo(); ?>
-				<p class="site-footer__tagline"><?php esc_html_e( 'Optag. Skab. Udgiv 247.', 'studie247' ); ?></p>
-				<p style="max-width: 32ch; color: rgba(244,233,221,0.7); font-size: var(--fs-sm); margin-top: var(--sp-4);">
+				<div class="logo logo--on-dark">
+					<span class="logo__word">STUDIE</span>
+					<span class="logo__num">247</span>
+				</div>
+				<p style="max-width: 34ch; color: var(--s247-bone-60); font-size: var(--fs-sm); margin-top: var(--sp-5); line-height: var(--lh-base);">
 					<?php esc_html_e( 'Dit studie — døgnet rundt. Simpelt. Professionelt. Menneskeligt.', 'studie247' ); ?>
 				</p>
 			</div>
@@ -35,8 +46,8 @@
 				<ul>
 					<li><a href="mailto:hej@studie247.dk">hej@studie247.dk</a></li>
 					<li><a href="tel:+4500000000">+45 00 00 00 00</a></li>
-					<li><?php esc_html_e( 'Adresse kommer', 'studie247' ); ?></li>
-					<li><?php esc_html_e( 'CVR: 00000000', 'studie247' ); ?></li>
+					<li style="color:var(--s247-bone-60);"><?php esc_html_e( 'Aarhus', 'studie247' ); ?></li>
+					<li style="color:var(--s247-bone-60);"><?php esc_html_e( 'CVR: 00000000', 'studie247' ); ?></li>
 				</ul>
 			</div>
 
@@ -52,10 +63,10 @@
 
 		<div class="site-footer__bottom">
 			<span>&copy; <?php echo esc_html( date( 'Y' ) ); ?> Studie 247</span>
-			<ul style="list-style:none;padding:0;margin:0;display:flex;gap:var(--sp-4);">
+			<ul>
 				<li><a href="<?php echo esc_url( home_url( '/privatlivspolitik/' ) ); ?>"><?php esc_html_e( 'Privatliv', 'studie247' ); ?></a></li>
 				<li><a href="<?php echo esc_url( home_url( '/cookies/' ) ); ?>"><?php esc_html_e( 'Cookies', 'studie247' ); ?></a></li>
-				<li><a href="<?php echo esc_url( home_url( '/handelsbetingelser/' ) ); ?>"><?php esc_html_e( 'Handelsbetingelser', 'studie247' ); ?></a></li>
+				<li><a href="<?php echo esc_url( home_url( '/handelsbetingelser/' ) ); ?>"><?php esc_html_e( 'Vilkår', 'studie247' ); ?></a></li>
 			</ul>
 		</div>
 	</div>

@@ -1,27 +1,31 @@
 <?php
 /**
- * Testimonials.
+ * Testimonials — editorial quotes.
  */
 $testimonials = studie247_get_testimonials( 3 );
 if ( empty( $testimonials ) ) {
 	return;
 }
 ?>
-<section class="section" aria-labelledby="testimonials-title">
+<section class="section" aria-labelledby="testimonials-title" style="background: var(--color-surface-deep);">
 	<div class="wrap">
-		<header class="section-head">
-			<span class="eyebrow"><?php esc_html_e( 'Hvad siger', 'studie247' ); ?></span>
+		<header class="section-head" data-reveal>
+			<div class="section-head__meta">
+				<span class="section-num">05</span>
+				<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Kundeudsagn', 'studie247' ); ?></span>
+			</div>
 			<h2 id="testimonials-title" class="section-head__title">
-				<?php esc_html_e( 'Vores', 'studie247' ); ?> <em><?php esc_html_e( 'kunder', 'studie247' ); ?></em>
+				<?php esc_html_e( 'Hvad de', 'studie247' ); ?> <em><?php esc_html_e( 'siger', 'studie247' ); ?></em>
 			</h2>
 		</header>
 
 		<div class="testimonials">
-			<?php foreach ( $testimonials as $t ) :
+			<?php $i = 0; foreach ( $testimonials as $t ) :
+				$i++;
 				$name    = get_post_meta( $t->ID, '_s247_author_name', true );
 				$company = get_post_meta( $t->ID, '_s247_author_company', true );
 				?>
-				<figure class="testimonial">
+				<figure class="testimonial" data-reveal style="--reveal-delay: <?php echo esc_attr( 80 * $i ); ?>ms;">
 					<blockquote class="testimonial__quote">
 						<?php echo wp_kses_post( wpautop( $t->post_content ) ); ?>
 					</blockquote>

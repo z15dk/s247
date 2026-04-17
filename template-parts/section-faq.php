@@ -1,9 +1,7 @@
 <?php
 /**
- * FAQ — statisk seed; kan senere drives af CPT eller customizer.
- * SEO-goldmine: tilføj FAQPage schema når indhold er på plads.
+ * FAQ — editorial two-col layout + FAQPage schema.
  */
-
 $faqs = array(
 	array(
 		'q' => __( 'Hvad er inkluderet i en booking?', 'studie247' ),
@@ -15,40 +13,51 @@ $faqs = array(
 	),
 	array(
 		'q' => __( 'Kan jeg leje studiet uden produktion?', 'studie247' ),
-		'a' => __( 'Ja. Vi udlejer også studiet "råt" til erfarne produktionsteams. Se siden Studiet for detaljer.', 'studie247' ),
+		'a' => __( 'Ja. Vi udlejer også studiet råt til erfarne produktionsteams. Se siden Studiet for detaljer.', 'studie247' ),
 	),
 	array(
 		'q' => __( 'Kan I hjælpe med manuskript og idéudvikling?', 'studie247' ),
 		'a' => __( 'Ja. Vi har producere og tekstforfattere, som kan hjælpe fra idé til færdigt script.', 'studie247' ),
 	),
+	array(
+		'q' => __( 'Hvor ligger studiet?', 'studie247' ),
+		'a' => __( 'Aarhus — præcis adresse får du med booking-bekræftelsen. Der er parkering og god offentlig transport.', 'studie247' ),
+	),
 );
 ?>
 <section class="section" aria-labelledby="faq-title">
-	<div class="wrap faq">
-		<header class="section-head">
-			<span class="eyebrow"><?php esc_html_e( 'FAQ', 'studie247' ); ?></span>
-			<h2 id="faq-title" class="section-head__title">
-				<?php esc_html_e( 'Ofte stillede', 'studie247' ); ?> <em><?php esc_html_e( 'spørgsmål', 'studie247' ); ?></em>
-			</h2>
-		</header>
+	<div class="wrap">
+		<div class="faq-wrap">
+			<header class="section-head" data-reveal style="margin-bottom:0;position:sticky;top:calc(var(--header-h) + var(--sp-6));">
+				<div class="section-head__meta">
+					<span class="section-num">06</span>
+					<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'FAQ', 'studie247' ); ?></span>
+				</div>
+				<h2 id="faq-title" class="section-head__title">
+					<?php esc_html_e( 'Ofte stillede', 'studie247' ); ?> <em><?php esc_html_e( 'spørgsmål', 'studie247' ); ?></em>
+				</h2>
+				<p class="section-head__lead">
+					<?php echo wp_kses_post( __( 'Stilles ofte nok til at vi samlede dem her. Mangler du svar? <em>Skriv til os.</em>', 'studie247' ) ); ?>
+				</p>
+			</header>
 
-		<div class="accordion">
-			<?php foreach ( $faqs as $faq ) : ?>
-				<details class="accordion__item">
-					<summary class="accordion__trigger"><?php echo esc_html( $faq['q'] ); ?></summary>
-					<div class="accordion__panel"><?php echo esc_html( $faq['a'] ); ?></div>
-				</details>
-			<?php endforeach; ?>
+			<div class="accordion" data-reveal style="--reveal-delay: 120ms;">
+				<?php foreach ( $faqs as $faq ) : ?>
+					<details class="accordion__item">
+						<summary class="accordion__trigger"><?php echo esc_html( $faq['q'] ); ?></summary>
+						<div class="accordion__panel"><?php echo esc_html( $faq['a'] ); ?></div>
+					</details>
+				<?php endforeach; ?>
+			</div>
 		</div>
 	</div>
 </section>
 
 <?php
-// FAQPage schema.
 $faq_schema = array(
-	'@context'    => 'https://schema.org',
-	'@type'       => 'FAQPage',
-	'mainEntity'  => array_map( function ( $f ) {
+	'@context'   => 'https://schema.org',
+	'@type'      => 'FAQPage',
+	'mainEntity' => array_map( function ( $f ) {
 		return array(
 			'@type'          => 'Question',
 			'name'           => $f['q'],

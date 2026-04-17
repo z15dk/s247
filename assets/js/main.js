@@ -1,6 +1,6 @@
 /**
- * Studie 247 — minimal vanilla JS.
- * Sticky header state, mobile menu, smooth scroll.
+ * Studie 247 — vanilla JS.
+ * Sticky header, mobile menu, smooth scroll, scroll reveals.
  */
 (function () {
 	'use strict';
@@ -43,12 +43,10 @@
 	navToggle?.addEventListener('click', openNav);
 	navClose?.addEventListener('click', closeNav);
 
-	// Close on Esc
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') closeNav();
 	});
 
-	// Close on link click
 	mobileNav?.querySelectorAll('a').forEach((a) => {
 		a.addEventListener('click', closeNav);
 	});
@@ -67,4 +65,23 @@
 			}
 		});
 	});
+
+	// ──────────────────────────────────────────────
+	// Scroll reveal — [data-reveal]
+	// ──────────────────────────────────────────────
+	const reveals = document.querySelectorAll('[data-reveal]');
+	if (reveals.length && 'IntersectionObserver' in window) {
+		const io = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					entry.target.classList.add('is-visible');
+					io.unobserve(entry.target);
+				}
+			});
+		}, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+		reveals.forEach((el) => io.observe(el));
+	} else {
+		// Fallback: show everything immediately
+		reveals.forEach((el) => el.classList.add('is-visible'));
+	}
 })();
