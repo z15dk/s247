@@ -8,6 +8,7 @@
  *  - _s247_startpris     (fx "fra 1.499 kr")
  *  - _s247_cta_text      (knapetikette)
  *  - _s247_included      (én pr. linje — hvad der er inkluderet)
+ *  - _s247_bg_image      (attachment ID til baggrundsbillede på kort)
  *
  * Testimonial CPT fields:
  *  - _s247_author_name
@@ -41,6 +42,8 @@ function studie247_render_service_meta( $post ) {
 	$startpris = get_post_meta( $post->ID, '_s247_startpris', true );
 	$cta_text  = get_post_meta( $post->ID, '_s247_cta_text', true );
 	$included  = get_post_meta( $post->ID, '_s247_included', true );
+	$bg_id     = (int) get_post_meta( $post->ID, '_s247_bg_image', true );
+	$bg_url    = $bg_id ? wp_get_attachment_image_url( $bg_id, 's247-card' ) : '';
 
 	$icons = array(
 		''         => __( '— Vælg ikon —', 'studie247' ),
@@ -76,6 +79,49 @@ function studie247_render_service_meta( $post ) {
 		<label for="s247_included"><strong><?php esc_html_e( 'Inkluderet (én pr. linje)', 'studie247' ); ?></strong></label><br>
 		<textarea id="s247_included" name="s247_included" rows="6" style="width:100%"><?php echo esc_textarea( $included ); ?></textarea>
 	</p>
+	<p>
+		<strong><?php esc_html_e( 'Baggrundsbillede på kort', 'studie247' ); ?></strong><br>
+		<span class="description" style="display:block;margin-bottom:8px;">
+			<?php esc_html_e( 'Vises som baggrund bag teksten på service-kortet på forsiden.', 'studie247' ); ?>
+		</span>
+		<span class="s247-bg-preview" style="display:<?php echo $bg_url ? 'block' : 'none'; ?>;margin:8px 0;">
+			<img src="<?php echo esc_url( $bg_url ); ?>" style="max-width:240px;height:auto;border:1px solid #ccd0d4;">
+		</span>
+		<input type="hidden" id="s247_bg_image" name="s247_bg_image" value="<?php echo esc_attr( $bg_id ); ?>">
+		<button type="button" class="button s247-bg-pick"><?php esc_html_e( 'Vælg billede', 'studie247' ); ?></button>
+		<button type="button" class="button s247-bg-remove" style="<?php echo $bg_url ? '' : 'display:none;'; ?>"><?php esc_html_e( 'Fjern', 'studie247' ); ?></button>
+	</p>
+	<script>
+	(function($){
+		$(function(){
+			var frame;
+			$('.s247-bg-pick').on('click', function(e){
+				e.preventDefault();
+				if (frame) { frame.open(); return; }
+				frame = wp.media({
+					title: '<?php echo esc_js( __( 'Vælg baggrundsbillede', 'studie247' ) ); ?>',
+					button: { text: '<?php echo esc_js( __( 'Brug dette billede', 'studie247' ) ); ?>' },
+					library: { type: 'image' },
+					multiple: false
+				});
+				frame.on('select', function(){
+					var att = frame.state().get('selection').first().toJSON();
+					$('#s247_bg_image').val(att.id);
+					var url = (att.sizes && att.sizes['s247-card']) ? att.sizes['s247-card'].url : att.url;
+					$('.s247-bg-preview').html('<img src="'+url+'" style="max-width:240px;height:auto;border:1px solid #ccd0d4;">').show();
+					$('.s247-bg-remove').show();
+				});
+				frame.open();
+			});
+			$('.s247-bg-remove').on('click', function(e){
+				e.preventDefault();
+				$('#s247_bg_image').val('');
+				$('.s247-bg-preview').hide().empty();
+				$(this).hide();
+			});
+		});
+	})(jQuery);
+	</script>
 	<?php
 }
 
@@ -95,6 +141,26 @@ add_action( 'save_post_service', function ( $post_id ) {
 			update_post_meta( $post_id, '_' . $field, sanitize_textarea_field( wp_unslash( $_POST[ $field ] ) ) );
 		}
 	}
+	if ( isset( $_POST['s247_bg_image'] ) ) {
+		$bg = absint( $_POST['s247_bg_image'] );
+		if ( $bg ) {
+			update_post_meta( $post_id, '_s247_bg_image', $bg );
+		} else {
+			delete_post_meta( $post_id, '_s247_bg_image' );
+		}
+	}
+} );
+
+// Enqueue media uploader on service edit screen.
+add_action( 'admin_enqueue_scripts', function ( $hook ) {
+	if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
+		return;
+	}
+	$screen = get_current_screen();
+	if ( ! $screen || 'service' !== $screen->post_type ) {
+		return;
+	}
+	wp_enqueue_media();
 } );
 
 /** ───────── Testimonial ───────── */

@@ -541,6 +541,46 @@
 	justify-content: space-between;
 }
 
+.service-card--has-bg {
+	position: relative;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	color: var(--color-ink-on-dark);
+	overflow: hidden;
+	isolation: isolate;
+}
+
+.service-card--has-bg::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(30, 30, 30, 0.15) 0%, rgba(30, 30, 30, 0.65) 100%);
+	z-index: -1;
+	transition: background var(--dur) var(--ease);
+}
+
+.service-card--has-bg:hover::before {
+	background: linear-gradient(180deg, rgba(30, 30, 30, 0.25) 0%, rgba(30, 30, 30, 0.8) 100%);
+}
+
+.service-card--has-bg .card__title,
+.service-card--has-bg .card__body,
+.service-card--has-bg .card__number,
+.service-card--has-bg .card__price,
+.service-card--has-bg .card__cta {
+	color: var(--color-ink-on-dark);
+}
+
+.service-card--has-bg .card__cta .icon {
+	color: var(--color-ink-on-dark);
+}
+
+.service-card--has-bg:hover .card__cta,
+.service-card--has-bg:hover .card__cta .icon {
+	color: var(--color-accent);
+}
+
 .service-card__head {
 	display: flex;
 	align-items: flex-start;
