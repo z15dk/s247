@@ -383,16 +383,25 @@
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
-	padding-block: var(--sp-6);
+	padding-block: 0;
 	margin: auto 0;
+	min-height: 0;
+	flex: 0 1 auto;
 }
 
 .hero__display--image img {
 	display: block;
-	width: 100%;
+	width: auto;
+	max-width: 100%;
 	height: auto;
-	max-height: 70vh;
+	max-height: min(40vh, 360px);
 	object-fit: contain;
+}
+
+@media (max-width: 900px) {
+	.hero__display--image img {
+		max-height: 32vh;
+	}
 }
 
 .hero__display-line--italic {
