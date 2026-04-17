@@ -6,29 +6,35 @@
 	'use strict';
 
 	// ──────────────────────────────────────────────
-	// Sticky header shadow on scroll
+	// Floating pill header — hidden at top, slides in on scroll
 	// ──────────────────────────────────────────────
 	const header = document.querySelector('[data-site-header]');
 	if (header) {
-		const setScrolled = () => {
-			header.classList.toggle('site-header--scrolled', window.scrollY > 8);
+		const showThreshold = 320;   // px scrolled before pill slides in
+		let lastShown = false;
+		const update = () => {
+			const shouldShow = window.scrollY > showThreshold;
+			if (shouldShow !== lastShown) {
+				header.classList.toggle('site-header--visible', shouldShow);
+				lastShown = shouldShow;
+			}
 		};
-		setScrolled();
-		window.addEventListener('scroll', setScrolled, { passive: true });
+		update();
+		window.addEventListener('scroll', update, { passive: true });
 	}
 
 	// ──────────────────────────────────────────────
 	// Mobile nav toggle
 	// ──────────────────────────────────────────────
-	const navToggle = document.querySelector('[data-nav-toggle]');
-	const navClose  = document.querySelector('[data-nav-close]');
-	const mobileNav = document.getElementById('mobile-nav');
+	const navToggles = document.querySelectorAll('[data-nav-toggle]');
+	const navCloses  = document.querySelectorAll('[data-nav-close]');
+	const mobileNav  = document.getElementById('mobile-nav');
 
 	const closeNav = () => {
 		if (!mobileNav) return;
 		mobileNav.dataset.open = 'false';
 		mobileNav.setAttribute('aria-hidden', 'true');
-		navToggle?.setAttribute('aria-expanded', 'false');
+		navToggles.forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
 		document.documentElement.style.overflow = '';
 	};
 
@@ -36,12 +42,12 @@
 		if (!mobileNav) return;
 		mobileNav.dataset.open = 'true';
 		mobileNav.setAttribute('aria-hidden', 'false');
-		navToggle?.setAttribute('aria-expanded', 'true');
+		navToggles.forEach((btn) => btn.setAttribute('aria-expanded', 'true'));
 		document.documentElement.style.overflow = 'hidden';
 	};
 
-	navToggle?.addEventListener('click', openNav);
-	navClose?.addEventListener('click', closeNav);
+	navToggles.forEach((btn) => btn.addEventListener('click', openNav));
+	navCloses.forEach((btn) => btn.addEventListener('click', closeNav));
 
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') closeNav();
