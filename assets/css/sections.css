@@ -45,7 +45,23 @@
 .site-header .logo__word { color: var(--color-ink-on-dark); }
 .site-header .logo__num  { color: var(--color-accent); }
 
-.site-header__brand { display: inline-flex; align-items: center; }
+.site-header__brand { display: inline-flex; align-items: center; max-height: 40px; }
+
+.site-header__brand .custom-logo-link,
+.site-header__brand .custom-logo,
+.site-header__brand img {
+	display: block;
+	height: 32px;
+	width: auto;
+	max-height: 32px;
+}
+
+.hero__brand .custom-logo,
+.hero__brand img {
+	display: block;
+	height: 28px;
+	width: auto;
+}
 
 .site-header__nav { display: none; }
 
