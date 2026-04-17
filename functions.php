@@ -26,5 +26,6 @@ require_once STUDIE247_DIR . '/inc/meta-boxes.php';
 require_once STUDIE247_DIR . '/inc/seo.php';
 require_once STUDIE247_DIR . '/inc/schema.php';
 require_once STUDIE247_DIR . '/inc/template-tags.php';
+require_once STUDIE247_DIR . '/inc/customizer.php';
 require_once STUDIE247_DIR . '/inc/svg-icons.php';
 require_once STUDIE247_DIR . '/inc/svg-upload.php';

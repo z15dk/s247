@@ -2,8 +2,9 @@
 /**
  * Hero — split layout: video venstre, massivt STUDIE 247 display højre.
  */
-$hero_image = get_theme_mod( 's247_hero_image' );
-$hero_video = get_theme_mod( 's247_hero_video' );
+$hero_image         = get_theme_mod( 's247_hero_image' );
+$hero_video         = get_theme_mod( 's247_hero_video' );
+$hero_display_image = get_theme_mod( 's247_hero_display_image' );
 ?>
 <section class="hero hero--split" aria-labelledby="hero-title">
 	<div class="hero__video" aria-hidden="true">
@@ -32,10 +33,16 @@ $hero_video = get_theme_mod( 's247_hero_video' );
 			</button>
 		</div>
 
-		<h1 id="hero-title" class="hero__display">
-			<span class="hero__display-line"><?php esc_html_e( 'STUDIE', 'studie247' ); ?></span>
-			<span class="hero__display-line hero__display-line--italic"><em>247</em></span>
-		</h1>
+		<?php if ( $hero_display_image ) : ?>
+			<h1 id="hero-title" class="hero__display hero__display--image">
+				<img src="<?php echo esc_url( $hero_display_image ); ?>" alt="<?php esc_attr_e( 'Studie 247', 'studie247' ); ?>" loading="eager" decoding="async">
+			</h1>
+		<?php else : ?>
+			<h1 id="hero-title" class="hero__display">
+				<span class="hero__display-line"><?php esc_html_e( 'STUDIE', 'studie247' ); ?></span>
+				<span class="hero__display-line hero__display-line--italic"><em>247</em></span>
+			</h1>
+		<?php endif; ?>
 
 		<div class="hero__below">
 			<p class="hero__tagline">
