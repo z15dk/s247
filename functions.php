@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'STUDIE247_VERSION', '0.3.0' );
+define( 'STUDIE247_VERSION', '0.3.1' );
 define( 'STUDIE247_DIR', get_template_directory() );
 define( 'STUDIE247_URI', get_template_directory_uri() );
 
@@ -27,3 +27,4 @@ require_once STUDIE247_DIR . '/inc/seo.php';
 require_once STUDIE247_DIR . '/inc/schema.php';
 require_once STUDIE247_DIR . '/inc/template-tags.php';
 require_once STUDIE247_DIR . '/inc/svg-icons.php';
+require_once STUDIE247_DIR . '/inc/svg-upload.php';
