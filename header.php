@@ -83,9 +83,6 @@
 			</li>
 		<?php endforeach; ?>
 	</ul>
-	<div>
-		<?php studie247_button( __( 'Book nu', 'studie247' ), home_url( '/book/' ), 'primary', 'btn--lg' ); ?>
-	</div>
 </div>
 
 <main id="main" class="site-main">
