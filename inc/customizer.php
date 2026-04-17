@@ -49,4 +49,17 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		'description' => __( 'Erstatter det store "STUDIE 247" display. Lad stå tomt for typografisk version.', 'studie247' ),
 		'section'     => 's247_hero',
 	) ) );
+
+	// Marquee items (text eller billede-URL, én pr. linje).
+	$wp_customize->add_setting( 's247_marquee_items', array(
+		'default'           => "Optag\nSkab\nUdgiv\nPodcast\nVideo\nFoto\nKursus",
+		'sanitize_callback' => 'sanitize_textarea_field',
+		'transport'         => 'refresh',
+	) );
+	$wp_customize->add_control( 's247_marquee_items', array(
+		'label'       => __( 'Marquee (rulle-bjælke)', 'studie247' ),
+		'description' => __( 'Én pr. linje. Skriv et ord (fx "Podcast") eller en billede-URL (http/https, fx .svg eller .png). Billeder skalerer automatisk til bjælkens højde.', 'studie247' ),
+		'section'     => 's247_hero',
+		'type'        => 'textarea',
+	) );
 } );

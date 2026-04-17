@@ -490,6 +490,18 @@
 	font-size: 0.7em;
 }
 
+.marquee__item--image {
+	padding: 0;
+}
+
+.marquee__item--image img {
+	display: block;
+	height: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+	width: auto;
+	max-width: none;
+	object-fit: contain;
+}
+
 @keyframes marquee {
 	from { transform: translateX(0); }
 	to   { transform: translateX(-50%); }

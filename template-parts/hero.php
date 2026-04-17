@@ -64,21 +64,23 @@ $hero_display_image = get_theme_mod( 's247_hero_display_image' );
 	</div>
 </section>
 
+<?php
+$marquee_raw   = get_theme_mod( 's247_marquee_items', "Optag\nSkab\nUdgiv\nPodcast\nVideo\nFoto\nKursus" );
+$marquee_lines = array_values( array_filter( array_map( 'trim', preg_split( '/\r\n|\r|\n/', $marquee_raw ) ) ) );
+if ( ! empty( $marquee_lines ) ) :
+	// Dupliker så animationen har nok indhold til at loope uden hul.
+	$marquee_items = array_merge( $marquee_lines, $marquee_lines );
+?>
 <div class="marquee" aria-hidden="true">
 	<div class="marquee__track">
-		<span class="marquee__item"><?php esc_html_e( 'Optag', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Skab', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Udgiv', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Podcast', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Video', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Foto', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Kursus', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Optag', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Skab', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Udgiv', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Podcast', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Video', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Foto', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Kursus', 'studie247' ); ?></span>
+		<?php foreach ( $marquee_items as $item ) :
+			if ( preg_match( '#^https?://#i', $item ) ) : ?>
+			<span class="marquee__item marquee__item--image">
+				<img src="<?php echo esc_url( $item ); ?>" alt="" loading="lazy" decoding="async">
+			</span>
+		<?php else : ?>
+			<span class="marquee__item"><?php echo esc_html( $item ); ?></span>
+		<?php endif; endforeach; ?>
 	</div>
 </div>
+<?php endif; ?>
