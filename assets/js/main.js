@@ -81,6 +81,41 @@
 	});
 
 	// ──────────────────────────────────────────────
+	// Team modal (Om-side)
+	// ──────────────────────────────────────────────
+	const teamOpeners = document.querySelectorAll('[data-team-open]');
+	const teamModals  = document.querySelectorAll('[data-team-modal]');
+
+	const closeTeamModal = () => {
+		teamModals.forEach((m) => m.setAttribute('hidden', ''));
+		document.body.classList.remove('team-modal-open');
+	};
+
+	teamOpeners.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const id = btn.dataset.teamOpen;
+			teamModals.forEach((m) => {
+				if (m.dataset.teamModal === id) {
+					m.removeAttribute('hidden');
+				} else {
+					m.setAttribute('hidden', '');
+				}
+			});
+			document.body.classList.add('team-modal-open');
+			const dialog = document.querySelector('[data-team-modal="' + id + '"] .team-modal__close');
+			dialog && dialog.focus();
+		});
+	});
+
+	document.querySelectorAll('[data-team-close]').forEach((el) => {
+		el.addEventListener('click', closeTeamModal);
+	});
+
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') closeTeamModal();
+	});
+
+	// ──────────────────────────────────────────────
 	// Smooth scroll for on-page anchor links
 	// ──────────────────────────────────────────────
 	document.querySelectorAll('a[href^="#"]').forEach((a) => {

@@ -178,4 +178,57 @@ add_action( 'customize_register', function ( $wp_customize ) {
 			) );
 		}
 	}
+
+	/* ───────── Om-side (team) ───────── */
+	$wp_customize->add_section( 's247_om', array(
+		'title'    => __( 'Om-side (team)', 'studie247' ),
+		'priority' => 34,
+	) );
+
+	$wp_customize->add_setting( 's247_om_intro', array(
+		'default'           => '',
+		'sanitize_callback' => 'wp_kses_post',
+		'transport'         => 'refresh',
+	) );
+	$wp_customize->add_control( 's247_om_intro', array(
+		'label'       => __( 'Kort tekst om os', 'studie247' ),
+		'description' => __( 'Vises øverst på Om-siden. HTML tilladt.', 'studie247' ),
+		'section'     => 's247_om',
+		'type'        => 'textarea',
+	) );
+
+	for ( $i = 1; $i <= 8; $i++ ) {
+		$fields = array(
+			"s247_team{$i}_name"        => array( 'label' => sprintf( __( 'Person %d — navn', 'studie247' ), $i ), 'type' => 'text' ),
+			"s247_team{$i}_role"        => array( 'label' => sprintf( __( 'Person %d — rolle', 'studie247' ), $i ), 'type' => 'text' ),
+			"s247_team{$i}_image"       => array( 'label' => sprintf( __( 'Person %d — kort-billede', 'studie247' ), $i ), 'type' => 'image' ),
+			"s247_team{$i}_modal_image" => array( 'label' => sprintf( __( 'Person %d — popup-billede', 'studie247' ), $i ), 'type' => 'image' ),
+			"s247_team{$i}_modal_text"  => array( 'label' => sprintf( __( 'Person %d — popup-tekst (HTML)', 'studie247' ), $i ), 'type' => 'textarea' ),
+		);
+		foreach ( $fields as $key => $cfg ) {
+			$sanitize = 'sanitize_text_field';
+			if ( 'image' === $cfg['type'] ) {
+				$sanitize = 'esc_url_raw';
+			} elseif ( 'textarea' === $cfg['type'] ) {
+				$sanitize = 'wp_kses_post';
+			}
+			$wp_customize->add_setting( $key, array(
+				'default'           => '',
+				'sanitize_callback' => $sanitize,
+				'transport'         => 'refresh',
+			) );
+			if ( 'image' === $cfg['type'] ) {
+				$wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $key, array(
+					'label'   => $cfg['label'],
+					'section' => 's247_om',
+				) ) );
+			} else {
+				$wp_customize->add_control( $key, array(
+					'label'   => $cfg['label'],
+					'section' => 's247_om',
+					'type'    => 'textarea' === $cfg['type'] ? 'textarea' : 'text',
+				) );
+			}
+		}
+	}
 } );
