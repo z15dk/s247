@@ -29,6 +29,7 @@ require_once STUDIE247_DIR . '/inc/template-tags.php';
 require_once STUDIE247_DIR . '/inc/customizer.php';
 require_once STUDIE247_DIR . '/inc/svg-icons.php';
 require_once STUDIE247_DIR . '/inc/svg-upload.php';
+require_once STUDIE247_DIR . '/inc/admin-style.php';
 
 /**
  * Auto-render team sektion efter indhold på Om-siden,

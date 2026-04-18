@@ -1,0 +1,531 @@
+/* =================================================================
+   Studie 247 — wp-admin brand styling
+   ================================================================= */
+
+:root {
+	--s247-bone: #F4E9DD;
+	--s247-bone-rich: #FBF5EC;
+	--s247-bone-deep: #EADDCB;
+	--s247-red: #9E2B25;
+	--s247-red-deep: #7E2019;
+	--s247-red-10: rgba(158, 43, 37, 0.1);
+	--s247-black: #282828;
+	--s247-black-rich: #1E1E1E;
+	--s247-black-80: rgba(40, 40, 40, 0.8);
+	--s247-black-60: rgba(40, 40, 40, 0.6);
+	--s247-black-40: rgba(40, 40, 40, 0.4);
+	--s247-black-10: rgba(40, 40, 40, 0.1);
+	--s247-black-05: rgba(40, 40, 40, 0.05);
+	--s247-bone-80: rgba(244, 233, 221, 0.8);
+	--s247-bone-60: rgba(244, 233, 221, 0.6);
+	--s247-bone-20: rgba(244, 233, 221, 0.2);
+}
+
+/* ───────── Body / typography ───────── */
+html, body, #wpwrap, #wpcontent, #wpbody, .wp-core-ui {
+	font-family: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+body.wp-admin {
+	background: var(--s247-bone) !important;
+	color: var(--s247-black) !important;
+}
+
+#wpbody-content { padding-bottom: 80px; }
+
+h1, h2, h3, h4, .wrap h1 { color: var(--s247-black) !important; font-weight: 700; letter-spacing: -0.01em; }
+
+.wrap h1.wp-heading-inline {
+	font-size: 1.75rem;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	color: var(--s247-black) !important;
+}
+
+/* ───────── Admin bar ───────── */
+#wpadminbar {
+	background: var(--s247-black-rich) !important;
+	border-bottom: 1px solid rgba(244, 233, 221, 0.08);
+	height: 40px;
+	font-size: 13px;
+}
+
+#wpadminbar .ab-item,
+#wpadminbar a.ab-item,
+#wpadminbar > #wp-toolbar span.ab-label,
+#wpadminbar > #wp-toolbar span.noticon {
+	color: var(--s247-bone-80) !important;
+	height: 40px;
+	line-height: 40px;
+}
+
+#wpadminbar .ab-top-menu > li > .ab-item:focus,
+#wpadminbar .ab-top-menu > li.hover > .ab-item,
+#wpadminbar .ab-top-menu > li > .ab-item:hover {
+	background: rgba(158, 43, 37, 0.25) !important;
+	color: var(--s247-bone) !important;
+}
+
+#wpadminbar .ab-icon,
+#wpadminbar .ab-icon::before { color: var(--s247-red) !important; }
+
+#wpadminbar .quicklinks .menupop ul li a,
+#wpadminbar .quicklinks .menupop.hover ul li a,
+#wpadminbar.nojs .quicklinks .menupop:hover ul li a {
+	color: var(--s247-bone-80) !important;
+}
+
+#wpadminbar .quicklinks .menupop.hover ul,
+#wpadminbar.nojs .quicklinks .menupop:hover ul {
+	background: var(--s247-black-rich) !important;
+	border: 1px solid rgba(244, 233, 221, 0.08);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+/* ───────── Sidebar (admin menu) ───────── */
+#adminmenuback,
+#adminmenuwrap,
+#adminmenu {
+	background: var(--s247-black-rich) !important;
+}
+
+#adminmenu a {
+	color: var(--s247-bone-80) !important;
+	font-weight: 500 !important;
+	font-size: 13px;
+}
+
+#adminmenu div.wp-menu-image::before,
+#adminmenu .wp-submenu .wp-submenu-head,
+#adminmenu div.wp-menu-name {
+	color: var(--s247-bone-80) !important;
+}
+
+#adminmenu li.menu-top {
+	border-bottom: 1px solid rgba(244, 233, 221, 0.04);
+}
+
+#adminmenu li.menu-top:hover,
+#adminmenu li.opensub > a.menu-top,
+#adminmenu li > a.menu-top:focus {
+	background: rgba(158, 43, 37, 0.12) !important;
+	color: var(--s247-bone) !important;
+}
+
+#adminmenu li.menu-top:hover div.wp-menu-image::before,
+#adminmenu li.menu-top:hover div.wp-menu-name {
+	color: var(--s247-red) !important;
+}
+
+#adminmenu li.current a.menu-top,
+#adminmenu li.wp-has-current-submenu a.wp-has-current-submenu,
+#adminmenu .wp-menu-arrow,
+#adminmenu .wp-menu-arrow div,
+#adminmenu li.current a.menu-top,
+.folded #adminmenu li.current.menu-top {
+	background: var(--s247-red) !important;
+	color: var(--s247-bone) !important;
+}
+
+#adminmenu li.current a.menu-top div.wp-menu-image::before,
+#adminmenu li.current a.menu-top div.wp-menu-name,
+#adminmenu li.wp-has-current-submenu .wp-submenu .wp-submenu-head,
+#adminmenu li.wp-has-current-submenu div.wp-menu-image::before {
+	color: var(--s247-bone) !important;
+}
+
+#adminmenu .wp-submenu {
+	background: var(--s247-black) !important;
+	border-left: 2px solid var(--s247-red) !important;
+}
+
+#adminmenu .wp-submenu a,
+#adminmenu .wp-has-current-submenu .wp-submenu a {
+	color: var(--s247-bone-60) !important;
+}
+
+#adminmenu .wp-submenu a:hover,
+#adminmenu .wp-submenu a:focus,
+#adminmenu .wp-has-current-submenu .wp-submenu a:hover,
+#adminmenu .wp-has-current-submenu .wp-submenu a:focus {
+	color: var(--s247-red) !important;
+	background: transparent !important;
+}
+
+#adminmenu .wp-submenu li.current a,
+#adminmenu .wp-submenu li.current a:hover,
+#adminmenu .wp-submenu li.current a:focus {
+	color: var(--s247-bone) !important;
+	font-weight: 600 !important;
+}
+
+/* Collapse button */
+#collapse-button {
+	color: var(--s247-bone-60) !important;
+}
+
+#collapse-button:hover {
+	color: var(--s247-red) !important;
+}
+
+/* ───────── Cards / boxes ───────── */
+.postbox,
+.meta-box-sortables .postbox,
+.stuffbox {
+	background: #FFFFFF !important;
+	border: 1px solid var(--s247-black-10) !important;
+	border-radius: 12px !important;
+	box-shadow: 0 2px 8px -4px rgba(40, 40, 40, 0.06);
+	overflow: hidden;
+}
+
+.postbox > .postbox-header,
+.postbox > h2,
+.postbox > h3 {
+	border-bottom: 1px solid var(--s247-black-10) !important;
+	background: var(--s247-bone-rich) !important;
+	padding: 14px 18px !important;
+}
+
+.postbox > .postbox-header .hndle,
+.postbox h2.hndle,
+.postbox h3.hndle {
+	font-size: 14px !important;
+	font-weight: 700 !important;
+	color: var(--s247-black) !important;
+	letter-spacing: -0.005em;
+	padding: 0 !important;
+}
+
+.postbox .inside { padding: 18px !important; }
+
+/* ───────── Form fields ───────── */
+input[type="text"], input[type="password"], input[type="email"],
+input[type="url"], input[type="tel"], input[type="search"],
+input[type="number"], textarea, select {
+	background: #FFFFFF !important;
+	border: 1px solid var(--s247-black-10) !important;
+	border-radius: 8px !important;
+	padding: 9px 12px !important;
+	font-size: 14px !important;
+	color: var(--s247-black) !important;
+	box-shadow: none !important;
+	transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus,
+input[type="url"]:focus, input[type="tel"]:focus, input[type="search"]:focus,
+input[type="number"]:focus, textarea:focus, select:focus {
+	border-color: var(--s247-red) !important;
+	box-shadow: 0 0 0 3px var(--s247-red-10) !important;
+	outline: none !important;
+}
+
+/* ───────── Buttons ───────── */
+.wp-core-ui .button,
+.wp-core-ui .button-secondary {
+	background: #FFFFFF !important;
+	color: var(--s247-black) !important;
+	border: 1px solid var(--s247-black-10) !important;
+	border-radius: 8px !important;
+	padding: 6px 14px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+	transition: all 180ms ease;
+}
+
+.wp-core-ui .button:hover,
+.wp-core-ui .button-secondary:hover {
+	background: var(--s247-bone-deep) !important;
+	border-color: var(--s247-black-10) !important;
+	color: var(--s247-black) !important;
+}
+
+.wp-core-ui .button-primary {
+	background: var(--s247-black) !important;
+	color: var(--s247-bone) !important;
+	border-color: var(--s247-black) !important;
+	border-radius: 8px !important;
+	padding: 7px 16px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+	transition: all 180ms ease;
+}
+
+.wp-core-ui .button-primary:hover,
+.wp-core-ui .button-primary:focus {
+	background: var(--s247-red) !important;
+	border-color: var(--s247-red) !important;
+	color: var(--s247-bone) !important;
+}
+
+.wp-core-ui .button-link {
+	color: var(--s247-red) !important;
+	text-decoration: none;
+	padding: 0 !important;
+}
+
+.wp-core-ui .button-link:hover { color: var(--s247-red-deep) !important; }
+
+/* ───────── Tables ───────── */
+.wp-list-table {
+	background: #FFFFFF !important;
+	border: 1px solid var(--s247-black-10) !important;
+	border-radius: 12px !important;
+	overflow: hidden;
+	box-shadow: 0 2px 8px -4px rgba(40, 40, 40, 0.06);
+}
+
+.wp-list-table thead th,
+.wp-list-table tfoot th {
+	background: var(--s247-bone-rich) !important;
+	color: var(--s247-black) !important;
+	border-bottom: 1px solid var(--s247-black-10) !important;
+	font-size: 12px !important;
+	font-weight: 700 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	padding: 12px 14px !important;
+}
+
+.wp-list-table tbody tr:hover {
+	background: var(--s247-red-10) !important;
+}
+
+.wp-list-table .row-title {
+	color: var(--s247-black) !important;
+	font-weight: 700 !important;
+}
+
+.wp-list-table .row-title:hover { color: var(--s247-red) !important; }
+
+.wp-list-table .row-actions a { color: var(--s247-black-60) !important; }
+.wp-list-table .row-actions a:hover { color: var(--s247-red) !important; }
+
+/* ───────── Notices ───────── */
+.notice,
+div.updated,
+div.error {
+	background: #FFFFFF !important;
+	border-left-width: 3px !important;
+	border-radius: 8px !important;
+	box-shadow: 0 2px 8px -4px rgba(40, 40, 40, 0.08) !important;
+	padding: 12px 14px !important;
+}
+
+.notice-success,
+div.updated { border-left-color: var(--s247-red) !important; }
+
+.notice-error,
+div.error { border-left-color: #dc2626 !important; }
+
+.notice-warning { border-left-color: #f59e0b !important; }
+
+/* ───────── Page/post editor (Gutenberg chrome) ───────── */
+.edit-post-layout__footer,
+.edit-post-header,
+.interface-navigable-region {
+	background: var(--s247-bone-rich) !important;
+}
+
+/* ───────── Screen tabs / nav ───────── */
+.nav-tab-wrapper {
+	border-bottom: 1px solid var(--s247-black-10) !important;
+	padding-bottom: 0;
+}
+
+.nav-tab {
+	background: transparent !important;
+	border: 0 !important;
+	border-bottom: 2px solid transparent !important;
+	color: var(--s247-black-60) !important;
+	padding: 10px 14px !important;
+	margin: 0 8px 0 0 !important;
+	border-radius: 0 !important;
+	font-weight: 600 !important;
+	font-size: 13px;
+}
+
+.nav-tab:hover { color: var(--s247-black) !important; background: transparent !important; }
+
+.nav-tab-active,
+.nav-tab-active:focus,
+.nav-tab-active:focus:active {
+	color: var(--s247-red) !important;
+	border-bottom-color: var(--s247-red) !important;
+	background: transparent !important;
+}
+
+/* ───────── Dashboard widget — Studie 247 ───────── */
+#s247_welcome {
+	border: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+#s247_welcome > .postbox-header {
+	display: none !important;
+}
+
+#s247_welcome > .inside { padding: 0 !important; }
+
+.s247-dash {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.s247-dash__hero {
+	padding: 28px 32px;
+	background:
+		radial-gradient(ellipse at 85% 35%, rgba(158, 43, 37, 0.12) 0%, transparent 60%),
+		linear-gradient(135deg, var(--s247-black-rich) 0%, var(--s247-black) 100%);
+	color: var(--s247-bone);
+	border-radius: 16px;
+}
+
+.s247-dash__eyebrow {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--s247-bone-60);
+	margin-bottom: 8px;
+}
+
+.s247-dash__title {
+	font-family: "Inter", sans-serif !important;
+	font-size: 1.75rem !important;
+	font-weight: 700 !important;
+	letter-spacing: -0.02em;
+	line-height: 1.05;
+	color: var(--s247-bone) !important;
+	margin: 0 0 6px !important;
+}
+
+.s247-dash__title em {
+	font-family: "Fraunces", Georgia, serif !important;
+	font-style: italic;
+	color: var(--s247-red);
+	font-weight: 400;
+}
+
+.s247-dash__lead {
+	font-size: 14px;
+	color: var(--s247-bone-60);
+	line-height: 1.5;
+	max-width: 52ch;
+}
+
+.s247-dash__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 12px;
+}
+
+.s247-dash__card {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 18px 20px;
+	background: #FFFFFF;
+	border: 1px solid var(--s247-black-10);
+	border-radius: 12px;
+	text-decoration: none;
+	color: var(--s247-black);
+	transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.s247-dash__card:hover {
+	transform: translateY(-2px);
+	border-color: var(--s247-red);
+	box-shadow: 0 8px 24px -12px rgba(40, 40, 40, 0.18);
+}
+
+.s247-dash__card-num {
+	font-family: "Fraunces", Georgia, serif;
+	font-style: italic;
+	font-weight: 400;
+	font-size: 18px;
+	color: var(--s247-red);
+}
+
+.s247-dash__card-title {
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--s247-black);
+	letter-spacing: -0.005em;
+}
+
+.s247-dash__card-hint {
+	font-size: 12px;
+	color: var(--s247-black-60);
+	line-height: 1.4;
+}
+
+/* ───────── Footer ───────── */
+#wpfooter {
+	color: var(--s247-black-60);
+	padding: 16px 20px;
+	font-size: 12px;
+}
+
+#wpfooter em {
+	font-family: "Fraunces", Georgia, serif;
+	font-style: italic;
+	color: var(--s247-red);
+}
+
+/* ───────── Diverse links ───────── */
+.wp-admin a {
+	color: var(--s247-red);
+	transition: color 180ms ease;
+}
+
+.wp-admin a:hover,
+.wp-admin a:focus {
+	color: var(--s247-red-deep);
+}
+
+.wp-admin a.page-title-action {
+	background: var(--s247-black) !important;
+	color: var(--s247-bone) !important;
+	border-color: var(--s247-black) !important;
+	border-radius: 8px !important;
+	padding: 6px 14px !important;
+	margin-left: 12px;
+}
+
+.wp-admin a.page-title-action:hover,
+.wp-admin a.page-title-action:focus {
+	background: var(--s247-red) !important;
+	border-color: var(--s247-red) !important;
+	color: var(--s247-bone) !important;
+}
+
+/* ───────── Admin bar (on frontend) ───────── */
+body.admin-bar #wpadminbar {
+	background: var(--s247-black-rich);
+}
+
+/* ───────── Tagify/small tweaks ───────── */
+.widefat td,
+.widefat th {
+	padding: 12px 14px !important;
+}
+
+.wp-editor-tools .button {
+	border-radius: 6px !important;
+}
+
+/* Responsive tweaks for small screens */
+@media (max-width: 782px) {
+	.s247-dash__hero { padding: 20px; }
+	.s247-dash__title { font-size: 1.4rem !important; }
+}
