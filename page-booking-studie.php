@@ -26,15 +26,15 @@ if ( $form_prod ) {
 
 // POST handler.
 if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_nonce'], 's247_book' ) ) {
-	$form_name  = sanitize_text_field( wp_unslash( $_POST['name']  ?? '' ) );
-	$form_email = sanitize_email(      wp_unslash( $_POST['email'] ?? '' ) );
-	$form_phone = sanitize_text_field( wp_unslash( $_POST['phone'] ?? '' ) );
-	$form_date  = sanitize_text_field( wp_unslash( $_POST['date']  ?? '' ) );
-	$form_start = sanitize_text_field( wp_unslash( $_POST['start'] ?? '' ) );
-	$form_dur   = sanitize_text_field( wp_unslash( $_POST['duration'] ?? '' ) );
-	$form_notes = sanitize_textarea_field( wp_unslash( $_POST['notes'] ?? '' ) );
-	$form_prod  = sanitize_title(      wp_unslash( $_POST['produkt'] ?? '' ) );
-	$form_type  = sanitize_text_field( wp_unslash( $_POST['type']  ?? '' ) );
+	$form_name  = sanitize_text_field( wp_unslash( $_POST['s247_name']  ?? '' ) );
+	$form_email = sanitize_email(      wp_unslash( $_POST['s247_email'] ?? '' ) );
+	$form_phone = sanitize_text_field( wp_unslash( $_POST['s247_phone'] ?? '' ) );
+	$form_date  = sanitize_text_field( wp_unslash( $_POST['s247_date']  ?? '' ) );
+	$form_start = sanitize_text_field( wp_unslash( $_POST['s247_start'] ?? '' ) );
+	$form_dur   = sanitize_text_field( wp_unslash( $_POST['s247_duration'] ?? '' ) );
+	$form_notes = sanitize_textarea_field( wp_unslash( $_POST['s247_notes'] ?? '' ) );
+	$form_prod  = sanitize_title(      wp_unslash( $_POST['s247_produkt'] ?? '' ) );
+	$form_type  = sanitize_text_field( wp_unslash( $_POST['s247_type']  ?? '' ) );
 
 	if ( ! $form_name )              { $errors[] = __( 'Udfyld dit navn.', 'studie247' ); }
 	if ( ! is_email( $form_email ) ) { $errors[] = __( 'Indtast en gyldig email.', 'studie247' ); }
@@ -303,11 +303,11 @@ get_header();
 
 					<form method="post" action="" class="book2__form" data-book-form novalidate>
 						<?php wp_nonce_field( 's247_book', 's247_book_nonce' ); ?>
-						<input type="hidden" name="produkt"  value="<?php echo esc_attr( $form_prod ); ?>">
-						<input type="hidden" name="type"     value="<?php echo esc_attr( $form_type ); ?>">
-						<input type="hidden" name="date"     value="" data-field-date>
-						<input type="hidden" name="start"    value="" data-field-time>
-						<input type="hidden" name="duration" value="" data-field-duration>
+						<input type="hidden" name="s247_produkt"  value="<?php echo esc_attr( $form_prod ); ?>">
+						<input type="hidden" name="s247_type"     value="<?php echo esc_attr( $form_type ); ?>">
+						<input type="hidden" name="s247_date"     value="" data-field-date>
+						<input type="hidden" name="s247_start"    value="" data-field-time>
+						<input type="hidden" name="s247_duration" value="" data-field-duration>
 
 						<h3 class="book2__section-title"><span class="book2__step-num">03</span> <?php esc_html_e( 'Dine oplysninger', 'studie247' ); ?></h3>
 
@@ -322,19 +322,19 @@ get_header();
 
 						<label class="book-field">
 							<span class="book-field__label"><?php esc_html_e( 'Navn', 'studie247' ); ?></span>
-							<input type="text"  name="name"  value="<?php echo esc_attr( $form_name ); ?>" required>
+							<input type="text"  name="s247_name"  value="<?php echo esc_attr( $form_name ); ?>" required>
 						</label>
 						<label class="book-field">
 							<span class="book-field__label"><?php esc_html_e( 'E-mail', 'studie247' ); ?></span>
-							<input type="email" name="email" value="<?php echo esc_attr( $form_email ); ?>" required>
+							<input type="email" name="s247_email" value="<?php echo esc_attr( $form_email ); ?>" required>
 						</label>
 						<label class="book-field">
 							<span class="book-field__label"><?php esc_html_e( 'Telefon', 'studie247' ); ?></span>
-							<input type="tel"   name="phone" value="<?php echo esc_attr( $form_phone ); ?>">
+							<input type="tel"   name="s247_phone" value="<?php echo esc_attr( $form_phone ); ?>">
 						</label>
 						<label class="book-field">
 							<span class="book-field__label"><?php esc_html_e( 'Noter', 'studie247' ); ?></span>
-							<textarea name="notes" rows="3" placeholder="<?php esc_attr_e( 'Ekstra ønsker eller spørgsmål?', 'studie247' ); ?>"><?php echo esc_textarea( $form_notes ); ?></textarea>
+							<textarea name="s247_notes" rows="3" placeholder="<?php esc_attr_e( 'Ekstra ønsker eller spørgsmål?', 'studie247' ); ?>"><?php echo esc_textarea( $form_notes ); ?></textarea>
 						</label>
 
 						<button type="submit" class="btn btn--primary btn--lg" data-book-submit disabled>
