@@ -207,3 +207,66 @@ add_action( 'save_post_testimonial', function ( $post_id ) {
 		}
 	}
 } );
+
+/** ───────── Udlejning ───────── */
+add_action( 'add_meta_boxes', function () {
+	add_meta_box(
+		's247_udlejning_fields',
+		__( 'Udlejnings-detaljer', 'studie247' ),
+		'studie247_render_udlejning_meta',
+		'udlejning_item',
+		'normal',
+		'high'
+	);
+} );
+
+function studie247_render_udlejning_meta( $post ) {
+	wp_nonce_field( 's247_udlejning_meta', 's247_udlejning_nonce' );
+	$pris_dag  = get_post_meta( $post->ID, '_s247_pris_dag', true );
+	$pris_uge  = get_post_meta( $post->ID, '_s247_pris_uge', true );
+	$deposit   = get_post_meta( $post->ID, '_s247_deposit', true );
+	$sku       = get_post_meta( $post->ID, '_s247_sku', true );
+	$in_stock  = get_post_meta( $post->ID, '_s247_in_stock', true );
+	?>
+	<p>
+		<label for="s247_pris_dag"><strong><?php esc_html_e( 'Pris pr. dag (fx 299 kr)', 'studie247' ); ?></strong></label><br>
+		<input type="text" id="s247_pris_dag" name="s247_pris_dag" value="<?php echo esc_attr( $pris_dag ); ?>" style="width:100%">
+	</p>
+	<p>
+		<label for="s247_pris_uge"><strong><?php esc_html_e( 'Pris pr. uge (valgfrit)', 'studie247' ); ?></strong></label><br>
+		<input type="text" id="s247_pris_uge" name="s247_pris_uge" value="<?php echo esc_attr( $pris_uge ); ?>" style="width:100%">
+	</p>
+	<p>
+		<label for="s247_deposit"><strong><?php esc_html_e( 'Depositum (valgfrit)', 'studie247' ); ?></strong></label><br>
+		<input type="text" id="s247_deposit" name="s247_deposit" value="<?php echo esc_attr( $deposit ); ?>" style="width:100%">
+	</p>
+	<p>
+		<label for="s247_sku"><strong><?php esc_html_e( 'Vare-nr./SKU (valgfrit)', 'studie247' ); ?></strong></label><br>
+		<input type="text" id="s247_sku" name="s247_sku" value="<?php echo esc_attr( $sku ); ?>" style="width:100%">
+	</p>
+	<p>
+		<label>
+			<input type="checkbox" name="s247_in_stock" value="1" <?php checked( '1', $in_stock ); ?>>
+			<?php esc_html_e( 'På lager / kan lejes nu', 'studie247' ); ?>
+		</label>
+	</p>
+	<?php
+}
+
+add_action( 'save_post_udlejning_item', function ( $post_id ) {
+	if ( ! isset( $_POST['s247_udlejning_nonce'] ) || ! wp_verify_nonce( $_POST['s247_udlejning_nonce'], 's247_udlejning_meta' ) ) {
+		return;
+	}
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+	foreach ( array( 's247_pris_dag', 's247_pris_uge', 's247_deposit', 's247_sku' ) as $field ) {
+		if ( isset( $_POST[ $field ] ) ) {
+			update_post_meta( $post_id, '_' . $field, sanitize_text_field( wp_unslash( $_POST[ $field ] ) ) );
+		}
+	}
+	update_post_meta( $post_id, '_s247_in_stock', ! empty( $_POST['s247_in_stock'] ) ? '1' : '0' );
+} );
