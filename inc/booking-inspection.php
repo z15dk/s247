@@ -343,6 +343,14 @@ add_action( 'manage_booking_posts_custom_column', function ( $col, $post_id ) {
 /* ───────── Historik på udlejnings-produktet ───────── */
 add_action( 'add_meta_boxes', function () {
 	add_meta_box(
+		's247_product_state',
+		__( 'Tilstands-dokumentation (intern)', 'studie247' ),
+		'studie247_render_product_state',
+		'udlejning_item',
+		'normal',
+		'high'
+	);
+	add_meta_box(
 		's247_product_history',
 		__( 'Udlejnings-historik', 'studie247' ),
 		'studie247_render_product_history',
@@ -350,6 +358,30 @@ add_action( 'add_meta_boxes', function () {
 		'normal',
 		'low'
 	);
+} );
+
+function studie247_render_product_state( $post ) {
+	wp_nonce_field( 's247_state_images', 's247_state_images_nonce' );
+	$value = get_post_meta( $post->ID, '_s247_state_images', true );
+	?>
+	<p style="margin:0 0 10px;color:#666;font-size:13px;">
+		<?php esc_html_e( 'Billeder af produktets tilstand som reference. Vises kun i admin — ikke på forsiden. Kan importeres via CSV eller tilføjes manuelt her.', 'studie247' ); ?>
+	</p>
+	<?php studie247_render_gallery_picker( 's247_state_images', $value ); ?>
+	<?php
+}
+
+add_action( 'save_post_udlejning_item', function ( $post_id ) {
+	if ( ! isset( $_POST['s247_state_images_nonce'] ) || ! wp_verify_nonce( $_POST['s247_state_images_nonce'], 's247_state_images' ) ) {
+		return;
+	}
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) { return; }
+	if ( ! current_user_can( 'edit_post', $post_id ) ) { return; }
+
+	if ( isset( $_POST['s247_state_images'] ) ) {
+		$clean = implode( ',', array_filter( array_map( 'intval', explode( ',', (string) wp_unslash( $_POST['s247_state_images'] ) ) ) ) );
+		update_post_meta( $post_id, '_s247_state_images', $clean );
+	}
 } );
 
 function studie247_render_product_history( $post ) {

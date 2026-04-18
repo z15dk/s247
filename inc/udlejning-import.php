@@ -74,12 +74,16 @@ function studie247_udlejning_import_page() {
 
 		<p style="max-width:720px;">
 			<?php esc_html_e( 'Upload enten en CSV-fil eller en ZIP. Kolonner: ', 'studie247' ); ?>
-			<code>title, excerpt, content, pris_dag, pris_uge, deposit, sku, in_stock, kategori, image_url, image_file</code>.
+			<code>title, excerpt, content, pris_dag, pris_uge, deposit, sku, in_stock, kategori, image_url, image_file, state_image_1..4, state_url_1..4</code>.
 			<?php esc_html_e( 'Kun "title" er påkrævet. Eksisterende produkter matches via SKU → title og opdateres i stedet for at duplikere.', 'studie247' ); ?>
 		</p>
 		<p style="max-width:720px;background:#fff;border-left:3px solid #9E2B25;padding:10px 14px;">
 			<strong><?php esc_html_e( 'ZIP-smart-import:', 'studie247' ); ?></strong>
 			<?php esc_html_e( 'Pak CSV + en billed-mappe sammen (fx "produkter.csv" og "images/sony-fs6.jpg"). I CSV\'en skriver du bare filnavnet i "image_file" (fx sony-fs6.jpg). Systemet finder billedet i ZIP\'en og uploader det automatisk.', 'studie247' ); ?>
+		</p>
+		<p style="max-width:720px;background:#fff;border-left:3px solid #0a7c2f;padding:10px 14px;">
+			<strong><?php esc_html_e( 'Tilstands-dokumentation:', 'studie247' ); ?></strong>
+			<?php esc_html_e( 'Tilføj op til 4 billeder pr. produkt til intern tilstands-dokumentation via kolonnerne state_image_1 til state_image_4 (filnavne i ZIP) eller state_url_1 til state_url_4 (URL\'er). Billederne gemmes på produktet og vises kun i admin — ikke på forsiden.', 'studie247' ); ?>
 		</p>
 
 		<form method="post" enctype="multipart/form-data" style="background:#fff;padding:20px;border:1px solid #ccd0d4;max-width:720px;">
@@ -123,18 +127,19 @@ add_action( 'admin_init', function () {
 	header( 'Content-Disposition: attachment; filename="studie247-udlejning-skabelon.csv"' );
 	// UTF-8 BOM så Excel åbner Ã¦/Ã¸/Ã¥ korrekt.
 	echo "\xEF\xBB\xBF";
-	echo "title,excerpt,content,pris_dag,pris_uge,deposit,sku,in_stock,kategori,image_url\n";
+	$cols = array( 'title','excerpt','content','pris_dag','pris_uge','deposit','sku','in_stock','kategori','image_url','image_file','state_image_1','state_image_2','state_image_3','state_image_4','state_url_1','state_url_2','state_url_3','state_url_4' );
+	echo implode( ',', $cols ) . "\n";
 	$rows = array(
-		array( 'Sony FS6',           'Fuld-frame cinema-kamera',      'Cinematisk farvegengivelse, S-Cinetone, klar til plug-and-play.',            '1.499 kr', '5.999 kr', '10.000 kr', 'CAM-FS6',    '1', 'Kamera',       '' ),
-		array( 'Canon R5 C',         'Hybrid still + 8K video',       '8K RAW, fuld-frame sensor, inkl. 2 batterier og CFexpress-kort.',            '1.299 kr', '4.999 kr', '8.000 kr',  'CAM-R5C',    '1', 'Kamera',       '' ),
-		array( 'GoPro Hero 10',      'Action-kamera',                 'Vandtæt, stabiliseret, kommer med 3 batterier og ladestation.',              '299 kr',   '999 kr',   '',          'CAM-GH10',   '1', 'Kamera',       '' ),
-		array( 'Aputure 600D Pro',   'Daylight COB-lys 600W',         'Bowens-mount, kører på bi-color. Inkluderer lantern + softbox.',             '599 kr',   '2.299 kr', '3.000 kr',  'LYS-A600',   '1', 'Lys',          '' ),
-		array( 'Pixel Lyspakke',     '3 lamper + stativer',           'Softbox hovedlys, 2 spots og 3 C-stands. Perfekt til talking-head.',         '449 kr',   '1.499 kr', '2.000 kr',  'LYS-PIXEL',  '1', 'Lys',          '' ),
-		array( 'Sennheiser MKH-416', 'Shotgun-mikrofon',              'Broadcast-standard. Kommer med blimp, pistol-grip og XLR-kabel.',            '349 kr',   '1.199 kr', '2.500 kr',  'LYD-MKH',    '1', 'Lyd',          '' ),
-		array( 'Zoom F6 Field Recorder', '32-bit floating recorder',  '6 kanaler, timecode, SD-kort inkl. Ingen gain at sætte.',                    '299 kr',   '999 kr',   '',          'LYD-ZF6',    '1', 'Lyd',          '' ),
-		array( 'DJI Ronin 4D',       'Gimbal med indbygget kamera',   '4-axis stabilisering, LiDAR autofocus. Til bevægelses-shots.',               '999 kr',   '3.499 kr', '6.000 kr',  'GRIP-R4D',   '1', 'Grip|Kamera',  '' ),
-		array( 'Manfrotto Slider',   '100 cm rail-slider',            'Motoriseret. Strøm via V-mount eller net.',                                  '199 kr',   '699 kr',   '',          'GRIP-SLD',  '1', 'Grip',         '' ),
-		array( 'Teleprompter 15"',   'iPad-baseret prompter',         'Inkl. app. Passer på alle kameraer med 15mm rods.',                          '299 kr',   '999 kr',   '',          'GRIP-PROM', '0', 'Grip',         '' ),
+		array( 'Sony FS6',           'Fuld-frame cinema-kamera',      'Cinematisk farvegengivelse, S-Cinetone, klar til plug-and-play.',            '1.499 kr', '5.999 kr', '10.000 kr', 'CAM-FS6',    '1', 'Kamera',       '', 'sony-fs6.jpg',    'sony-fs6-state-1.jpg','sony-fs6-state-2.jpg','sony-fs6-state-3.jpg','sony-fs6-state-4.jpg','','','','' ),
+		array( 'Canon R5 C',         'Hybrid still + 8K video',       '8K RAW, fuld-frame sensor, inkl. 2 batterier og CFexpress-kort.',            '1.299 kr', '4.999 kr', '8.000 kr',  'CAM-R5C',    '1', 'Kamera',       '', 'canon-r5c.jpg',   'canon-r5c-state-1.jpg','canon-r5c-state-2.jpg','','','','','','' ),
+		array( 'GoPro Hero 10',      'Action-kamera',                 'Vandtæt, stabiliseret, kommer med 3 batterier og ladestation.',              '299 kr',   '999 kr',   '',          'CAM-GH10',   '1', 'Kamera',       '', 'gopro-hero10.jpg','','','','','','','','' ),
+		array( 'Aputure 600D Pro',   'Daylight COB-lys 600W',         'Bowens-mount, kører på bi-color. Inkluderer lantern + softbox.',             '599 kr',   '2.299 kr', '3.000 kr',  'LYS-A600',   '1', 'Lys',          '', 'aputure-600d.jpg','','','','','','','','' ),
+		array( 'Pixel Lyspakke',     '3 lamper + stativer',           'Softbox hovedlys, 2 spots og 3 C-stands. Perfekt til talking-head.',         '449 kr',   '1.499 kr', '2.000 kr',  'LYS-PIXEL',  '1', 'Lys',          '', 'pixel-pakke.jpg', '','','','','','','','' ),
+		array( 'Sennheiser MKH-416', 'Shotgun-mikrofon',              'Broadcast-standard. Kommer med blimp, pistol-grip og XLR-kabel.',            '349 kr',   '1.199 kr', '2.500 kr',  'LYD-MKH',    '1', 'Lyd',          '', 'mkh416.jpg',      '','','','','','','','' ),
+		array( 'Zoom F6 Field Recorder', '32-bit floating recorder',  '6 kanaler, timecode, SD-kort inkl. Ingen gain at sætte.',                    '299 kr',   '999 kr',   '',          'LYD-ZF6',    '1', 'Lyd',          '', 'zoom-f6.jpg',     '','','','','','','','' ),
+		array( 'DJI Ronin 4D',       'Gimbal med indbygget kamera',   '4-axis stabilisering, LiDAR autofocus. Til bevægelses-shots.',               '999 kr',   '3.499 kr', '6.000 kr',  'GRIP-R4D',   '1', 'Grip|Kamera',  '', 'ronin-4d.jpg',    '','','','','','','','' ),
+		array( 'Manfrotto Slider',   '100 cm rail-slider',            'Motoriseret. Strøm via V-mount eller net.',                                  '199 kr',   '699 kr',   '',          'GRIP-SLD',  '1', 'Grip',         '', 'slider.jpg',      '','','','','','','','' ),
+		array( 'Teleprompter 15"',   'iPad-baseret prompter',         'Inkl. app. Passer på alle kameraer med 15mm rods.',                          '299 kr',   '999 kr',   '',          'GRIP-PROM', '0', 'Grip',         '', 'prompter.jpg',    '','','','','','','','' ),
 	);
 	foreach ( $rows as $r ) {
 		echo '"' . implode( '","', array_map( function ( $v ) { return str_replace( '"', '""', $v ); }, $r ) ) . '"' . "\n";
@@ -281,6 +286,32 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 				set_post_thumbnail( $post_id, $attach_id );
 			} elseif ( is_wp_error( $attach_id ) ) {
 				$result['messages'][] = sprintf( 'Række %d: billede-fejl — %s', $row_num, $attach_id->get_error_message() );
+			}
+
+			// Tilstands-billeder (intern doku) — state_image_1..4 og state_url_1..4.
+			$state_ids = array();
+			for ( $si = 1; $si <= 4; $si++ ) {
+				$state_aid = 0;
+				$file_key  = 'state_image_' . $si;
+				$url_key   = 'state_url_'   . $si;
+				if ( ! empty( $data[ $file_key ] ) && $image_dir ) {
+					$local = studie247_find_image_in_dir( $image_dir, $data[ $file_key ] );
+					if ( $local ) { $state_aid = studie247_sideload_local( $local, $post_id ); }
+				}
+				if ( ! $state_aid && ! empty( $data[ $url_key ] ) && filter_var( $data[ $url_key ], FILTER_VALIDATE_URL ) ) {
+					$state_aid = media_sideload_image( $data[ $url_key ], $post_id, null, 'id' );
+				}
+				if ( $state_aid && ! is_wp_error( $state_aid ) ) {
+					$state_ids[] = (int) $state_aid;
+				} elseif ( is_wp_error( $state_aid ) ) {
+					$result['messages'][] = sprintf( 'Række %d: tilstands-billede %d fejlede — %s', $row_num, $si, $state_aid->get_error_message() );
+				}
+			}
+			if ( ! empty( $state_ids ) ) {
+				// Flet med evt. eksisterende (undgå duplikater).
+				$existing_state = array_filter( array_map( 'intval', explode( ',', (string) get_post_meta( $post_id, '_s247_state_images', true ) ) ) );
+				$merged         = array_values( array_unique( array_merge( $existing_state, $state_ids ) ) );
+				update_post_meta( $post_id, '_s247_state_images', implode( ',', $merged ) );
 			}
 		}
 
