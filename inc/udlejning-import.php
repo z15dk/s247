@@ -25,7 +25,8 @@ add_action( 'admin_menu', function () {
 } );
 
 function studie247_udlejning_import_page() {
-	$result = null;
+	$result      = null;
+	$batch_start = null;
 
 	if ( ! empty( $_POST['s247_udlejning_csv_nonce'] )
 		&& wp_verify_nonce( $_POST['s247_udlejning_csv_nonce'], 's247_udlejning_csv' )
@@ -33,19 +34,93 @@ function studie247_udlejning_import_page() {
 	) {
 		$tmp  = $_FILES['s247_csv']['tmp_name'];
 		$name = isset( $_FILES['s247_csv']['name'] ) ? strtolower( $_FILES['s247_csv']['name'] ) : '';
-		// Global flag for WebP-konvertering under denne import.
 		if ( ! defined( 'S247_IMPORT_WEBP' ) ) {
 			define( 'S247_IMPORT_WEBP', ! empty( $_POST['s247_webp'] ) );
 		}
-		if ( substr( $name, -4 ) === '.zip' ) {
-			$result = studie247_udlejning_import_zip( $tmp, ! empty( $_POST['s247_download_images'] ) );
+		$download_images = ! empty( $_POST['s247_download_images'] );
+
+		// Forbered batch: parse CSV til array og gem i transient.
+		$prepared = studie247_prepare_import( $tmp, $name, $download_images );
+		if ( ! empty( $prepared['error'] ) ) {
+			$result = array( 'error' => $prepared['error'], 'created' => 0, 'updated' => 0, 'skipped' => 0, 'messages' => array() );
 		} else {
-			$result = studie247_udlejning_import_csv( $tmp, ! empty( $_POST['s247_download_images'] ) );
+			$batch_start = $prepared['id'];
 		}
 	}
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Importér udstyr fra CSV', 'studie247' ); ?></h1>
+
+		<?php if ( $batch_start ) : ?>
+			<div id="s247-import-progress" data-import-id="<?php echo esc_attr( $batch_start ); ?>" style="background:#fff;border:1px solid #ccd0d4;padding:20px;max-width:720px;margin-bottom:20px;">
+				<h2 style="margin-top:0;"><?php esc_html_e( 'Importerer …', 'studie247' ); ?></h2>
+				<p class="s247-import-progress__status"><?php esc_html_e( 'Klargør batch …', 'studie247' ); ?></p>
+				<div style="background:#f0f0f1;border-radius:6px;height:14px;overflow:hidden;margin:12px 0;">
+					<div class="s247-import-progress__bar" style="background:#9E2B25;height:100%;width:0%;transition:width 300ms ease;"></div>
+				</div>
+				<p class="s247-import-progress__count" style="font-family:monospace;font-size:13px;color:#666;">0 / ?</p>
+				<details class="s247-import-progress__log" style="margin-top:12px;" open>
+					<summary><?php esc_html_e( 'Log', 'studie247' ); ?></summary>
+					<ul style="margin:8px 0 0 20px;font-size:12px;font-family:monospace;max-height:260px;overflow:auto;"></ul>
+				</details>
+			</div>
+			<script>
+			(function(){
+				var el   = document.getElementById('s247-import-progress');
+				var id   = el.dataset.importId;
+				var bar  = el.querySelector('.s247-import-progress__bar');
+				var cnt  = el.querySelector('.s247-import-progress__count');
+				var stat = el.querySelector('.s247-import-progress__status');
+				var log  = el.querySelector('.s247-import-progress__log ul');
+				var ajaxUrl = '<?php echo esc_url_raw( admin_url( 'admin-ajax.php' ) ); ?>';
+				var nonce   = '<?php echo esc_js( wp_create_nonce( 's247_import_batch' ) ); ?>';
+				var offset = 0;
+				var totals = { created: 0, updated: 0, skipped: 0 };
+
+				function step(){
+					var data = new FormData();
+					data.append('action', 's247_import_batch');
+					data.append('nonce', nonce);
+					data.append('id', id);
+					data.append('offset', offset);
+
+					fetch(ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
+						.then(function(r){ return r.json(); })
+						.then(function(res){
+							if (!res.success) {
+								stat.textContent = 'Fejl: ' + (res.data && res.data.message || 'ukendt');
+								return;
+							}
+							var d = res.data;
+							offset = d.next_offset;
+							totals.created += d.created;
+							totals.updated += d.updated;
+							totals.skipped += d.skipped;
+							var pct = d.total > 0 ? Math.round((offset / d.total) * 100) : 100;
+							bar.style.width = pct + '%';
+							cnt.textContent = offset + ' / ' + d.total + ' — ' +
+								totals.created + ' oprettet · ' + totals.updated + ' opdateret · ' + totals.skipped + ' sprunget over';
+							(d.messages || []).forEach(function(m){
+								var li = document.createElement('li');
+								li.textContent = m;
+								log.appendChild(li);
+							});
+							if (d.done) {
+								stat.innerHTML = '<strong style="color:#0a7c2f;">✓ Import færdig</strong>';
+							} else {
+								stat.textContent = 'Behandler rækker ' + (offset - d.batch_size + 1) + '–' + offset + ' …';
+								setTimeout(step, 400);
+							}
+						})
+						.catch(function(err){
+							stat.textContent = 'Netværksfejl — prøver igen om 3 sek …';
+							setTimeout(step, 3000);
+						});
+				}
+				step();
+			})();
+			</script>
+		<?php endif; ?>
 
 		<?php if ( $result ) : ?>
 			<?php if ( ! empty( $result['error'] ) ) : ?>
@@ -171,6 +246,10 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 		'error'    => '',
 	);
 
+	// Giv importen luft til at hente mange billeder.
+	@set_time_limit( 0 );
+	@ini_set( 'memory_limit', '512M' );
+
 	$handle = @fopen( $path, 'r' );
 	if ( ! $handle ) {
 		$result['error'] = __( 'Kunne ikke åbne filen.', 'studie247' );
@@ -185,8 +264,9 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 		"\t" => substr_count( $first, "\t" ),
 	);
 	arsort( $counts );
-	$sep = array_key_first( $counts );
-	if ( 0 === $counts[ $sep ] ) { $sep = ','; }
+	reset( $counts );
+	$sep = key( $counts );
+	if ( ! $sep || 0 === $counts[ $sep ] ) { $sep = ','; }
 	rewind( $handle );
 
 	$alias_map = array(
@@ -262,6 +342,10 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 	while ( ( $row = fgetcsv( $handle, 0, $sep ) ) !== false ) {
 		$row_num++;
 		if ( count( $row ) === 1 && '' === trim( $row[0] ) ) { continue; } // tom linje
+
+		// Reset PHP's timeout for hver række så vi overlever store imports.
+		@set_time_limit( 60 );
+		try {
 
 		$data = array();
 		foreach ( $header as $i => $col ) {
@@ -382,21 +466,33 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 				$state_alt = sprintf( '%s — tilstand %d', $title, $si );
 				$file_key  = 'state_image_' . $si;
 				$url_key   = 'state_url_'   . $si;
-				if ( ! empty( $data[ $file_key ] ) && $image_dir ) {
-					$local = studie247_find_image_in_dir( $image_dir, $data[ $file_key ] );
-					if ( $local ) { $state_aid = studie247_sideload_local( $local, $post_id, $state_alt ); }
+				$has_file  = ! empty( $data[ $file_key ] );
+				$has_url   = ! empty( $data[ $url_key ] );
+				if ( ! $has_file && ! $has_url ) { continue; }
+
+				try {
+					if ( $has_file && $image_dir ) {
+						$local = studie247_find_image_in_dir( $image_dir, $data[ $file_key ] );
+						if ( $local ) { $state_aid = studie247_sideload_local( $local, $post_id, $state_alt ); }
+					}
+					if ( ! $state_aid && $has_url && filter_var( $data[ $url_key ], FILTER_VALIDATE_URL ) ) {
+						$state_aid = studie247_sideload_url( $data[ $url_key ], $post_id, $state_alt );
+					}
+				} catch ( Throwable $e ) {
+					$result['messages'][] = sprintf( 'Række %d: tilstands-billede %d kastede en exception — %s', $row_num, $si, $e->getMessage() );
+					continue;
 				}
-				if ( ! $state_aid && ! empty( $data[ $url_key ] ) && filter_var( $data[ $url_key ], FILTER_VALIDATE_URL ) ) {
-					$state_aid = studie247_sideload_url( $data[ $url_key ], $post_id, $state_alt );
-				}
+
 				if ( $state_aid && ! is_wp_error( $state_aid ) ) {
 					$state_ids[] = (int) $state_aid;
+					$result['messages'][] = sprintf( 'Række %d (%s): tilstands-billede %d importeret (ID %d).', $row_num, $title, $si, $state_aid );
 				} elseif ( is_wp_error( $state_aid ) ) {
-					$result['messages'][] = sprintf( 'Række %d: tilstands-billede %d fejlede — %s', $row_num, $si, $state_aid->get_error_message() );
+					$result['messages'][] = sprintf( 'Række %d (%s): tilstands-billede %d fejlede — %s', $row_num, $title, $si, $state_aid->get_error_message() );
+				} else {
+					$result['messages'][] = sprintf( 'Række %d (%s): tilstands-billede %d blev ikke importeret.', $row_num, $title, $si );
 				}
 			}
 			if ( ! empty( $state_ids ) ) {
-				// Flet med evt. eksisterende (undgå duplikater).
 				$existing_state = array_filter( array_map( 'intval', explode( ',', (string) get_post_meta( $post_id, '_s247_state_images', true ) ) ) );
 				$merged         = array_values( array_unique( array_merge( $existing_state, $state_ids ) ) );
 				update_post_meta( $post_id, '_s247_state_images', implode( ',', $merged ) );
@@ -407,6 +503,11 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 			$result['updated']++;
 		} else {
 			$result['created']++;
+		}
+		} catch ( Throwable $e ) {
+			$result['skipped']++;
+			$result['messages'][] = sprintf( 'Række %d crashede — %s', $row_num, $e->getMessage() );
+			continue;
 		}
 	}
 	fclose( $handle );
@@ -677,4 +778,318 @@ function studie247_to_webp( $src_path, $quality = 82 ) {
 	$ok  = @imagewebp( $img, $out, $quality );
 	imagedestroy( $img );
 	return ( $ok && is_readable( $out ) ) ? $out : false;
+}
+
+/**
+ * Forbered import: parse CSV/ZIP, gem rækker i transient, returnér batch-ID.
+ */
+function studie247_prepare_import( $upload_tmp, $upload_name, $download_images = true ) {
+	$image_dir = '';
+	$csv_path  = $upload_tmp;
+	$name      = strtolower( (string) $upload_name );
+
+	if ( substr( $name, -4 ) === '.zip' ) {
+		if ( ! class_exists( 'ZipArchive' ) ) {
+			return array( 'error' => 'PHP mangler ZipArchive — upload CSV alene.' );
+		}
+		$zip = new ZipArchive();
+		if ( true !== $zip->open( $upload_tmp ) ) {
+			return array( 'error' => 'Kunne ikke åbne ZIP-filen.' );
+		}
+		$upload_dir = wp_upload_dir();
+		$image_dir  = trailingslashit( $upload_dir['basedir'] ) . 's247-import-' . wp_generate_password( 8, false );
+		if ( ! wp_mkdir_p( $image_dir ) ) {
+			$zip->close();
+			return array( 'error' => 'Kunne ikke oprette midlertidig mappe.' );
+		}
+		$zip->extractTo( $image_dir );
+		$zip->close();
+
+		$rii = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $image_dir, RecursiveDirectoryIterator::SKIP_DOTS ) );
+		foreach ( $rii as $file ) {
+			if ( $file->isFile() && strtolower( $file->getExtension() ) === 'csv' ) {
+				$csv_path = $file->getPathname();
+				break;
+			}
+		}
+		if ( $csv_path === $upload_tmp ) {
+			return array( 'error' => 'Ingen CSV fundet i ZIP.' );
+		}
+	}
+
+	$rows = studie247_parse_csv_to_rows( $csv_path );
+	if ( ! empty( $rows['error'] ) ) {
+		return $rows;
+	}
+
+	$id = 's247_import_' . wp_generate_password( 12, false );
+	set_transient( $id, array(
+		'rows'            => $rows['rows'],
+		'image_dir'       => $image_dir,
+		'download_images' => $download_images,
+		'webp'            => defined( 'S247_IMPORT_WEBP' ) && S247_IMPORT_WEBP,
+	), 2 * HOUR_IN_SECONDS );
+
+	return array( 'id' => $id, 'total' => count( $rows['rows'] ) );
+}
+
+/**
+ * Parse CSV (uden at lave posts endnu) — returnér bare rækker som map.
+ */
+function studie247_parse_csv_to_rows( $path ) {
+	$handle = @fopen( $path, 'r' );
+	if ( ! $handle ) { return array( 'error' => 'Kunne ikke åbne CSV.' ); }
+
+	$first  = fgets( $handle );
+	$counts = array( ',' => substr_count( $first, ',' ), ';' => substr_count( $first, ';' ), "\t" => substr_count( $first, "\t" ) );
+	arsort( $counts );
+	reset( $counts );
+	$sep = key( $counts );
+	if ( ! $sep || 0 === $counts[ $sep ] ) { $sep = ','; }
+	rewind( $handle );
+
+	$alias_map = array(
+		'tittel'=>'title','titel'=>'title','navn'=>'title',
+		'kort beskrivelse'=>'excerpt','beskrivelse'=>'excerpt',
+		'lang beskrivelse'=>'content',
+		'dags pris'=>'pris_dag','dagspris'=>'pris_dag','pris pr dag'=>'pris_dag','pris pr. dag'=>'pris_dag',
+		'uge pris'=>'pris_uge','ugepris'=>'pris_uge','pris pr uge'=>'pris_uge',
+		'evt depositum'=>'deposit','depositum'=>'deposit',
+		'tags'=>'sku','tag'=>'sku','vare-nr'=>'sku','varenr'=>'sku',
+		'antal'=>'antal','stk'=>'antal','quantity'=>'antal',
+		'ejer'=>'ejer',
+		'evt serienummer'=>'serienummer','serienummer'=>'serienummer','serie'=>'serienummer',
+		'dokumentation af stand 1'=>'state_url_1','dokumentation af stand 2'=>'state_url_2',
+		'dokumentation af stand 3'=>'state_url_3','dokumentation af stand 4'=>'state_url_4',
+		'stand 1'=>'state_url_1','stand 2'=>'state_url_2','stand 3'=>'state_url_3','stand 4'=>'state_url_4',
+	);
+	$normalize = function ( $h ) use ( $alias_map ) {
+		$key = str_replace( "\xEF\xBB\xBF", '', (string) $h );
+		$key = strtolower( trim( $key ) );
+		$key = preg_replace( '/\s+/', ' ', $key );
+		return isset( $alias_map[ $key ] ) ? $alias_map[ $key ] : $key;
+	};
+
+	$header = null;
+	for ( $i = 0; $i < 3; $i++ ) {
+		$c = fgetcsv( $handle, 0, $sep );
+		if ( false === $c ) { break; }
+		$m = array_map( $normalize, $c );
+		if ( in_array( 'title', $m, true ) ) { $header = $m; break; }
+	}
+	if ( ! $header ) {
+		fclose( $handle );
+		return array( 'error' => 'Ingen title-kolonne fundet i de første 3 rækker.' );
+	}
+
+	$rows = array();
+	while ( ( $row = fgetcsv( $handle, 0, $sep ) ) !== false ) {
+		if ( count( $row ) === 1 && '' === trim( $row[0] ) ) { continue; }
+		$data = array();
+		foreach ( $header as $i => $col ) {
+			$data[ $col ] = isset( $row[ $i ] ) ? trim( $row[ $i ] ) : '';
+		}
+		if ( empty( $data['title'] ) ) { continue; }
+		$rows[] = $data;
+	}
+	fclose( $handle );
+	return array( 'rows' => $rows );
+}
+
+/**
+ * AJAX: behandl en batch af rækker.
+ */
+add_action( 'wp_ajax_s247_import_batch', function () {
+	check_ajax_referer( 's247_import_batch', 'nonce' );
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		wp_send_json_error( array( 'message' => 'Manglende rettigheder.' ) );
+	}
+
+	$id     = sanitize_text_field( wp_unslash( $_POST['id']     ?? '' ) );
+	$offset = (int) ( $_POST['offset'] ?? 0 );
+	$batch  = 3;
+
+	$state = get_transient( $id );
+	if ( ! $state || empty( $state['rows'] ) ) {
+		wp_send_json_error( array( 'message' => 'Import-data udløb. Upload CSV igen.' ) );
+	}
+
+	@set_time_limit( 120 );
+	@ini_set( 'memory_limit', '512M' );
+
+	$rows            = $state['rows'];
+	$image_dir       = $state['image_dir'];
+	$download_images = $state['download_images'];
+	if ( ! empty( $state['webp'] ) && ! defined( 'S247_IMPORT_WEBP' ) ) {
+		define( 'S247_IMPORT_WEBP', true );
+	}
+
+	$total   = count( $rows );
+	$end     = min( $offset + $batch, $total );
+	$chunk   = array_slice( $rows, $offset, $batch, true );
+
+	$counts  = array( 'created' => 0, 'updated' => 0, 'skipped' => 0 );
+	$msgs    = array();
+
+	foreach ( $chunk as $idx => $data ) {
+		$row_num = $idx + 2; // +2 fordi vi hoppede over header
+		try {
+			$outcome = studie247_import_single_row( $data, $download_images, $image_dir );
+			$counts[ $outcome['status'] ]++;
+			foreach ( (array) $outcome['messages'] as $m ) {
+				$msgs[] = 'R' . $row_num . ' · ' . $m;
+			}
+		} catch ( Throwable $e ) {
+			$counts['skipped']++;
+			$msgs[] = 'R' . $row_num . ' crashede — ' . $e->getMessage();
+		}
+	}
+
+	$next_offset = $end;
+	$done        = $next_offset >= $total;
+	if ( $done && ! empty( $image_dir ) && is_dir( $image_dir ) ) {
+		studie247_rrmdir( $image_dir );
+		delete_transient( $id );
+	}
+
+	wp_send_json_success( array(
+		'next_offset' => $next_offset,
+		'total'       => $total,
+		'batch_size'  => count( $chunk ),
+		'done'        => $done,
+		'created'     => $counts['created'],
+		'updated'     => $counts['updated'],
+		'skipped'     => $counts['skipped'],
+		'messages'    => $msgs,
+	) );
+} );
+
+/**
+ * Behandl én række — genbruger logikken fra den oprindelige importer.
+ */
+function studie247_import_single_row( $data, $download_images, $image_dir ) {
+	$messages = array();
+	$status   = 'skipped';
+
+	$title = isset( $data['title'] ) ? trim( $data['title'] ) : '';
+	if ( ! $title ) {
+		return array( 'status' => 'skipped', 'messages' => array( 'Ingen title.' ) );
+	}
+
+	// Find eksisterende: SKU → title.
+	$existing_id = 0;
+	if ( ! empty( $data['sku'] ) ) {
+		$q = get_posts( array(
+			'post_type'      => 'udlejning_item',
+			'post_status'    => array( 'publish', 'draft', 'pending' ),
+			'posts_per_page' => 1,
+			'meta_query'     => array( array( 'key' => '_s247_sku', 'value' => $data['sku'], 'compare' => '=' ) ),
+			'fields'         => 'ids',
+		) );
+		if ( ! empty( $q ) ) { $existing_id = (int) $q[0]; }
+	}
+	if ( ! $existing_id ) {
+		$existing = get_page_by_title( $title, OBJECT, 'udlejning_item' );
+		if ( $existing ) { $existing_id = $existing->ID; }
+	}
+
+	$postarr = array(
+		'post_type'    => 'udlejning_item',
+		'post_status'  => 'publish',
+		'post_title'   => $title,
+		'post_content' => $data['content'] ?? '',
+		'post_excerpt' => $data['excerpt'] ?? '',
+	);
+	if ( $existing_id ) { $postarr['ID'] = $existing_id; }
+
+	$post_id = wp_insert_post( $postarr, true );
+	if ( is_wp_error( $post_id ) ) {
+		return array( 'status' => 'skipped', 'messages' => array( 'DB-fejl: ' . $post_id->get_error_message() ) );
+	}
+
+	// Auto-generér unik S247-ID hvis ny post.
+	studie247_ensure_product_uid( $post_id );
+
+	// Meta.
+	foreach ( array( 'pris_dag', 'pris_uge', 'deposit', 'sku', 'ejer', 'serienummer' ) as $m ) {
+		if ( isset( $data[ $m ] ) && $data[ $m ] !== '' ) {
+			update_post_meta( $post_id, '_s247_' . $m, sanitize_text_field( $data[ $m ] ) );
+		}
+	}
+	if ( isset( $data['antal'] ) && $data['antal'] !== '' ) {
+		$qty = max( 0, (int) $data['antal'] );
+		update_post_meta( $post_id, '_s247_antal', $qty );
+		update_post_meta( $post_id, '_s247_in_stock', $qty > 0 ? '1' : '0' );
+	} elseif ( isset( $data['in_stock'] ) ) {
+		$val = strtolower( trim( $data['in_stock'] ) );
+		$in  = in_array( $val, array( '1', 'true', 'ja', 'yes', 'y', 'på lager' ), true ) ? '1' : '0';
+		update_post_meta( $post_id, '_s247_in_stock', $in );
+	}
+
+	// Kategori.
+	if ( ! empty( $data['kategori'] ) ) {
+		$terms = array_map( 'trim', explode( '|', $data['kategori'] ) );
+		$ids   = array();
+		foreach ( $terms as $tn ) {
+			if ( '' === $tn ) { continue; }
+			$t = term_exists( $tn, 'udlejning_kategori' );
+			if ( ! $t ) { $t = wp_insert_term( $tn, 'udlejning_kategori' ); }
+			if ( ! is_wp_error( $t ) ) {
+				$ids[] = (int) ( is_array( $t ) ? $t['term_id'] : $t );
+			}
+		}
+		if ( ! empty( $ids ) ) { wp_set_object_terms( $post_id, $ids, 'udlejning_kategori', false ); }
+	}
+
+	// Billeder.
+	if ( $download_images ) {
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$attach_id = 0;
+		if ( ! empty( $data['image_file'] ) && $image_dir ) {
+			$local = studie247_find_image_in_dir( $image_dir, $data['image_file'] );
+			if ( $local ) { $attach_id = studie247_sideload_local( $local, $post_id, $title ); }
+		}
+		if ( ! $attach_id && ! empty( $data['image_url'] ) && filter_var( $data['image_url'], FILTER_VALIDATE_URL ) ) {
+			$attach_id = studie247_sideload_url( $data['image_url'], $post_id, $title );
+		}
+		if ( $attach_id && ! is_wp_error( $attach_id ) ) {
+			set_post_thumbnail( $post_id, $attach_id );
+			$messages[] = 'hoved-billede OK';
+		} elseif ( is_wp_error( $attach_id ) ) {
+			$messages[] = 'hoved-billede fejlede: ' . $attach_id->get_error_message();
+		}
+
+		$state_ids = array();
+		for ( $si = 1; $si <= 4; $si++ ) {
+			$state_aid = 0;
+			$alt = $title . ' — tilstand ' . $si;
+			$fk = 'state_image_' . $si;
+			$uk = 'state_url_' . $si;
+			if ( ! empty( $data[ $fk ] ) && $image_dir ) {
+				$local = studie247_find_image_in_dir( $image_dir, $data[ $fk ] );
+				if ( $local ) { $state_aid = studie247_sideload_local( $local, $post_id, $alt ); }
+			}
+			if ( ! $state_aid && ! empty( $data[ $uk ] ) && filter_var( $data[ $uk ], FILTER_VALIDATE_URL ) ) {
+				$state_aid = studie247_sideload_url( $data[ $uk ], $post_id, $alt );
+			}
+			if ( $state_aid && ! is_wp_error( $state_aid ) ) {
+				$state_ids[] = (int) $state_aid;
+			} elseif ( is_wp_error( $state_aid ) ) {
+				$messages[] = 'stand ' . $si . ' fejlede: ' . $state_aid->get_error_message();
+			}
+		}
+		if ( ! empty( $state_ids ) ) {
+			$existing_state = array_filter( array_map( 'intval', explode( ',', (string) get_post_meta( $post_id, '_s247_state_images', true ) ) ) );
+			$merged         = array_values( array_unique( array_merge( $existing_state, $state_ids ) ) );
+			update_post_meta( $post_id, '_s247_state_images', implode( ',', $merged ) );
+			$messages[] = count( $state_ids ) . ' tilstands-billeder importeret';
+		}
+	}
+
+	$status = $existing_id ? 'updated' : 'created';
+	array_unshift( $messages, '"' . $title . '" ' . ( 'updated' === $status ? 'opdateret' : 'oprettet' ) );
+	return array( 'status' => $status, 'messages' => $messages );
 }
