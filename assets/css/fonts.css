@@ -19,6 +19,17 @@
 	     url("../fonts/aileron/Aileron-Regular.ttf") format("truetype");
 }
 
+/* TANK Indred Display — brand display font */
+@font-face {
+	font-family: "TankIndred";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("../fonts/tankindred/TANKINDRED-Display.woff2") format("woff2"),
+	     url("../fonts/tankindred/TANKINDRED-Display.otf") format("opentype"),
+	     url("../fonts/tankindred/TANKINDRED-Display.ttf") format("truetype");
+}
+
 /* Aileron Bold */
 @font-face {
 	font-family: "Aileron";
