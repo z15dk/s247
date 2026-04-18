@@ -167,19 +167,18 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 		return $result;
 	}
 
-	// Gæt separator: komma eller semikolon.
+	// Gæt separator: komma, semikolon eller tab (vælg den der giver flest kolonner).
 	$first = fgets( $handle );
-	$sep   = ( substr_count( $first, ';' ) > substr_count( $first, ',' ) ) ? ';' : ',';
+	$counts = array(
+		','  => substr_count( $first, ',' ),
+		';'  => substr_count( $first, ';' ),
+		"\t" => substr_count( $first, "\t" ),
+	);
+	arsort( $counts );
+	$sep = array_key_first( $counts );
+	if ( 0 === $counts[ $sep ] ) { $sep = ','; }
 	rewind( $handle );
 
-	$header = fgetcsv( $handle, 0, $sep );
-	if ( ! $header ) {
-		fclose( $handle );
-		$result['error'] = __( 'CSV-filen mangler en header-række.', 'studie247' );
-		return $result;
-	}
-
-	// Normalisér header: trim + lowercase + map danske navne.
 	$alias_map = array(
 		'tittel'                    => 'title',
 		'titel'                     => 'title',
@@ -216,12 +215,38 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 		'stand 3'                   => 'state_url_3',
 		'stand 4'                   => 'state_url_4',
 	);
-	$header = array_map( function ( $h ) use ( $alias_map ) {
-		$key = strtolower( trim( $h ) );
-		// Dobbelt-mellemrum → et mellemrum.
+
+	$normalize = function ( $h ) use ( $alias_map ) {
+		// Fjern BOM fra første celle.
+		$key = str_replace( "\xEF\xBB\xBF", '', (string) $h );
+		$key = strtolower( trim( $key ) );
 		$key = preg_replace( '/\s+/', ' ', $key );
 		return isset( $alias_map[ $key ] ) ? $alias_map[ $key ] : $key;
-	}, $header );
+	};
+
+	// Prøv op til 3 rækker — spring over "meta-description"-rækker der ikke indeholder 'title'.
+	$header        = null;
+	$pre_header    = 0;
+	for ( $i = 0; $i < 3; $i++ ) {
+		$candidate = fgetcsv( $handle, 0, $sep );
+		if ( false === $candidate ) { break; }
+		$mapped = array_map( $normalize, $candidate );
+		if ( in_array( 'title', $mapped, true ) ) {
+			$header = $mapped;
+			break;
+		}
+		$pre_header++;
+	}
+
+	if ( ! $header ) {
+		fclose( $handle );
+		$result['error'] = __( 'Kunne ikke finde en header-række med kolonnen "Tittel" / "title". Tjek at den findes i de første 3 rækker.', 'studie247' );
+		return $result;
+	}
+
+	if ( $pre_header > 0 ) {
+		$result['messages'][] = sprintf( 'Sprang over %d info-række(r) før header.', $pre_header );
+	}
 
 	$row_num = 1;
 	while ( ( $row = fgetcsv( $handle, 0, $sep ) ) !== false ) {
