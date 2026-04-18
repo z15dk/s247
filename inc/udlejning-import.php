@@ -352,7 +352,7 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 			}
 
 			if ( ! $attach_id && ! empty( $data['image_url'] ) && filter_var( $data['image_url'], FILTER_VALIDATE_URL ) ) {
-				$attach_id = media_sideload_image( $data['image_url'], $post_id, null, 'id' );
+				$attach_id = studie247_sideload_url( $data['image_url'], $post_id );
 			}
 
 			if ( $attach_id && ! is_wp_error( $attach_id ) ) {
@@ -372,7 +372,7 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 					if ( $local ) { $state_aid = studie247_sideload_local( $local, $post_id ); }
 				}
 				if ( ! $state_aid && ! empty( $data[ $url_key ] ) && filter_var( $data[ $url_key ], FILTER_VALIDATE_URL ) ) {
-					$state_aid = media_sideload_image( $data[ $url_key ], $post_id, null, 'id' );
+					$state_aid = studie247_sideload_url( $data[ $url_key ], $post_id );
 				}
 				if ( $state_aid && ! is_wp_error( $state_aid ) ) {
 					$state_ids[] = (int) $state_aid;
@@ -523,4 +523,60 @@ function studie247_rrmdir( $dir ) {
 		}
 	}
 	@rmdir( $dir );
+}
+
+/**
+ * Robust URL-til-attachment sideloader.
+ * Håndterer URLs uden fil-endelse (fx Unsplash ?q=80) ved at læse MIME-typen.
+ */
+function studie247_sideload_url( $url, $post_id ) {
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+
+	$tmp = download_url( $url, 45 ); // 45s timeout
+	if ( is_wp_error( $tmp ) ) {
+		return $tmp;
+	}
+
+	$path = parse_url( $url, PHP_URL_PATH );
+	$name = $path ? basename( $path ) : '';
+
+	// Hvis filnavn ikke har en kendt billed-endelse, bestem udvidelse fra MIME.
+	if ( ! preg_match( '/\.(jpe?g|png|gif|webp|svg)$/i', $name ) ) {
+		$mime = '';
+		if ( function_exists( 'mime_content_type' ) ) {
+			$mime = mime_content_type( $tmp );
+		}
+		if ( ! $mime && function_exists( 'finfo_open' ) ) {
+			$f = finfo_open( FILEINFO_MIME_TYPE );
+			$mime = $f ? finfo_file( $f, $tmp ) : '';
+			if ( $f ) { finfo_close( $f ); }
+		}
+		$mime_map = array(
+			'image/jpeg' => 'jpg',
+			'image/png'  => 'png',
+			'image/gif'  => 'gif',
+			'image/webp' => 'webp',
+			'image/svg+xml' => 'svg',
+		);
+		$ext = isset( $mime_map[ $mime ] ) ? $mime_map[ $mime ] : 'jpg';
+
+		$base = $name ?: 'image-' . wp_generate_password( 6, false );
+		// Fjern evt. eksisterende endelse og tilføj den korrekte.
+		$base = preg_replace( '/\.[^.]+$/', '', $base );
+		$name = $base . '.' . $ext;
+	}
+
+	$file_array = array(
+		'name'     => sanitize_file_name( $name ),
+		'tmp_name' => $tmp,
+	);
+
+	$id = media_handle_sideload( $file_array, $post_id );
+	if ( is_wp_error( $id ) ) {
+		@unlink( $tmp );
+		return $id;
+	}
+	return $id;
 }
