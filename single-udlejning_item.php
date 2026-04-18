@@ -77,7 +77,7 @@ while ( have_posts() ) : the_post();
 
 				<div style="display:flex; gap: var(--sp-3); flex-wrap: wrap;">
 					<?php if ( $in_stock ) : ?>
-						<?php studie247_button( __( 'Reservér nu', 'studie247' ), home_url( '/kontakt/?produkt=' . get_post_field( 'post_name' ) ), 'primary', 'btn--lg' ); ?>
+						<?php studie247_button( __( 'Book produkt', 'studie247' ), home_url( '/book/?produkt=' . get_post_field( 'post_name' ) ), 'primary', 'btn--lg' ); ?>
 					<?php endif; ?>
 					<a class="btn btn--ghost" href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>">
 						<?php esc_html_e( 'Spørg ind', 'studie247' ); ?>

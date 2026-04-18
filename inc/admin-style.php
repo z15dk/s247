@@ -30,3 +30,10 @@ add_filter( 'login_headerurl', function () {
 add_filter( 'login_headertext', function () {
 	return get_bloginfo( 'name' );
 } );
+
+/* ───────── Admin footer — byline ───────── */
+add_filter( 'admin_footer_text', function () {
+	return 'Bygget med <span style="color:#9E2B25;">♥</span> af <a href="https://webza.dk" target="_blank" rel="noopener">webza.dk</a>';
+} );
+
+add_filter( 'update_footer', '__return_empty_string', 11 );
