@@ -343,16 +343,17 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 			require_once ABSPATH . 'wp-admin/includes/image.php';
 
 			$attach_id = 0;
+			$alt_text  = $title;
 
 			if ( ! empty( $data['image_file'] ) && $image_dir ) {
 				$local = studie247_find_image_in_dir( $image_dir, $data['image_file'] );
 				if ( $local ) {
-					$attach_id = studie247_sideload_local( $local, $post_id );
+					$attach_id = studie247_sideload_local( $local, $post_id, $alt_text );
 				}
 			}
 
 			if ( ! $attach_id && ! empty( $data['image_url'] ) && filter_var( $data['image_url'], FILTER_VALIDATE_URL ) ) {
-				$attach_id = studie247_sideload_url( $data['image_url'], $post_id );
+				$attach_id = studie247_sideload_url( $data['image_url'], $post_id, $alt_text );
 			}
 
 			if ( $attach_id && ! is_wp_error( $attach_id ) ) {
@@ -365,14 +366,15 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 			$state_ids = array();
 			for ( $si = 1; $si <= 4; $si++ ) {
 				$state_aid = 0;
+				$state_alt = sprintf( '%s — tilstand %d', $title, $si );
 				$file_key  = 'state_image_' . $si;
 				$url_key   = 'state_url_'   . $si;
 				if ( ! empty( $data[ $file_key ] ) && $image_dir ) {
 					$local = studie247_find_image_in_dir( $image_dir, $data[ $file_key ] );
-					if ( $local ) { $state_aid = studie247_sideload_local( $local, $post_id ); }
+					if ( $local ) { $state_aid = studie247_sideload_local( $local, $post_id, $state_alt ); }
 				}
 				if ( ! $state_aid && ! empty( $data[ $url_key ] ) && filter_var( $data[ $url_key ], FILTER_VALIDATE_URL ) ) {
-					$state_aid = studie247_sideload_url( $data[ $url_key ], $post_id );
+					$state_aid = studie247_sideload_url( $data[ $url_key ], $post_id, $state_alt );
 				}
 				if ( $state_aid && ! is_wp_error( $state_aid ) ) {
 					$state_ids[] = (int) $state_aid;
@@ -475,24 +477,35 @@ function studie247_find_image_in_dir( $dir, $filename ) {
 
 /**
  * Kopier en lokal fil ind i mediebiblioteket og returnér attachment-ID.
+ * Konverterer automatisk til WebP hvis muligt. Sætter alt-tekst.
  */
-function studie247_sideload_local( $local_path, $post_id ) {
+function studie247_sideload_local( $local_path, $post_id, $alt_text = '' ) {
 	$mime_ok = array( 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg' );
 	$ext     = strtolower( pathinfo( $local_path, PATHINFO_EXTENSION ) );
 	if ( ! in_array( $ext, $mime_ok, true ) ) {
 		return new WP_Error( 'bad_ext', 'Ikke-understøttet billedformat: ' . $ext );
 	}
 
+	// Kopi ind i uploads-mappen.
 	$filename = wp_unique_filename( wp_upload_dir()['path'], basename( $local_path ) );
 	$dest     = trailingslashit( wp_upload_dir()['path'] ) . $filename;
 	if ( ! @copy( $local_path, $dest ) ) {
 		return new WP_Error( 'copy_failed', 'Kunne ikke kopiere billedet ind i mediebiblioteket.' );
 	}
 
-	$filetype = wp_check_filetype( $filename, null );
+	// Konvertér til WebP (skip SVG og allerede-WebP).
+	if ( ! in_array( $ext, array( 'webp', 'svg' ), true ) ) {
+		$webp = studie247_to_webp( $dest );
+		if ( $webp ) {
+			@unlink( $dest );
+			$dest = $webp;
+		}
+	}
+
+	$filetype = wp_check_filetype( basename( $dest ), null );
 	$attach   = array(
 		'post_mime_type' => $filetype['type'] ?: 'image/jpeg',
-		'post_title'     => preg_replace( '/\.[^.]+$/', '', $filename ),
+		'post_title'     => $alt_text ?: preg_replace( '/\.[^.]+$/', '', basename( $dest ) ),
 		'post_content'   => '',
 		'post_status'    => 'inherit',
 	);
@@ -502,6 +515,10 @@ function studie247_sideload_local( $local_path, $post_id ) {
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 	$meta = wp_generate_attachment_metadata( $attach_id, $dest );
 	wp_update_attachment_metadata( $attach_id, $meta );
+
+	if ( $alt_text ) {
+		update_post_meta( $attach_id, '_wp_attachment_image_alt', $alt_text );
+	}
 
 	return $attach_id;
 }
@@ -527,14 +544,14 @@ function studie247_rrmdir( $dir ) {
 
 /**
  * Robust URL-til-attachment sideloader.
- * Håndterer URLs uden fil-endelse (fx Unsplash ?q=80) ved at læse MIME-typen.
+ * Håndterer URLs uden fil-endelse, konverterer til WebP og sætter alt-tekst.
  */
-function studie247_sideload_url( $url, $post_id ) {
+function studie247_sideload_url( $url, $post_id, $alt_text = '' ) {
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 	require_once ABSPATH . 'wp-admin/includes/file.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 
-	$tmp = download_url( $url, 45 ); // 45s timeout
+	$tmp = download_url( $url, 45 );
 	if ( is_wp_error( $tmp ) ) {
 		return $tmp;
 	}
@@ -542,7 +559,7 @@ function studie247_sideload_url( $url, $post_id ) {
 	$path = parse_url( $url, PHP_URL_PATH );
 	$name = $path ? basename( $path ) : '';
 
-	// Hvis filnavn ikke har en kendt billed-endelse, bestem udvidelse fra MIME.
+	// Bestem fil-endelse fra MIME hvis URL ikke har en.
 	if ( ! preg_match( '/\.(jpe?g|png|gif|webp|svg)$/i', $name ) ) {
 		$mime = '';
 		if ( function_exists( 'mime_content_type' ) ) {
@@ -563,20 +580,84 @@ function studie247_sideload_url( $url, $post_id ) {
 		$ext = isset( $mime_map[ $mime ] ) ? $mime_map[ $mime ] : 'jpg';
 
 		$base = $name ?: 'image-' . wp_generate_password( 6, false );
-		// Fjern evt. eksisterende endelse og tilføj den korrekte.
 		$base = preg_replace( '/\.[^.]+$/', '', $base );
 		$name = $base . '.' . $ext;
 	}
 
+	$name = sanitize_file_name( $name );
+	$ext  = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
+
+	// Konvertér til WebP inden vi giver filen til WordPress.
+	if ( ! in_array( $ext, array( 'webp', 'svg' ), true ) ) {
+		$webp = studie247_to_webp( $tmp );
+		if ( $webp ) {
+			@unlink( $tmp );
+			$tmp  = $webp;
+			$name = preg_replace( '/\.[^.]+$/', '.webp', $name );
+		}
+	}
+
 	$file_array = array(
-		'name'     => sanitize_file_name( $name ),
+		'name'     => $name,
 		'tmp_name' => $tmp,
 	);
 
-	$id = media_handle_sideload( $file_array, $post_id );
+	$id = media_handle_sideload( $file_array, $post_id, $alt_text );
 	if ( is_wp_error( $id ) ) {
 		@unlink( $tmp );
 		return $id;
 	}
+
+	if ( $alt_text ) {
+		update_post_meta( $id, '_wp_attachment_image_alt', $alt_text );
+		wp_update_post( array( 'ID' => $id, 'post_title' => $alt_text ) );
+	}
+
 	return $id;
+}
+
+/**
+ * Konvertér en billedfil til WebP. Returnerer ny sti eller false.
+ */
+function studie247_to_webp( $src_path, $quality = 82 ) {
+	if ( ! is_readable( $src_path ) ) { return false; }
+
+	// Prøv Imagick først (bedre kvalitet), derefter GD.
+	if ( class_exists( 'Imagick' ) ) {
+		try {
+			$im = new Imagick( $src_path );
+			$im->setImageFormat( 'webp' );
+			$im->setImageCompressionQuality( $quality );
+			$im->setOption( 'webp:method', '6' );
+			$out = preg_replace( '/\.[^.]+$/', '', $src_path ) . '.webp';
+			$im->writeImage( $out );
+			$im->clear();
+			return is_readable( $out ) ? $out : false;
+		} catch ( Exception $e ) { /* fallback til GD */ }
+	}
+
+	if ( ! function_exists( 'imagewebp' ) ) { return false; }
+
+	$info = @getimagesize( $src_path );
+	if ( ! $info ) { return false; }
+	$img = null;
+	switch ( $info[2] ) {
+		case IMAGETYPE_JPEG: $img = @imagecreatefromjpeg( $src_path ); break;
+		case IMAGETYPE_PNG:
+			$img = @imagecreatefrompng( $src_path );
+			if ( $img ) {
+				imagepalettetotruecolor( $img );
+				imagealphablending( $img, true );
+				imagesavealpha( $img, true );
+			}
+			break;
+		case IMAGETYPE_GIF:  $img = @imagecreatefromgif( $src_path ); break;
+		default: return false;
+	}
+	if ( ! $img ) { return false; }
+
+	$out = preg_replace( '/\.[^.]+$/', '', $src_path ) . '.webp';
+	$ok  = @imagewebp( $img, $out, $quality );
+	imagedestroy( $img );
+	return ( $ok && is_readable( $out ) ) ? $out : false;
 }
