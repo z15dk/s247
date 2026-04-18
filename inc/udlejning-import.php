@@ -109,10 +109,25 @@ add_action( 'admin_init', function () {
 	if ( ! current_user_can( 'edit_posts' ) ) { return; }
 
 	header( 'Content-Type: text/csv; charset=UTF-8' );
-	header( 'Content-Disposition: attachment; filename="udlejning-skabelon.csv"' );
+	header( 'Content-Disposition: attachment; filename="studie247-udlejning-skabelon.csv"' );
+	// UTF-8 BOM så Excel åbner Ã¦/Ã¸/Ã¥ korrekt.
+	echo "\xEF\xBB\xBF";
 	echo "title,excerpt,content,pris_dag,pris_uge,deposit,sku,in_stock,kategori,image_url\n";
-	echo "Sony FS6,Fuld-frame cinema,Cinematisk farver.,\"1.499 kr\",\"5.999 kr\",\"5.000 kr\",FS6-01,1,Kamera,\n";
-	echo "GoPro Hero 10,Action-kamera,,299 kr,999 kr,,GH10-02,1,Kamera,\n";
+	$rows = array(
+		array( 'Sony FS6',           'Fuld-frame cinema-kamera',      'Cinematisk farvegengivelse, S-Cinetone, klar til plug-and-play.',            '1.499 kr', '5.999 kr', '10.000 kr', 'CAM-FS6',    '1', 'Kamera',       '' ),
+		array( 'Canon R5 C',         'Hybrid still + 8K video',       '8K RAW, fuld-frame sensor, inkl. 2 batterier og CFexpress-kort.',            '1.299 kr', '4.999 kr', '8.000 kr',  'CAM-R5C',    '1', 'Kamera',       '' ),
+		array( 'GoPro Hero 10',      'Action-kamera',                 'Vandtæt, stabiliseret, kommer med 3 batterier og ladestation.',              '299 kr',   '999 kr',   '',          'CAM-GH10',   '1', 'Kamera',       '' ),
+		array( 'Aputure 600D Pro',   'Daylight COB-lys 600W',         'Bowens-mount, kører på bi-color. Inkluderer lantern + softbox.',             '599 kr',   '2.299 kr', '3.000 kr',  'LYS-A600',   '1', 'Lys',          '' ),
+		array( 'Pixel Lyspakke',     '3 lamper + stativer',           'Softbox hovedlys, 2 spots og 3 C-stands. Perfekt til talking-head.',         '449 kr',   '1.499 kr', '2.000 kr',  'LYS-PIXEL',  '1', 'Lys',          '' ),
+		array( 'Sennheiser MKH-416', 'Shotgun-mikrofon',              'Broadcast-standard. Kommer med blimp, pistol-grip og XLR-kabel.',            '349 kr',   '1.199 kr', '2.500 kr',  'LYD-MKH',    '1', 'Lyd',          '' ),
+		array( 'Zoom F6 Field Recorder', '32-bit floating recorder',  '6 kanaler, timecode, SD-kort inkl. Ingen gain at sætte.',                    '299 kr',   '999 kr',   '',          'LYD-ZF6',    '1', 'Lyd',          '' ),
+		array( 'DJI Ronin 4D',       'Gimbal med indbygget kamera',   '4-axis stabilisering, LiDAR autofocus. Til bevægelses-shots.',               '999 kr',   '3.499 kr', '6.000 kr',  'GRIP-R4D',   '1', 'Grip|Kamera',  '' ),
+		array( 'Manfrotto Slider',   '100 cm rail-slider',            'Motoriseret. Strøm via V-mount eller net.',                                  '199 kr',   '699 kr',   '',          'GRIP-SLD',  '1', 'Grip',         '' ),
+		array( 'Teleprompter 15"',   'iPad-baseret prompter',         'Inkl. app. Passer på alle kameraer med 15mm rods.',                          '299 kr',   '999 kr',   '',          'GRIP-PROM', '0', 'Grip',         '' ),
+	);
+	foreach ( $rows as $r ) {
+		echo '"' . implode( '","', array_map( function ( $v ) { return str_replace( '"', '""', $v ); }, $r ) ) . '"' . "\n";
+	}
 	exit;
 } );
 
