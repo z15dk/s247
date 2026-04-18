@@ -58,6 +58,29 @@
 	});
 
 	// ──────────────────────────────────────────────
+	// Studio moods — tab switcher
+	// ──────────────────────────────────────────────
+	document.querySelectorAll('[data-moods]').forEach((root) => {
+		const tabs   = root.querySelectorAll('[data-mood-target]');
+		const panels = root.querySelectorAll('[data-mood-panel]');
+		tabs.forEach((tab) => {
+			tab.addEventListener('click', () => {
+				const target = tab.dataset.moodTarget;
+				tabs.forEach((t) => {
+					const active = t.dataset.moodTarget === target;
+					t.classList.toggle('is-active', active);
+					t.setAttribute('aria-selected', active ? 'true' : 'false');
+				});
+				panels.forEach((p) => {
+					const active = p.dataset.moodPanel === target;
+					p.classList.toggle('is-active', active);
+					if (active) { p.removeAttribute('hidden'); } else { p.setAttribute('hidden', ''); }
+				});
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────
 	// Smooth scroll for on-page anchor links
 	// ──────────────────────────────────────────────
 	document.querySelectorAll('a[href^="#"]').forEach((a) => {

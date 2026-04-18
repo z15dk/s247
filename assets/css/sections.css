@@ -1078,3 +1078,109 @@
 }
 
 .placeholder__inner { max-width: 640px; }
+
+/* ─── Studio moods — tabbed panel ─── */
+.moods__title {
+	text-align: center;
+	font-family: var(--font-sans);
+	font-weight: 700;
+	font-size: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+	letter-spacing: var(--tracking-tight);
+	margin-bottom: var(--sp-10);
+	line-height: 1.1;
+}
+
+.moods__title-a { color: var(--color-ink-on-dark); }
+.moods__title-b { color: var(--color-accent); margin-left: 0.4em; }
+
+.moods__panel {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--sp-8);
+	align-items: start;
+}
+
+@media (min-width: 900px) {
+	.moods__panel {
+		grid-template-columns: minmax(240px, 320px) 1fr;
+		gap: var(--sp-10);
+	}
+}
+
+.moods__tabs {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-3);
+}
+
+.moods__tab {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sp-3);
+	padding: var(--sp-4) var(--sp-5);
+	background: transparent;
+	color: var(--s247-bone-60);
+	border: 1px solid var(--s247-bone-20);
+	border-radius: var(--radius-pill);
+	font-family: var(--font-sans);
+	font-weight: 600;
+	font-size: var(--fs-sm);
+	text-align: left;
+	cursor: pointer;
+	transition: color var(--dur-fast) var(--ease),
+	            border-color var(--dur-fast) var(--ease),
+	            background var(--dur-fast) var(--ease);
+}
+
+.moods__tab .icon { color: var(--color-accent); flex: 0 0 auto; }
+
+.moods__tab:hover {
+	color: var(--color-ink-on-dark);
+	border-color: var(--s247-bone-40);
+}
+
+.moods__tab.is-active {
+	color: var(--color-ink-on-dark);
+	border-color: var(--color-accent);
+	background: rgba(158, 43, 37, 0.08);
+}
+
+.moods__stage {
+	position: relative;
+	aspect-ratio: 16 / 10;
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+	background: var(--color-bg-dark-rich);
+}
+
+.moods__image {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	transition: opacity var(--dur) var(--ease-smooth);
+}
+
+.moods__image.is-active {
+	opacity: 1;
+}
+
+.moods__image[hidden] {
+	display: block;
+}
+
+.moods__image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.moods__image-placeholder {
+	width: 100%;
+	height: 100%;
+	display: grid;
+	place-items: center;
+	color: var(--s247-bone-60);
+	font-size: var(--fs-sm);
+}
+

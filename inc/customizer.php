@@ -115,4 +115,67 @@ add_action( 'customize_register', function ( $wp_customize ) {
 			) );
 		}
 	}
+
+	/* ───────── Studio moods (fane-sektion) ───────── */
+	$wp_customize->add_section( 's247_moods', array(
+		'title'    => __( 'Studie-stemninger (fane)', 'studie247' ),
+		'priority' => 33,
+	) );
+
+	$icon_choices = array(
+		'sun'      => 'Sol',
+		'moon'     => 'Måne',
+		'home'     => 'Hus',
+		'sparkle'  => 'Sparkle',
+		'video'    => 'Video',
+		'mic'      => 'Mikrofon',
+		'camera'   => 'Kamera',
+		'play'     => 'Play',
+	);
+
+	$mood_fields = array(
+		's247_moods_title_a' => array( 'label' => __( 'Overskrift — del 1 (sans)', 'studie247' ), 'type' => 'text',     'default' => 'Tilpas studiet til dit' ),
+		's247_moods_title_b' => array( 'label' => __( 'Overskrift — del 2 (accent)', 'studie247' ), 'type' => 'text',   'default' => 'Brand' ),
+	);
+	for ( $i = 1; $i <= 3; $i++ ) {
+		$defaults = array(
+			1 => array( 'Lyst & let', 'sun' ),
+			2 => array( 'Afdæmpet & cinematisk', 'moon' ),
+			3 => array( 'Varmt & hyggeligt', 'home' ),
+		);
+		$mood_fields[ "s247_mood{$i}_label" ] = array( 'label' => sprintf( __( 'Stemning %d — label', 'studie247' ), $i ), 'type' => 'text', 'default' => $defaults[ $i ][0] );
+		$mood_fields[ "s247_mood{$i}_icon" ]  = array( 'label' => sprintf( __( 'Stemning %d — ikon', 'studie247' ), $i ),  'type' => 'select', 'default' => $defaults[ $i ][1], 'choices' => $icon_choices );
+		$mood_fields[ "s247_mood{$i}_image" ] = array( 'label' => sprintf( __( 'Stemning %d — billede', 'studie247' ), $i ), 'type' => 'image', 'default' => '' );
+	}
+
+	foreach ( $mood_fields as $key => $cfg ) {
+		$sanitize = 'sanitize_text_field';
+		if ( 'image' === $cfg['type'] || 'url' === $cfg['type'] ) {
+			$sanitize = 'esc_url_raw';
+		}
+		$wp_customize->add_setting( $key, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => $sanitize,
+			'transport'         => 'refresh',
+		) );
+		if ( 'image' === $cfg['type'] ) {
+			$wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $key, array(
+				'label'   => $cfg['label'],
+				'section' => 's247_moods',
+			) ) );
+		} elseif ( 'select' === $cfg['type'] ) {
+			$wp_customize->add_control( $key, array(
+				'label'   => $cfg['label'],
+				'section' => 's247_moods',
+				'type'    => 'select',
+				'choices' => $cfg['choices'],
+			) );
+		} else {
+			$wp_customize->add_control( $key, array(
+				'label'   => $cfg['label'],
+				'section' => 's247_moods',
+				'type'    => 'text',
+			) );
+		}
+	}
 } );
