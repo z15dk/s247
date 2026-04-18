@@ -15,6 +15,7 @@
 	font-weight: 400;
 	font-display: swap;
 	src: url("../fonts/aileron/Aileron-Regular.woff2") format("woff2"),
+	     url("../fonts/aileron/Aileron-Regular.otf") format("opentype"),
 	     url("../fonts/aileron/Aileron-Regular.ttf") format("truetype");
 }
 
@@ -25,6 +26,7 @@
 	font-weight: 700;
 	font-display: swap;
 	src: url("../fonts/aileron/Aileron-Bold.woff2") format("woff2"),
+	     url("../fonts/aileron/Aileron-Bold.otf") format("opentype"),
 	     url("../fonts/aileron/Aileron-Bold.ttf") format("truetype");
 }
 
@@ -35,6 +37,7 @@
 	font-weight: 200;
 	font-display: swap;
 	src: url("../fonts/migra/Migra-ExtralightItalic.woff2") format("woff2"),
+	     url("../fonts/migra/Migra-ExtralightItalic.otf") format("opentype"),
 	     url("../fonts/migra/Migra-ExtralightItalic.ttf") format("truetype");
 }
 
@@ -45,5 +48,6 @@
 	font-weight: 800;
 	font-display: swap;
 	src: url("../fonts/migra/Migra-ExtraboldItalic.woff2") format("woff2"),
+	     url("../fonts/migra/Migra-ExtraboldItalic.otf") format("opentype"),
 	     url("../fonts/migra/Migra-ExtraboldItalic.ttf") format("truetype");
 }
