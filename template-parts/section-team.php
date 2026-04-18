@@ -18,6 +18,9 @@ for ( $i = 1; $i <= 8; $i++ ) {
 }
 
 if ( empty( $team ) ) {
+	if ( current_user_can( 'edit_theme_options' ) ) {
+		echo '<section class="section"><div class="wrap wrap--tight"><div class="card" style="padding:var(--sp-6);border:1px dashed var(--color-accent);"><p><strong>Team-sektion:</strong> templaten kører, men ingen team-medlemmer er udfyldt. Gå til Tilpas → Om-side (team) og udfyld mindst "Person 1 — navn". Denne besked vises kun for admins.</p></div></div></section>';
+	}
 	return;
 }
 ?>
