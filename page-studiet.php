@@ -29,12 +29,22 @@ $guide_eyebrow = get_theme_mod( 's247_studiet_guide_eyebrow', 'Guide' );
 $guide_title_a = get_theme_mod( 's247_studiet_guide_title_a', 'Sådan booker du' );
 $guide_title_b = get_theme_mod( 's247_studiet_guide_title_b', 'uden at græde' );
 
+/* Standard setups (bruges hvis customizer er tom) */
+$setup_defaults = array(
+	1 => array( 'label' => 'Podcast',         'desc' => '2-4 personer, 3 kameravinkler, rig til lyd.' ),
+	2 => array( 'label' => 'Video-interview', 'desc' => 'Cinematisk setup med prompter og dedikeret lys.' ),
+	3 => array( 'label' => 'Talking-head',    'desc' => 'Ren simpel baggrund, én person, hurtigt i gang.' ),
+	4 => array( 'label' => 'Produkt / foto',  'desc' => 'Cyklorama, softboxe, klar til still og bevægelse.' ),
+	5 => array( 'label' => '',                'desc' => '' ),
+	6 => array( 'label' => '',                'desc' => '' ),
+);
+
 /* Samle setups */
 $setups = array();
 for ( $i = 1; $i <= 6; $i++ ) {
-	$label = get_theme_mod( "s247_studiet_setup{$i}_label" );
+	$label = get_theme_mod( "s247_studiet_setup{$i}_label", $setup_defaults[ $i ]['label'] );
 	$image = get_theme_mod( "s247_studiet_setup{$i}_image" );
-	$desc  = get_theme_mod( "s247_studiet_setup{$i}_desc" );
+	$desc  = get_theme_mod( "s247_studiet_setup{$i}_desc",  $setup_defaults[ $i ]['desc'] );
 	if ( $label ) {
 		$setups[] = array( 'label' => $label, 'desc' => $desc, 'image' => $image );
 	}
@@ -52,12 +62,41 @@ for ( $i = 1; $i <= 3; $i++ ) {
 	}
 }
 
+/* Standard guide-steps */
+$step_defaults = array(
+	1 => array(
+		'title' => 'Find en ledig tid',
+		'text'  => 'Åbn kalenderen og vælg dag + start/slut-tidspunkt. Ingen kode ord, ingen formular der varer 40 minutter.',
+		'joke'  => 'Pro-tip: undgå fredag kl. 14 — det er når alle andre også vil.',
+	),
+	2 => array(
+		'title' => 'Vælg dit setup',
+		'text'  => 'Podcast, interview, talking-head, foto? Klik det du skal have. Vi rigger klar.',
+		'joke'  => 'Ja, du må godt skifte mening 3 gange. Vi sletter ikke din booking.',
+	),
+	3 => array(
+		'title' => 'Betal online',
+		'text'  => 'Kort eller faktura. Du får en kvittering på mail plus en ICS-fil til din kalender.',
+		'joke'  => 'Ingen skjulte gebyrer. Vi lover.',
+	),
+	4 => array(
+		'title' => 'Mød op — vi er klar',
+		'text'  => 'Cyklorama hvidt, lys tændt, kaffe brygget. Du ringer på, vi åbner.',
+		'joke'  => 'Medbring snacks. Vi har ingen følelser om din valg af slikketype.',
+	),
+	5 => array(
+		'title' => 'Optag, slap af, ud',
+		'text'  => 'Når du er færdig, smider du bare døren til. Vi rydder op.',
+		'joke'  => 'Du efterlader jer med godt indhold, vi efterlader os med ren gulvvask.',
+	),
+);
+
 /* Samle guide-steps */
 $steps = array();
 for ( $i = 1; $i <= 5; $i++ ) {
-	$title = get_theme_mod( "s247_studiet_step{$i}_title" );
-	$text  = get_theme_mod( "s247_studiet_step{$i}_text" );
-	$joke  = get_theme_mod( "s247_studiet_step{$i}_joke" );
+	$title = get_theme_mod( "s247_studiet_step{$i}_title", $step_defaults[ $i ]['title'] );
+	$text  = get_theme_mod( "s247_studiet_step{$i}_text",  $step_defaults[ $i ]['text'] );
+	$joke  = get_theme_mod( "s247_studiet_step{$i}_joke",  $step_defaults[ $i ]['joke'] );
 	if ( $title || $text ) {
 		$steps[] = array( 'title' => $title, 'text' => $text, 'joke' => $joke );
 	}
