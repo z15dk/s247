@@ -370,6 +370,15 @@ function studie247_render_product_history( $post ) {
 		return;
 	}
 	?>
+	<style>
+		.s247-hist-row { background: #fff; }
+		.s247-hist-photos { padding: 12px 14px !important; background: #fafafa !important; border-top: 1px dashed #ddd; }
+		.s247-hist-photos h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #666; }
+		.s247-hist-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+		.s247-hist-strip a { display: block; }
+		.s247-hist-strip img { width: 64px; height: 64px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; transition: transform 120ms ease; }
+		.s247-hist-strip a:hover img { transform: scale(1.06); }
+	</style>
 	<table class="widefat striped" style="margin-top:6px;">
 		<thead>
 			<tr>
@@ -391,7 +400,7 @@ function studie247_render_product_history( $post ) {
 			$in_p  = array_filter( array_map( 'intval', explode( ',', (string) get_post_meta( $b->ID, '_s247_check_in_photos',  true ) ) ) );
 			$total = count( $out_p ) + count( $in_p );
 		?>
-			<tr>
+			<tr class="s247-hist-row">
 				<td><?php echo esc_html( $date ); ?></td>
 				<td><?php echo esc_html( $name ); ?></td>
 				<td><?php echo $out ? esc_html( $out ) : '—'; ?></td>
@@ -399,6 +408,36 @@ function studie247_render_product_history( $post ) {
 				<td><?php echo (int) $total; ?></td>
 				<td><a class="button button-small" href="<?php echo esc_url( get_edit_post_link( $b->ID ) ); ?>"><?php esc_html_e( 'Åbn', 'studie247' ); ?></a></td>
 			</tr>
+			<?php if ( $total > 0 ) : ?>
+				<tr>
+					<td colspan="6" class="s247-hist-photos">
+						<?php if ( ! empty( $out_p ) ) : ?>
+							<h4><?php esc_html_e( 'Før udlejning', 'studie247' ); ?> (<?php echo count( $out_p ); ?>)</h4>
+							<div class="s247-hist-strip">
+								<?php foreach ( $out_p as $aid ) :
+									$thumb = wp_get_attachment_image_url( $aid, 'thumbnail' );
+									$full  = wp_get_attachment_image_url( $aid, 'full' );
+									if ( $thumb ) : ?>
+										<a href="<?php echo esc_url( $full ?: $thumb ); ?>" target="_blank" rel="noopener"><img src="<?php echo esc_url( $thumb ); ?>" alt=""></a>
+									<?php endif;
+								endforeach; ?>
+							</div>
+						<?php endif; ?>
+						<?php if ( ! empty( $in_p ) ) : ?>
+							<h4><?php esc_html_e( 'Efter retur', 'studie247' ); ?> (<?php echo count( $in_p ); ?>)</h4>
+							<div class="s247-hist-strip">
+								<?php foreach ( $in_p as $aid ) :
+									$thumb = wp_get_attachment_image_url( $aid, 'thumbnail' );
+									$full  = wp_get_attachment_image_url( $aid, 'full' );
+									if ( $thumb ) : ?>
+										<a href="<?php echo esc_url( $full ?: $thumb ); ?>" target="_blank" rel="noopener"><img src="<?php echo esc_url( $thumb ); ?>" alt=""></a>
+									<?php endif;
+								endforeach; ?>
+							</div>
+						<?php endif; ?>
+					</td>
+				</tr>
+			<?php endif; ?>
 		<?php endforeach; ?>
 		</tbody>
 	</table>
