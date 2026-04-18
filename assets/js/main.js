@@ -132,6 +132,29 @@
 	});
 
 	// ──────────────────────────────────────────────
+	// Studiet — setup switcher
+	// ──────────────────────────────────────────────
+	document.querySelectorAll('[data-studiet-setups]').forEach((root) => {
+		const tabs   = root.querySelectorAll('[data-setup-target]');
+		const panels = root.querySelectorAll('[data-setup-panel]');
+		tabs.forEach((tab) => {
+			tab.addEventListener('click', () => {
+				const target = tab.dataset.setupTarget;
+				tabs.forEach((t) => {
+					const active = t.dataset.setupTarget === target;
+					t.classList.toggle('is-active', active);
+					t.setAttribute('aria-selected', active ? 'true' : 'false');
+				});
+				panels.forEach((p) => {
+					const active = p.dataset.setupPanel === target;
+					p.classList.toggle('is-active', active);
+					if (active) { p.removeAttribute('hidden'); } else { p.setAttribute('hidden', ''); }
+				});
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────
 	// Smooth scroll for on-page anchor links
 	// ──────────────────────────────────────────────
 	document.querySelectorAll('a[href^="#"]').forEach((a) => {

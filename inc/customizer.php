@@ -203,6 +203,128 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		'type'        => 'textarea',
 	) );
 
+	/* ───────── Studiet-side (dedikeret) ───────── */
+	$wp_customize->add_section( 's247_studiet_page', array(
+		'title'    => __( 'Studiet-side', 'studie247' ),
+		'priority' => 35,
+	) );
+
+	$studiet_fields = array(
+		's247_studiet_video'       => array( 'label' => 'Hero-video (MP4 URL)', 'type' => 'url',      'default' => '' ),
+		's247_studiet_poster'      => array( 'label' => 'Hero-poster/fallback-billede', 'type' => 'image', 'default' => '' ),
+		's247_studiet_eyebrow'     => array( 'label' => 'Eyebrow over overskrift',       'type' => 'text', 'default' => 'Studiet' ),
+		's247_studiet_title_a'     => array( 'label' => 'Overskrift — del 1 (sans)',     'type' => 'text', 'default' => 'Hvor dit' ),
+		's247_studiet_title_b'     => array( 'label' => 'Overskrift — del 2 (kursiv)',   'type' => 'text', 'default' => 'indhold skabes' ),
+		's247_studiet_lead'        => array( 'label' => 'Under-tekst',                   'type' => 'textarea', 'default' => '200 m² produktionsrum. Kamera-rig, lys, lyd, cyklorama — alt klart fra dag 1.' ),
+		's247_studiet_cta_text'    => array( 'label' => 'Primær knap — tekst',           'type' => 'text', 'default' => 'Book studiet' ),
+		's247_studiet_cta_url'     => array( 'label' => 'Primær knap — URL',             'type' => 'url',  'default' => '/book/' ),
+
+		/* Book-sektion */
+		's247_studiet_book_title_a' => array( 'label' => 'Book-sektion overskrift del 1 (sans)', 'type' => 'text', 'default' => 'Book vores studie' ),
+		's247_studiet_book_title_b' => array( 'label' => 'Book-sektion overskrift del 2 (kursiv)', 'type' => 'text', 'default' => 'online' ),
+		's247_studiet_book_lead'    => array( 'label' => 'Book-sektion tekst',          'type' => 'textarea', 'default' => 'Vælg tid, vælg setup, betal — vi gør resten klar inden du kommer.' ),
+		's247_studiet_book_cta'     => array( 'label' => 'Book-knap tekst',             'type' => 'text', 'default' => 'Book nu' ),
+		's247_studiet_book_url'     => array( 'label' => 'Book-knap URL',               'type' => 'url',  'default' => '/book/' ),
+		's247_studiet_book_psst'    => array( 'label' => 'Psst-linje (ekstra tip)',     'type' => 'textarea', 'default' => '<em>psst</em> — du kan også leje vores udstyr herfra.' ),
+		's247_studiet_book_psst_cta'=> array( 'label' => 'Psst — knap tekst',           'type' => 'text', 'default' => 'Se udlejning' ),
+		's247_studiet_book_psst_url'=> array( 'label' => 'Psst — knap URL',             'type' => 'url',  'default' => '/udlejning/' ),
+
+		/* Guide-sektion */
+		's247_studiet_guide_eyebrow' => array( 'label' => 'Guide — eyebrow',            'type' => 'text', 'default' => 'Guide' ),
+		's247_studiet_guide_title_a' => array( 'label' => 'Guide — overskrift del 1 (sans)', 'type' => 'text', 'default' => 'Sådan booker du' ),
+		's247_studiet_guide_title_b' => array( 'label' => 'Guide — overskrift del 2 (kursiv)', 'type' => 'text', 'default' => 'uden at græde' ),
+	);
+
+	/* 6 setup-valg */
+	for ( $i = 1; $i <= 6; $i++ ) {
+		$studiet_fields[ "s247_studiet_setup{$i}_label" ] = array( 'label' => sprintf( 'Setup %d — label', $i ), 'type' => 'text', 'default' => '' );
+		$studiet_fields[ "s247_studiet_setup{$i}_desc" ]  = array( 'label' => sprintf( 'Setup %d — beskrivelse', $i ), 'type' => 'text', 'default' => '' );
+		$studiet_fields[ "s247_studiet_setup{$i}_image" ] = array( 'label' => sprintf( 'Setup %d — billede', $i ), 'type' => 'image', 'default' => '' );
+	}
+	// Standard setups
+	$studiet_fields['s247_studiet_setup1_label']['default'] = 'Podcast';
+	$studiet_fields['s247_studiet_setup1_desc']['default']  = '2-4 personer, 3 kameravinkler, rig til lyd.';
+	$studiet_fields['s247_studiet_setup2_label']['default'] = 'Video-interview';
+	$studiet_fields['s247_studiet_setup2_desc']['default']  = 'Cinematisk setup med prompter og dedikeret lys.';
+	$studiet_fields['s247_studiet_setup3_label']['default'] = 'Talking-head';
+	$studiet_fields['s247_studiet_setup3_desc']['default']  = 'Ren simpel baggrund, én person, hurtigt i gang.';
+	$studiet_fields['s247_studiet_setup4_label']['default'] = 'Produkt / foto';
+	$studiet_fields['s247_studiet_setup4_desc']['default']  = 'Cyklorama, softboxe, klar til still og bevægelse.';
+
+	/* 3 portrait-videoer */
+	for ( $i = 1; $i <= 3; $i++ ) {
+		$studiet_fields[ "s247_studiet_reel{$i}_video" ] = array( 'label' => sprintf( 'Reel %d — video (MP4 URL)', $i ), 'type' => 'url',   'default' => '' );
+		$studiet_fields[ "s247_studiet_reel{$i}_poster"] = array( 'label' => sprintf( 'Reel %d — poster',           $i ), 'type' => 'image', 'default' => '' );
+		$studiet_fields[ "s247_studiet_reel{$i}_title" ] = array( 'label' => sprintf( 'Reel %d — titel',            $i ), 'type' => 'text',  'default' => '' );
+		$studiet_fields[ "s247_studiet_reel{$i}_label" ] = array( 'label' => sprintf( 'Reel %d — label (fx kunde)', $i ), 'type' => 'text',  'default' => '' );
+	}
+
+	/* 5 guide-trin */
+	for ( $i = 1; $i <= 5; $i++ ) {
+		$studiet_fields[ "s247_studiet_step{$i}_title" ] = array( 'label' => sprintf( 'Guide-trin %d — titel',      $i ), 'type' => 'text', 'default' => '' );
+		$studiet_fields[ "s247_studiet_step{$i}_text" ]  = array( 'label' => sprintf( 'Guide-trin %d — tekst',      $i ), 'type' => 'textarea', 'default' => '' );
+		$studiet_fields[ "s247_studiet_step{$i}_joke" ]  = array( 'label' => sprintf( 'Guide-trin %d — sjov ekstra linje', $i ), 'type' => 'text', 'default' => '' );
+	}
+	$studiet_fields['s247_studiet_step1_title']['default'] = 'Find en ledig tid';
+	$studiet_fields['s247_studiet_step1_text']['default']  = 'Åbn kalenderen og vælg dag + start/slut-tidspunkt. Ingen kode ord, ingen formular der varer 40 minutter.';
+	$studiet_fields['s247_studiet_step1_joke']['default']  = 'Pro-tip: undgå fredag kl. 14 — det er når alle andre også vil.';
+	$studiet_fields['s247_studiet_step2_title']['default'] = 'Vælg dit setup';
+	$studiet_fields['s247_studiet_step2_text']['default']  = 'Podcast, interview, talking-head, foto? Klik det du skal have. Vi rigger klar.';
+	$studiet_fields['s247_studiet_step2_joke']['default']  = 'Ja, du må godt skifte mening 3 gange. Vi sletter ikke din booking.';
+	$studiet_fields['s247_studiet_step3_title']['default'] = 'Betal online';
+	$studiet_fields['s247_studiet_step3_text']['default']  = 'Kort eller faktura. Du får en kvittering på mail plus en ICS-fil til din kalender.';
+	$studiet_fields['s247_studiet_step3_joke']['default']  = 'Ingen skjulte gebyrer. Vi lover.';
+	$studiet_fields['s247_studiet_step4_title']['default'] = 'Mød op — vi er klar';
+	$studiet_fields['s247_studiet_step4_text']['default']  = 'Cyklorama hvidt, lys tændt, kaffe brygget. Du ringer på, vi åbner.';
+	$studiet_fields['s247_studiet_step4_joke']['default']  = 'Medbring snacks. Vi har ingen følelser om din valg af slikketype.';
+	$studiet_fields['s247_studiet_step5_title']['default'] = 'Optag, slap af, ud';
+	$studiet_fields['s247_studiet_step5_text']['default']  = 'Når du er færdig, smider du bare døren til. Vi rydder op.';
+	$studiet_fields['s247_studiet_step5_joke']['default']  = 'Du efterlader jer med godt indhold, vi efterlader os med ren gulvvask.';
+
+	foreach ( $studiet_fields as $key => $cfg ) {
+		$sanitize = 'sanitize_text_field';
+		if ( 'textarea' === $cfg['type'] ) {
+			$sanitize = 'wp_kses_post';
+		} elseif ( 'url' === $cfg['type'] || 'image' === $cfg['type'] ) {
+			$sanitize = 'esc_url_raw';
+		}
+		$wp_customize->add_setting( $key, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => $sanitize,
+			'transport'         => 'refresh',
+		) );
+		if ( 'image' === $cfg['type'] ) {
+			$wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $key, array(
+				'label'   => $cfg['label'],
+				'section' => 's247_studiet_page',
+			) ) );
+		} else {
+			$wp_customize->add_control( $key, array(
+				'label'   => $cfg['label'],
+				'section' => 's247_studiet_page',
+				'type'    => 'textarea' === $cfg['type'] ? 'textarea' : ( 'url' === $cfg['type'] ? 'url' : 'text' ),
+			) );
+		}
+	}
+
+	/* ───────── Om-side (team) ───────── */
+	$wp_customize->add_section( 's247_om', array(
+		'title'    => __( 'Om-side (team)', 'studie247' ),
+		'priority' => 34,
+	) );
+
+	$wp_customize->add_setting( 's247_om_intro', array(
+		'default'           => '',
+		'sanitize_callback' => 'wp_kses_post',
+		'transport'         => 'refresh',
+	) );
+	$wp_customize->add_control( 's247_om_intro', array(
+		'label'       => __( 'Kort tekst om os', 'studie247' ),
+		'description' => __( 'Vises øverst på Om-siden. HTML tilladt.', 'studie247' ),
+		'section'     => 's247_om',
+		'type'        => 'textarea',
+	) );
+
 	for ( $i = 1; $i <= 8; $i++ ) {
 		$fields = array(
 			"s247_team{$i}_name"        => array( 'label' => sprintf( __( 'Person %d — navn', 'studie247' ), $i ), 'type' => 'text' ),
