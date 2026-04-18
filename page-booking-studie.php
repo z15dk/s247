@@ -1,6 +1,6 @@
 <?php
 /**
- * Book-side — kalender-grid booking (koncept 05).
+ * Booking-studie — kalender-grid for studie-bookinger (max 1 dag).
  *
  * @package Studie247
  */
@@ -95,7 +95,7 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			'Reply-To: info@s247.dk',
 		) );
 
-		$redirect = add_query_arg( 'sendt', '1', wp_get_referer() ?: home_url( '/book/' ) );
+		$redirect = add_query_arg( 'sendt', '1', wp_get_referer() ?: home_url( '/booking-studie/' ) );
 		if ( $form_prod ) { $redirect = add_query_arg( 'produkt', $form_prod, $redirect ); }
 		wp_safe_redirect( $redirect );
 		exit;
@@ -128,31 +128,22 @@ foreach ( $booking_posts as $b ) {
 	if ( ! $d || ! $s ) { continue; }
 	$start_h = (int) substr( $s, 0, 2 );
 
-	// Bestem hvor mange timer og dage der er blokeret.
-	$hours = 0;
-	$days  = 1;
+	// Bestem hvor mange timer der er blokeret (max 1 dag).
+	$hours = 2;
 	switch ( $dur ) {
-		case '2 timer': $hours = 2; break;
-		case '4 timer': $hours = 4; break;
+		case '2 timer': $hours = 2;  break;
+		case '4 timer': $hours = 4;  break;
+		case '6 timer': $hours = 6;  break;
 		case '8 timer':
 		case '1 dag':   $hours = 13; break; // hele dagen (08-20)
-		case '2 dage':  $hours = 13; $days = 2; break;
-		case '1 uge':   $hours = 13; $days = 7; break;
-		default:        $hours = 2; break;
 	}
 
-	for ( $di = 0; $di < $days; $di++ ) {
-		$day_key = date( 'Y-m-d', strtotime( $d . ' +' . $di . ' days' ) );
-		if ( ! isset( $booked_map[ $day_key ] ) ) {
-			$booked_map[ $day_key ] = array();
-		}
-		// Første dag: blokér fra start_h; efterfølgende dage: fra 08.
-		$block_start = ( 0 === $di ) ? $start_h : 8;
-		$remaining   = ( 0 === $di ) ? $hours   : 13;
-		for ( $h = $block_start; $h < $block_start + $remaining && $h <= 20; $h++ ) {
-			if ( ! in_array( $h, $booked_map[ $day_key ], true ) ) {
-				$booked_map[ $day_key ][] = $h;
-			}
+	if ( ! isset( $booked_map[ $d ] ) ) {
+		$booked_map[ $d ] = array();
+	}
+	for ( $h = $start_h; $h < $start_h + $hours && $h <= 20; $h++ ) {
+		if ( ! in_array( $h, $booked_map[ $d ], true ) ) {
+			$booked_map[ $d ][] = $h;
 		}
 	}
 }
@@ -271,7 +262,7 @@ get_header();
 						<div class="book2__duration">
 							<span class="book2__dur-label"><?php esc_html_e( 'Varighed', 'studie247' ); ?></span>
 							<div class="book2__dur-grid">
-								<?php foreach ( array( '2 timer', '4 timer', '8 timer', '1 dag', '2 dage', '1 uge' ) as $opt ) : ?>
+								<?php foreach ( array( '2 timer', '4 timer', '6 timer', '8 timer', '1 dag' ) as $opt ) : ?>
 									<button type="button" class="book2__dur" data-duration="<?php echo esc_attr( $opt ); ?>"><?php echo esc_html( $opt ); ?></button>
 								<?php endforeach; ?>
 							</div>

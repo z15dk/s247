@@ -14,13 +14,13 @@ $title_a      = get_theme_mod( 's247_studiet_title_a', 'Hvor dit' );
 $title_b      = get_theme_mod( 's247_studiet_title_b', 'indhold skabes' );
 $lead         = get_theme_mod( 's247_studiet_lead', '200 m² produktionsrum. Kamera-rig, lys, lyd, cyklorama — alt klart fra dag 1.' );
 $cta_text     = get_theme_mod( 's247_studiet_cta_text', 'Book studiet' );
-$cta_url      = get_theme_mod( 's247_studiet_cta_url', home_url( '/book/' ) );
+$cta_url      = get_theme_mod( 's247_studiet_cta_url', home_url( '/booking-studie/' ) );
 
 $book_title_a = get_theme_mod( 's247_studiet_book_title_a', 'Book vores studie' );
 $book_title_b = get_theme_mod( 's247_studiet_book_title_b', 'online' );
 $book_lead    = get_theme_mod( 's247_studiet_book_lead' );
 $book_cta     = get_theme_mod( 's247_studiet_book_cta', 'Book nu' );
-$book_url     = get_theme_mod( 's247_studiet_book_url', home_url( '/book/' ) );
+$book_url     = get_theme_mod( 's247_studiet_book_url', home_url( '/booking-studie/' ) );
 $book_psst    = get_theme_mod( 's247_studiet_book_psst' );
 $book_psst_cta= get_theme_mod( 's247_studiet_book_psst_cta', 'Se udlejning' );
 $book_psst_url= get_theme_mod( 's247_studiet_book_psst_url', home_url( '/udlejning/' ) );

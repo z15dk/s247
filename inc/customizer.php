@@ -217,14 +217,14 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		's247_studiet_title_b'     => array( 'label' => 'Overskrift — del 2 (kursiv)',   'type' => 'text', 'default' => 'indhold skabes' ),
 		's247_studiet_lead'        => array( 'label' => 'Under-tekst',                   'type' => 'textarea', 'default' => '200 m² produktionsrum. Kamera-rig, lys, lyd, cyklorama — alt klart fra dag 1.' ),
 		's247_studiet_cta_text'    => array( 'label' => 'Primær knap — tekst',           'type' => 'text', 'default' => 'Book studiet' ),
-		's247_studiet_cta_url'     => array( 'label' => 'Primær knap — URL',             'type' => 'url',  'default' => '/book/' ),
+		's247_studiet_cta_url'     => array( 'label' => 'Primær knap — URL',             'type' => 'url',  'default' => '/booking-studie/' ),
 
 		/* Book-sektion */
 		's247_studiet_book_title_a' => array( 'label' => 'Book-sektion overskrift del 1 (sans)', 'type' => 'text', 'default' => 'Book vores studie' ),
 		's247_studiet_book_title_b' => array( 'label' => 'Book-sektion overskrift del 2 (kursiv)', 'type' => 'text', 'default' => 'online' ),
 		's247_studiet_book_lead'    => array( 'label' => 'Book-sektion tekst',          'type' => 'textarea', 'default' => 'Vælg tid, vælg setup, betal — vi gør resten klar inden du kommer.' ),
 		's247_studiet_book_cta'     => array( 'label' => 'Book-knap tekst',             'type' => 'text', 'default' => 'Book nu' ),
-		's247_studiet_book_url'     => array( 'label' => 'Book-knap URL',               'type' => 'url',  'default' => '/book/' ),
+		's247_studiet_book_url'     => array( 'label' => 'Book-knap URL',               'type' => 'url',  'default' => '/booking-studie/' ),
 		's247_studiet_book_psst'    => array( 'label' => 'Psst-linje (ekstra tip)',     'type' => 'textarea', 'default' => '<em>psst</em> — du kan også leje vores udstyr herfra.' ),
 		's247_studiet_book_psst_cta'=> array( 'label' => 'Psst — knap tekst',           'type' => 'text', 'default' => 'Se udlejning' ),
 		's247_studiet_book_psst_url'=> array( 'label' => 'Psst — knap URL',             'type' => 'url',  'default' => '/udlejning/' ),

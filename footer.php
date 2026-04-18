@@ -54,7 +54,7 @@
 			<div class="site-footer__col">
 				<h3><?php esc_html_e( 'Book', 'studie247' ); ?></h3>
 				<ul>
-					<li><a href="<?php echo esc_url( home_url( '/book/' ) ); ?>"><?php esc_html_e( 'Book studie', 'studie247' ); ?></a></li>
+					<li><a href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>"><?php esc_html_e( 'Book studie', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/priser/' ) ); ?>"><?php esc_html_e( 'Se priser', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>"><?php esc_html_e( 'Få et tilbud', 'studie247' ); ?></a></li>
 				</ul>
