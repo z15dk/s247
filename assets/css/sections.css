@@ -878,8 +878,14 @@
 	align-items: start;
 }
 
+.faq__head { margin-bottom: 0; }
+
 @media (min-width: 900px) {
 	.faq-wrap { grid-template-columns: 1fr 1.5fr; gap: var(--sp-16); }
+	.faq__head {
+		position: sticky;
+		top: calc(var(--header-h) + var(--sp-6));
+	}
 }
 
 /* ─── CTA banner — HUGE editorial display ─── */
