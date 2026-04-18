@@ -10,11 +10,11 @@ get_header();
 
 <?php get_template_part( 'template-parts/hero' ); ?>
 
-<?php get_template_part( 'template-parts/section', 'services' ); ?>
-
 <?php get_template_part( 'template-parts/section', 'studio' ); ?>
 
 <?php get_template_part( 'template-parts/section', 'studio-moods' ); ?>
+
+<?php get_template_part( 'template-parts/section', 'services' ); ?>
 
 <?php get_template_part( 'template-parts/section', 'process' ); ?>
 

@@ -45,7 +45,7 @@ $cta2_url  = get_theme_mod( 's247_studio_cta2_url', home_url( '/studiet/#raalej'
 
 			<div class="studio__content" data-reveal style="--reveal-delay: 120ms;">
 				<div class="section-head__meta">
-					<span class="section-num">02</span>
+					<span class="section-num">01</span>
 					<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Studiet', 'studie247' ); ?></span>
 				</div>
 				<h2 id="studio-title" class="section-head__title">

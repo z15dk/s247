@@ -9,7 +9,7 @@ $services = studie247_get_services();
 	<div class="wrap">
 		<header class="section-head" data-reveal>
 			<div class="section-head__meta">
-				<span class="section-num">01</span>
+				<span class="section-num">02</span>
 				<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Services', 'studie247' ); ?></span>
 			</div>
 			<h2 id="services-title" class="section-head__title">
