@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'STUDIE247_VERSION', '0.3.1' );
+define( 'STUDIE247_VERSION', '0.4.0' );
 define( 'STUDIE247_DIR', get_template_directory() );
 define( 'STUDIE247_URI', get_template_directory_uri() );
 
