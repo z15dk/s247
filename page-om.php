@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Om
+ * Om-side — bruges automatisk når side-slug er "om".
  *
  * @package Studie247
  */

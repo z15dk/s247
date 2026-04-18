@@ -14,7 +14,7 @@
 				</h2>
 			</div>
 			<div class="cta-banner__actions">
-				<?php studie247_button( __( 'Book studie', 'studie247' ), home_url( '/book/' ), 'primary', 'btn--xl' ); ?>
+				<?php studie247_button( __( 'Book studie', 'studie247' ), home_url( '/booking-studie/' ), 'primary', 'btn--xl' ); ?>
 				<a class="btn btn--ghost btn--on-dark" href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>">
 					<?php esc_html_e( 'Tag en snak først', 'studie247' ); ?>
 					<?php echo studie247_icon( 'arrow-right', 16 ); ?>

@@ -9,7 +9,7 @@ $services = studie247_get_services();
 	<div class="wrap">
 		<header class="section-head" data-reveal>
 			<div class="section-head__meta">
-				<span class="section-num">01</span>
+				<span class="section-num">02</span>
 				<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Services', 'studie247' ); ?></span>
 			</div>
 			<h2 id="services-title" class="section-head__title">
@@ -35,8 +35,15 @@ $services = studie247_get_services();
 					$tagline   = get_post_meta( $service->ID, '_s247_tagline', true );
 					$startpris = get_post_meta( $service->ID, '_s247_startpris', true );
 					$cta_text  = get_post_meta( $service->ID, '_s247_cta_text', true ) ?: __( 'Læs mere', 'studie247' );
+					$bg_id     = (int) get_post_meta( $service->ID, '_s247_bg_image', true );
+					$bg_url    = $bg_id ? wp_get_attachment_image_url( $bg_id, 's247-card' ) : '';
+					$card_class = 'card service-card' . ( $bg_url ? ' service-card--has-bg' : '' );
+					$card_style = sprintf( '--reveal-delay: %dms;', 80 * $i );
+					if ( $bg_url ) {
+						$card_style .= ' background-image: url(' . esc_url( $bg_url ) . ');';
+					}
 					?>
-					<article class="card service-card" data-reveal style="--reveal-delay: <?php echo esc_attr( 80 * $i ); ?>ms;">
+					<article class="<?php echo esc_attr( $card_class ); ?>" data-reveal style="<?php echo esc_attr( $card_style ); ?>">
 						<div class="service-card__head">
 							<?php if ( has_post_thumbnail( $service->ID ) ) : ?>
 								<div class="card__icon" style="width:72px;height:72px;padding:0;overflow:hidden;background:transparent;">

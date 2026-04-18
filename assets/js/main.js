@@ -58,6 +58,259 @@
 	});
 
 	// ──────────────────────────────────────────────
+	// Studio moods — tab switcher
+	// ──────────────────────────────────────────────
+	document.querySelectorAll('[data-moods]').forEach((root) => {
+		const tabs   = root.querySelectorAll('[data-mood-target]');
+		const panels = root.querySelectorAll('[data-mood-panel]');
+		tabs.forEach((tab) => {
+			tab.addEventListener('click', () => {
+				const target = tab.dataset.moodTarget;
+				tabs.forEach((t) => {
+					const active = t.dataset.moodTarget === target;
+					t.classList.toggle('is-active', active);
+					t.setAttribute('aria-selected', active ? 'true' : 'false');
+				});
+				panels.forEach((p) => {
+					const active = p.dataset.moodPanel === target;
+					p.classList.toggle('is-active', active);
+					if (active) { p.removeAttribute('hidden'); } else { p.setAttribute('hidden', ''); }
+				});
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────
+	// Team modal (Om-side)
+	// ──────────────────────────────────────────────
+	const teamOpeners = document.querySelectorAll('[data-team-open]');
+	const teamModals  = document.querySelectorAll('[data-team-modal]');
+
+	const closeTeamModal = () => {
+		teamModals.forEach((m) => m.setAttribute('hidden', ''));
+		document.body.classList.remove('team-modal-open');
+	};
+
+	teamOpeners.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const id = btn.dataset.teamOpen;
+			teamModals.forEach((m) => {
+				if (m.dataset.teamModal === id) {
+					m.removeAttribute('hidden');
+				} else {
+					m.setAttribute('hidden', '');
+				}
+			});
+			document.body.classList.add('team-modal-open');
+			const dialog = document.querySelector('[data-team-modal="' + id + '"] .team-modal__close');
+			dialog && dialog.focus();
+		});
+	});
+
+	document.querySelectorAll('[data-team-close]').forEach((el) => {
+		el.addEventListener('click', closeTeamModal);
+	});
+
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') closeTeamModal();
+	});
+
+	// ──────────────────────────────────────────────
+	// Kontakt — Vælg side (radiogruppe)
+	// ──────────────────────────────────────────────
+	const sideButtons = document.querySelectorAll('.side[data-side]');
+	const sideInput   = document.querySelector('[data-side-input]');
+	sideButtons.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			sideButtons.forEach((b) => {
+				const on = b === btn;
+				b.classList.toggle('is-selected', on);
+				b.setAttribute('aria-checked', on ? 'true' : 'false');
+			});
+			if (sideInput) sideInput.value = btn.dataset.side;
+		});
+	});
+
+	// ──────────────────────────────────────────────
+	// Kontakt os — multi-step flow
+	// ──────────────────────────────────────────────
+	const koFlow = document.querySelector('[data-ko-flow]');
+	if (koFlow) {
+		const steps = koFlow.querySelectorAll('[data-ko-step]');
+		const dots  = koFlow.querySelectorAll('[data-ko-dot]');
+		const topicInput = koFlow.querySelector('[data-ko-topic-input]');
+
+		const show = (n) => {
+			steps.forEach((s) => {
+				const active = s.dataset.koStep === String(n);
+				s.classList.toggle('is-active', active);
+				if (active) { s.removeAttribute('hidden'); } else { s.setAttribute('hidden', ''); }
+			});
+			dots.forEach((d) => d.classList.toggle('is-active', d.dataset.koDot === String(n)));
+		};
+
+		koFlow.querySelectorAll('[data-ko-next]').forEach((b) => {
+			b.addEventListener('click', () => {
+				const target = b.dataset.koNext;
+				const currentStep = b.closest('[data-ko-step]');
+				const required = currentStep.querySelectorAll('[required]');
+				for (const el of required) {
+					if (!el.checkValidity()) { el.reportValidity(); return; }
+				}
+				show(target);
+			});
+		});
+
+		koFlow.querySelectorAll('[data-ko-prev]').forEach((b) => {
+			b.addEventListener('click', () => show(b.dataset.koPrev));
+		});
+
+		koFlow.querySelectorAll('[data-ko-topic]').forEach((t) => {
+			t.addEventListener('click', () => {
+				koFlow.querySelectorAll('[data-ko-topic]').forEach((x) => {
+					x.classList.remove('is-selected');
+					x.setAttribute('aria-checked', 'false');
+				});
+				t.classList.add('is-selected');
+				t.setAttribute('aria-checked', 'true');
+				if (topicInput) topicInput.value = t.dataset.koTopic;
+			});
+		});
+	}
+
+	// ──────────────────────────────────────────────
+	// Book — kalender-grid step flow
+	// ──────────────────────────────────────────────
+	const bookPicker = document.querySelector('[data-book-picker]');
+	if (bookPicker) {
+		const slots    = bookPicker.querySelector('[data-book-slots]');
+		const picked   = bookPicker.querySelector('[data-book-picked]');
+		const form     = document.querySelector('[data-book-form]');
+		const dateIn   = form?.querySelector('[data-field-date]');
+		const timeIn   = form?.querySelector('[data-field-time]');
+		const durIn    = form?.querySelector('[data-field-duration]');
+		const sumDate  = document.querySelector('[data-sum-date]');
+		const sumTime  = document.querySelector('[data-sum-time]');
+		const sumDur   = document.querySelector('[data-sum-duration]');
+		const submit   = form?.querySelector('[data-book-submit]');
+		const hint     = form?.querySelector('[data-book-hint]');
+
+		let bookedMap = {};
+		try { bookedMap = JSON.parse(bookPicker.dataset.booked || '{}'); } catch (e) {}
+
+		const applyBookedFor = (iso) => {
+			const blocked = bookedMap[iso] || [];
+			bookPicker.querySelectorAll('.book2__time').forEach((t) => {
+				const h = parseInt(t.dataset.time, 10);
+				const isBlocked = blocked.includes(h);
+				t.classList.toggle('is-disabled', isBlocked);
+				if (isBlocked && t.classList.contains('is-selected')) {
+					t.classList.remove('is-selected');
+					if (timeIn) timeIn.value = '';
+					if (sumTime) { sumTime.textContent = '—'; delete sumTime.dataset.filled; }
+				}
+			});
+		};
+
+		const fmtDate = (iso) => {
+			const d = new Date(iso + 'T00:00:00');
+			const days = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+			const months = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+			return `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]}`;
+		};
+
+		const checkReady = () => {
+			const ready = dateIn.value && timeIn.value && durIn.value;
+			if (submit) submit.disabled = !ready;
+			if (hint) hint.textContent = ready
+				? 'Klar — tjek opsummeringen og udfyld dine oplysninger.'
+				: 'Vælg dato, tid og varighed for at fortsætte.';
+		};
+
+		bookPicker.querySelectorAll('.book2__day[data-date]').forEach((d) => {
+			d.addEventListener('click', () => {
+				bookPicker.querySelectorAll('.book2__day.is-selected').forEach((x) => x.classList.remove('is-selected'));
+				d.classList.add('is-selected');
+				const iso = d.dataset.date;
+				if (dateIn) dateIn.value = iso;
+				if (sumDate) { sumDate.textContent = fmtDate(iso); sumDate.dataset.filled = '1'; }
+				if (picked) picked.textContent = 'Valgt: ' + fmtDate(iso);
+				if (slots) slots.hidden = false;
+				applyBookedFor(iso);
+				checkReady();
+			});
+		});
+
+		bookPicker.querySelectorAll('.book2__time').forEach((t) => {
+			t.addEventListener('click', () => {
+				bookPicker.querySelectorAll('.book2__time.is-selected').forEach((x) => x.classList.remove('is-selected'));
+				t.classList.add('is-selected');
+				if (timeIn) timeIn.value = t.dataset.time;
+				if (sumTime) { sumTime.textContent = t.dataset.time; sumTime.dataset.filled = '1'; }
+				checkReady();
+			});
+		});
+
+		bookPicker.querySelectorAll('.book2__dur').forEach((d) => {
+			d.addEventListener('click', () => {
+				bookPicker.querySelectorAll('.book2__dur.is-selected').forEach((x) => x.classList.remove('is-selected'));
+				d.classList.add('is-selected');
+				if (durIn) durIn.value = d.dataset.duration;
+				if (sumDur) { sumDur.textContent = d.dataset.duration; sumDur.dataset.filled = '1'; }
+				checkReady();
+			});
+		});
+	}
+
+	// ──────────────────────────────────────────────
+	// Studiet — reels click-to-play
+	// ──────────────────────────────────────────────
+	document.querySelectorAll('[data-reel]').forEach((reel) => {
+		const video = reel.querySelector('[data-reel-video]');
+		const btn   = reel.querySelector('[data-reel-play]');
+		if (!video || !btn) return;
+
+		const start = () => {
+			video.muted = false;
+			video.controls = true;
+			video.play().catch(() => {
+				// If unmuted play is blocked, fall back to muted.
+				video.muted = true;
+				video.play();
+			});
+			reel.classList.add('is-playing');
+		};
+
+		btn.addEventListener('click', start);
+		video.addEventListener('click', () => {
+			if (!reel.classList.contains('is-playing')) start();
+		});
+	});
+
+	// ──────────────────────────────────────────────
+	// Studiet — setup switcher
+	// ──────────────────────────────────────────────
+	document.querySelectorAll('[data-studiet-setups]').forEach((root) => {
+		const tabs   = root.querySelectorAll('[data-setup-target]');
+		const panels = root.querySelectorAll('[data-setup-panel]');
+		tabs.forEach((tab) => {
+			tab.addEventListener('click', () => {
+				const target = tab.dataset.setupTarget;
+				tabs.forEach((t) => {
+					const active = t.dataset.setupTarget === target;
+					t.classList.toggle('is-active', active);
+					t.setAttribute('aria-selected', active ? 'true' : 'false');
+				});
+				panels.forEach((p) => {
+					const active = p.dataset.setupPanel === target;
+					p.classList.toggle('is-active', active);
+					if (active) { p.removeAttribute('hidden'); } else { p.setAttribute('hidden', ''); }
+				});
+			});
+		});
+	});
+
+	// ──────────────────────────────────────────────
 	// Smooth scroll for on-page anchor links
 	// ──────────────────────────────────────────────
 	document.querySelectorAll('a[href^="#"]').forEach((a) => {

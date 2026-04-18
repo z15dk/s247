@@ -46,7 +46,7 @@
 				<?php echo studie247_icon( 'phone', 18 ); ?>
 				<span><?php esc_html_e( '+45 00 00 00 00', 'studie247' ); ?></span>
 			</a>
-			<?php studie247_button( __( 'Book nu', 'studie247' ), home_url( '/book/' ), 'primary', 'btn--sm' ); ?>
+			<?php studie247_button( __( 'Book nu', 'studie247' ), home_url( '/booking-studie/' ), 'primary', 'btn--sm' ); ?>
 			<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="mobile-nav" data-nav-toggle>
 				<span class="screen-reader-text"><?php esc_html_e( 'Åbn menu', 'studie247' ); ?></span>
 				<?php echo studie247_icon( 'menu', 28 ); ?>
@@ -83,9 +83,6 @@
 			</li>
 		<?php endforeach; ?>
 	</ul>
-	<div>
-		<?php studie247_button( __( 'Book nu', 'studie247' ), home_url( '/book/' ), 'primary', 'btn--lg' ); ?>
-	</div>
 </div>
 
 <main id="main" class="site-main">

@@ -42,7 +42,7 @@ $included_items = array_filter( array_map( 'trim', preg_split( "/\r\n|\r|\n/", $
 				<p class="hero__lead"><?php echo esc_html( $tagline ); ?></p>
 			<?php endif; ?>
 			<div class="hero__actions">
-				<?php studie247_button( __( 'Book denne service', 'studie247' ), home_url( '/book/?service=' . get_post_field( 'post_name' ) ), 'primary', 'btn--lg' ); ?>
+				<?php studie247_button( __( 'Book denne service', 'studie247' ), home_url( '/booking-studie/?service=' . get_post_field( 'post_name' ) ), 'primary', 'btn--lg' ); ?>
 				<?php if ( $startpris ) : ?>
 					<span style="align-self:center; color: var(--color-accent); font-family: var(--font-serif); font-style: italic; font-size: var(--fs-lg);">
 						<?php echo esc_html( $startpris ); ?>

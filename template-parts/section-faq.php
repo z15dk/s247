@@ -28,7 +28,7 @@ $faqs = array(
 <section class="section" aria-labelledby="faq-title">
 	<div class="wrap">
 		<div class="faq-wrap">
-			<header class="section-head" data-reveal style="margin-bottom:0;position:sticky;top:calc(var(--header-h) + var(--sp-6));">
+			<header class="section-head faq__head" data-reveal>
 				<div class="section-head__meta">
 					<span class="section-num">06</span>
 					<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'FAQ', 'studie247' ); ?></span>
