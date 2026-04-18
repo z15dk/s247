@@ -10,10 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_action( 'wp_enqueue_scripts', function () {
 	$version = STUDIE247_VERSION;
 
-	// Preconnect to Google Fonts (fallback/temporary Migra-alternative).
+	// Google Fonts — Inter (sans) + Fraunces (dramatic serif italics).
 	wp_enqueue_style(
 		'studie247-fonts',
-		'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,700;1,900&display=swap',
+		'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,200;1,9..144,400;1,9..144,700;1,9..144,900&display=swap',
 		array(),
 		null
 	);
