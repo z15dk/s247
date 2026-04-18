@@ -132,6 +132,53 @@
 	});
 
 	// ──────────────────────────────────────────────
+	// Kontakt os — multi-step flow
+	// ──────────────────────────────────────────────
+	const koFlow = document.querySelector('[data-ko-flow]');
+	if (koFlow) {
+		const steps = koFlow.querySelectorAll('[data-ko-step]');
+		const dots  = koFlow.querySelectorAll('[data-ko-dot]');
+		const topicInput = koFlow.querySelector('[data-ko-topic-input]');
+
+		const show = (n) => {
+			steps.forEach((s) => {
+				const active = s.dataset.koStep === String(n);
+				s.classList.toggle('is-active', active);
+				if (active) { s.removeAttribute('hidden'); } else { s.setAttribute('hidden', ''); }
+			});
+			dots.forEach((d) => d.classList.toggle('is-active', d.dataset.koDot === String(n)));
+		};
+
+		koFlow.querySelectorAll('[data-ko-next]').forEach((b) => {
+			b.addEventListener('click', () => {
+				const target = b.dataset.koNext;
+				const currentStep = b.closest('[data-ko-step]');
+				const required = currentStep.querySelectorAll('[required]');
+				for (const el of required) {
+					if (!el.checkValidity()) { el.reportValidity(); return; }
+				}
+				show(target);
+			});
+		});
+
+		koFlow.querySelectorAll('[data-ko-prev]').forEach((b) => {
+			b.addEventListener('click', () => show(b.dataset.koPrev));
+		});
+
+		koFlow.querySelectorAll('[data-ko-topic]').forEach((t) => {
+			t.addEventListener('click', () => {
+				koFlow.querySelectorAll('[data-ko-topic]').forEach((x) => {
+					x.classList.remove('is-selected');
+					x.setAttribute('aria-checked', 'false');
+				});
+				t.classList.add('is-selected');
+				t.setAttribute('aria-checked', 'true');
+				if (topicInput) topicInput.value = t.dataset.koTopic;
+			});
+		});
+	}
+
+	// ──────────────────────────────────────────────
 	// Book — kalender-grid step flow
 	// ──────────────────────────────────────────────
 	const bookPicker = document.querySelector('[data-book-picker]');
