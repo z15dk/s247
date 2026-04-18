@@ -178,8 +178,49 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 		$result['error'] = __( 'CSV-filen mangler en header-række.', 'studie247' );
 		return $result;
 	}
-	$header = array_map( function ( $h ) {
-		return strtolower( trim( $h ) );
+
+	// Normalisér header: trim + lowercase + map danske navne.
+	$alias_map = array(
+		'tittel'                    => 'title',
+		'titel'                     => 'title',
+		'navn'                      => 'title',
+		'kort beskrivelse'          => 'excerpt',
+		'beskrivelse'               => 'excerpt',
+		'lang beskrivelse'          => 'content',
+		'dags pris'                 => 'pris_dag',
+		'dagspris'                  => 'pris_dag',
+		'pris pr dag'               => 'pris_dag',
+		'pris pr. dag'              => 'pris_dag',
+		'uge pris'                  => 'pris_uge',
+		'ugepris'                   => 'pris_uge',
+		'pris pr uge'               => 'pris_uge',
+		'evt depositum'             => 'deposit',
+		'depositum'                 => 'deposit',
+		'tags'                      => 'sku',
+		'tag'                       => 'sku',
+		'vare-nr'                   => 'sku',
+		'varenr'                    => 'sku',
+		'antal'                     => 'antal',
+		'stk'                       => 'antal',
+		'quantity'                  => 'antal',
+		'ejer'                      => 'ejer',
+		'evt serienummer'           => 'serienummer',
+		'serienummer'               => 'serienummer',
+		'serie'                     => 'serienummer',
+		'dokumentation af stand 1'  => 'state_url_1',
+		'dokumentation af stand 2'  => 'state_url_2',
+		'dokumentation af stand 3'  => 'state_url_3',
+		'dokumentation af stand 4'  => 'state_url_4',
+		'stand 1'                   => 'state_url_1',
+		'stand 2'                   => 'state_url_2',
+		'stand 3'                   => 'state_url_3',
+		'stand 4'                   => 'state_url_4',
+	);
+	$header = array_map( function ( $h ) use ( $alias_map ) {
+		$key = strtolower( trim( $h ) );
+		// Dobbelt-mellemrum → et mellemrum.
+		$key = preg_replace( '/\s+/', ' ', $key );
+		return isset( $alias_map[ $key ] ) ? $alias_map[ $key ] : $key;
 	}, $header );
 
 	$row_num = 1;
@@ -235,14 +276,21 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 		}
 
 		// Meta
-		foreach ( array( 'pris_dag', 'pris_uge', 'deposit', 'sku' ) as $m ) {
+		foreach ( array( 'pris_dag', 'pris_uge', 'deposit', 'sku', 'ejer', 'serienummer' ) as $m ) {
 			if ( isset( $data[ $m ] ) && $data[ $m ] !== '' ) {
 				update_post_meta( $post_id, '_s247_' . $m, sanitize_text_field( $data[ $m ] ) );
 			}
 		}
-		$in_stock = isset( $data['in_stock'] ) ? strtolower( trim( $data['in_stock'] ) ) : '1';
-		$in_stock = in_array( $in_stock, array( '1', 'true', 'ja', 'yes', 'y', 'på lager' ), true ) ? '1' : '0';
-		update_post_meta( $post_id, '_s247_in_stock', $in_stock );
+		// Antal (styrer også in_stock hvis sat).
+		if ( isset( $data['antal'] ) && $data['antal'] !== '' ) {
+			$qty = max( 0, (int) $data['antal'] );
+			update_post_meta( $post_id, '_s247_antal', $qty );
+			update_post_meta( $post_id, '_s247_in_stock', $qty > 0 ? '1' : '0' );
+		} else {
+			$in_stock = isset( $data['in_stock'] ) ? strtolower( trim( $data['in_stock'] ) ) : '1';
+			$in_stock = in_array( $in_stock, array( '1', 'true', 'ja', 'yes', 'y', 'på lager' ), true ) ? '1' : '0';
+			update_post_meta( $post_id, '_s247_in_stock', $in_stock );
+		}
 
 		// Kategori
 		if ( ! empty( $data['kategori'] ) ) {

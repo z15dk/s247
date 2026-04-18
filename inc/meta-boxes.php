@@ -222,11 +222,14 @@ add_action( 'add_meta_boxes', function () {
 
 function studie247_render_udlejning_meta( $post ) {
 	wp_nonce_field( 's247_udlejning_meta', 's247_udlejning_nonce' );
-	$pris_dag  = get_post_meta( $post->ID, '_s247_pris_dag', true );
-	$pris_uge  = get_post_meta( $post->ID, '_s247_pris_uge', true );
-	$deposit   = get_post_meta( $post->ID, '_s247_deposit', true );
-	$sku       = get_post_meta( $post->ID, '_s247_sku', true );
-	$in_stock  = get_post_meta( $post->ID, '_s247_in_stock', true );
+	$pris_dag    = get_post_meta( $post->ID, '_s247_pris_dag', true );
+	$pris_uge    = get_post_meta( $post->ID, '_s247_pris_uge', true );
+	$deposit     = get_post_meta( $post->ID, '_s247_deposit', true );
+	$sku         = get_post_meta( $post->ID, '_s247_sku', true );
+	$in_stock    = get_post_meta( $post->ID, '_s247_in_stock', true );
+	$antal       = get_post_meta( $post->ID, '_s247_antal', true );
+	$ejer        = get_post_meta( $post->ID, '_s247_ejer', true );
+	$serienummer = get_post_meta( $post->ID, '_s247_serienummer', true );
 	?>
 	<p>
 		<label for="s247_pris_dag"><strong><?php esc_html_e( 'Pris pr. dag (fx 299 kr)', 'studie247' ); ?></strong></label><br>
@@ -245,10 +248,26 @@ function studie247_render_udlejning_meta( $post ) {
 		<input type="text" id="s247_sku" name="s247_sku" value="<?php echo esc_attr( $sku ); ?>" style="width:100%">
 	</p>
 	<p>
+		<label for="s247_antal"><strong><?php esc_html_e( 'Antal på lager', 'studie247' ); ?></strong></label><br>
+		<input type="number" id="s247_antal" name="s247_antal" value="<?php echo esc_attr( $antal ); ?>" min="0" step="1" style="width:100px">
+		<span style="color:#666;font-size:12px;">&nbsp;<?php esc_html_e( '(0 = udlejet / ikke tilgængelig)', 'studie247' ); ?></span>
+	</p>
+	<p>
 		<label>
 			<input type="checkbox" name="s247_in_stock" value="1" <?php checked( '1', $in_stock ); ?>>
-			<?php esc_html_e( 'På lager / kan lejes nu', 'studie247' ); ?>
+			<?php esc_html_e( 'Kan lejes nu (bliver sat automatisk når Antal > 0)', 'studie247' ); ?>
 		</label>
+	</p>
+
+	<hr style="margin:16px 0;">
+	<p style="font-size:12px;color:#666;margin:0 0 8px;"><strong><?php esc_html_e( 'Kun til intern brug — vises ikke på forsiden', 'studie247' ); ?></strong></p>
+	<p>
+		<label for="s247_ejer"><strong><?php esc_html_e( 'Ejer', 'studie247' ); ?></strong></label><br>
+		<input type="text" id="s247_ejer" name="s247_ejer" value="<?php echo esc_attr( $ejer ); ?>" style="width:100%" placeholder="z-15">
+	</p>
+	<p>
+		<label for="s247_serienummer"><strong><?php esc_html_e( 'Serienummer', 'studie247' ); ?></strong></label><br>
+		<input type="text" id="s247_serienummer" name="s247_serienummer" value="<?php echo esc_attr( $serienummer ); ?>" style="width:100%">
 	</p>
 	<?php
 }
@@ -263,10 +282,16 @@ add_action( 'save_post_udlejning_item', function ( $post_id ) {
 	if ( ! current_user_can( 'edit_post', $post_id ) ) {
 		return;
 	}
-	foreach ( array( 's247_pris_dag', 's247_pris_uge', 's247_deposit', 's247_sku' ) as $field ) {
+	foreach ( array( 's247_pris_dag', 's247_pris_uge', 's247_deposit', 's247_sku', 's247_ejer', 's247_serienummer' ) as $field ) {
 		if ( isset( $_POST[ $field ] ) ) {
 			update_post_meta( $post_id, '_' . $field, sanitize_text_field( wp_unslash( $_POST[ $field ] ) ) );
 		}
 	}
-	update_post_meta( $post_id, '_s247_in_stock', ! empty( $_POST['s247_in_stock'] ) ? '1' : '0' );
+	if ( isset( $_POST['s247_antal'] ) && $_POST['s247_antal'] !== '' ) {
+		$qty = max( 0, (int) $_POST['s247_antal'] );
+		update_post_meta( $post_id, '_s247_antal', $qty );
+		update_post_meta( $post_id, '_s247_in_stock', $qty > 0 ? '1' : '0' );
+	} else {
+		update_post_meta( $post_id, '_s247_in_stock', ! empty( $_POST['s247_in_stock'] ) ? '1' : '0' );
+	}
 } );
