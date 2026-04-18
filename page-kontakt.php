@@ -120,6 +120,7 @@ if ( ! empty( $_POST['s247_contact_nonce'] ) && wp_verify_nonce( $_POST['s247_co
 		<?php else : ?>
 			<?php if ( $errors ) : ?>
 				<div class="kontakt-errors" role="alert">
+					<span class="kontakt-errors__label"><?php esc_html_e( 'Lige en ting—', 'studie247' ); ?></span>
 					<ul>
 						<?php foreach ( $errors as $err ) : ?>
 							<li><?php echo esc_html( $err ); ?></li>
@@ -127,7 +128,7 @@ if ( ! empty( $_POST['s247_contact_nonce'] ) && wp_verify_nonce( $_POST['s247_co
 					</ul>
 				</div>
 			<?php endif; ?>
-			<form method="post" action="<?php echo esc_url( get_permalink() ); ?>" class="kontakt-form" novalidate>
+			<form method="post" action="" class="kontakt-form" novalidate>
 				<?php wp_nonce_field( 's247_contact', 's247_contact_nonce' ); ?>
 				<input type="hidden" name="side" value="<?php echo esc_attr( $form_side ); ?>" data-side-input>
 				<div class="kontakt-form__row">
