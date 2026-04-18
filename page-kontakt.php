@@ -5,15 +5,14 @@
  * @package Studie247
  */
 
-get_header();
-
-$submitted  = false;
 $errors     = array();
 $form_name  = '';
 $form_email = '';
 $form_msg   = '';
 $form_side  = '';
+$submitted  = isset( $_GET['sendt'] ) && '1' === $_GET['sendt'];
 
+// Behandl POST før get_header() så vi kan redirecte uden "headers already sent".
 if ( ! empty( $_POST['s247_contact_nonce'] ) && wp_verify_nonce( $_POST['s247_contact_nonce'], 's247_contact' ) ) {
 	$form_name  = sanitize_text_field( wp_unslash( $_POST['name'] ?? '' ) );
 	$form_email = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
@@ -49,7 +48,7 @@ if ( ! empty( $_POST['s247_contact_nonce'] ) && wp_verify_nonce( $_POST['s247_co
 			'Content-Type: text/plain; charset=UTF-8',
 			'Reply-To: ' . $form_name . ' <' . $form_email . '>',
 		);
-		wp_mail( $admin_to, $admin_subject, $admin_body, $admin_headers );
+		@wp_mail( $admin_to, $admin_subject, $admin_body, $admin_headers );
 
 		$user_subject  = 'Tak for din henvendelse — Studie 247';
 		$user_body     = "Hej {$form_name},\n\nTak for at du skrev til os. Vi vender tilbage så hurtigt vi kan — typisk inden for 24 timer på hverdage.\n";
@@ -62,11 +61,14 @@ if ( ! empty( $_POST['s247_contact_nonce'] ) && wp_verify_nonce( $_POST['s247_co
 			'From: Studie 247 <info@s247.dk>',
 			'Reply-To: info@s247.dk',
 		);
-		wp_mail( $form_email, $user_subject, $user_body, $user_headers );
+		@wp_mail( $form_email, $user_subject, $user_body, $user_headers );
 
-		$submitted = true;
+		wp_safe_redirect( add_query_arg( 'sendt', '1', wp_get_referer() ?: home_url( '/kontakt/' ) ) );
+		exit;
 	}
 }
+
+get_header();
 ?>
 
 <section class="kontakt-section">
