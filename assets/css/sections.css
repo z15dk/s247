@@ -327,7 +327,7 @@
 
 .hero__brand {
 	display: inline-flex;
-	align-items: baseline;
+	align-items: center;
 	gap: 0.25em;
 	color: var(--color-ink);
 	font-family: var(--font-sans);
@@ -335,6 +335,14 @@
 	font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
 	text-decoration: none;
 	letter-spacing: 0.02em;
+}
+
+.hero__brand-img {
+	display: block;
+	height: clamp(28px, 2.5vw, 40px);
+	width: auto;
+	max-width: 200px;
+	object-fit: contain;
 }
 
 .hero__brand .logo__num {

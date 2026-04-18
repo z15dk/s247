@@ -25,8 +25,16 @@ $hero_display_image = get_theme_mod( 's247_hero_display_image' );
 	<div class="hero__stage">
 		<div class="hero__top">
 			<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="hero__brand" aria-label="<?php esc_attr_e( 'Studie 247 forside', 'studie247' ); ?>">
-				<span class="logo__word">STUDIE</span>
-				<span class="logo__num">247</span>
+				<?php if ( has_custom_logo() ) :
+					$logo_id  = get_theme_mod( 'custom_logo' );
+					$logo_src = $logo_id ? wp_get_attachment_image_src( $logo_id, 'full' ) : false;
+					if ( $logo_src ) : ?>
+						<img src="<?php echo esc_url( $logo_src[0] ); ?>" alt="<?php esc_attr_e( 'Studie 247', 'studie247' ); ?>" class="hero__brand-img">
+					<?php endif;
+				else : ?>
+					<span class="logo__word">STUDIE</span>
+					<span class="logo__num">247</span>
+				<?php endif; ?>
 			</a>
 			<button type="button" class="hero-menu-toggle" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" aria-label="<?php esc_attr_e( 'Åbn menu', 'studie247' ); ?>">
 				<?php echo studie247_icon( 'menu', 32 ); ?>
