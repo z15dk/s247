@@ -275,6 +275,245 @@ get_header();
 				</div>
 			</article>
 
+			<!-- Kontakt-sektion delimiter -->
+			<div class="kc-divider">
+				<span>Kontakt-formular · 10 bud</span>
+			</div>
+
+			<!-- 11. Emne-vælger -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">11</span>
+					<div>
+						<h2>Emne-vælger</h2>
+						<p>Vælg topic som pills, så én besked.</p>
+					</div>
+				</header>
+				<div class="kc-frame">
+					<span class="kc-eyebrow">Hvad drejer det sig om?</span>
+					<div class="kc11-topics">
+						<span class="kc11-pill kc11-pill--on">Booking</span>
+						<span class="kc11-pill">Priser</span>
+						<span class="kc11-pill">Udstyrs-leje</span>
+						<span class="kc11-pill">Andet</span>
+					</div>
+					<div class="kc-input" style="min-height:72px;">Din besked …</div>
+					<div class="kc-input">Navn & e-mail</div>
+					<button class="kc-btn kc-btn--primary">Send →</button>
+				</div>
+			</article>
+
+			<!-- 12. Visitkort-split -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">12</span>
+					<div>
+						<h2>Visitkort-split</h2>
+						<p>Kontakt-info som kort, form ved siden af.</p>
+					</div>
+				</header>
+				<div class="kc-frame">
+					<div class="kc12-split">
+						<div class="kc12-card">
+							<span class="kc-eyebrow">Studie 247</span>
+							<h3>Aarhus</h3>
+							<p>📧 info@s247.dk</p>
+							<p>📞 +45 00 00 00 00</p>
+							<p>📍 Amager 2026</p>
+						</div>
+						<div class="kc12-form">
+							<div class="kc-input">Navn</div>
+							<div class="kc-input">E-mail</div>
+							<div class="kc-input" style="min-height:56px;">Besked</div>
+							<button class="kc-btn kc-btn--primary">Send →</button>
+						</div>
+					</div>
+				</div>
+			</article>
+
+			<!-- 13. Editorial løfte -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">13</span>
+					<div>
+						<h2>Editorial løfte</h2>
+						<p>Stort løfte, minimal form.</p>
+					</div>
+				</header>
+				<div class="kc-frame kc13-frame">
+					<span class="kc-eyebrow">Skriv til os</span>
+					<h3 class="kc13-promise">Vi svarer <em>indenfor 24 timer</em>.</h3>
+					<div class="kc-input">E-mail</div>
+					<div class="kc-input" style="min-height:64px;">Hvad kan vi hjælpe med?</div>
+					<button class="kc-btn kc-btn--primary">Send →</button>
+				</div>
+			</article>
+
+			<!-- 14. Form + direkte kontakt -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">14</span>
+					<div>
+						<h2>Form + direkte</h2>
+						<p>Formular + genveje til mail/tlf/social.</p>
+					</div>
+				</header>
+				<div class="kc-frame">
+					<div class="kc14-split">
+						<div class="kc14-form">
+							<div class="kc-input">Navn</div>
+							<div class="kc-input">E-mail</div>
+							<div class="kc-input" style="min-height:56px;">Besked</div>
+							<button class="kc-btn kc-btn--primary">Send →</button>
+						</div>
+						<aside class="kc14-direct">
+							<span class="kc-eyebrow">Eller direkte</span>
+							<a>📧 info@s247.dk</a>
+							<a>📞 +45 00 00 00 00</a>
+							<a>💬 Instagram</a>
+							<a>🎵 TikTok</a>
+						</aside>
+					</div>
+				</div>
+			</article>
+
+			<!-- 15. Spørgsmåls-flow -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">15</span>
+					<div>
+						<h2>Spørgsmåls-flow</h2>
+						<p>Ét spørgsmål ad gangen, serif-stort.</p>
+					</div>
+				</header>
+				<div class="kc-frame">
+					<span class="kc-eyebrow">Spørgsmål 02 / 03</span>
+					<h3 class="kc15-q"><em>Hvad</em> drejer det sig om?</h3>
+					<div class="kc-input" style="min-height:72px;">Skriv frit her …</div>
+					<div class="kc-actions">
+						<button class="kc-btn kc-btn--ghost">← Tilbage</button>
+						<button class="kc-btn kc-btn--primary">Næste →</button>
+					</div>
+				</div>
+			</article>
+
+			<!-- 16. Stablede kort -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">16</span>
+					<div>
+						<h2>Stablede kort</h2>
+						<p>Hvert spørgsmål i sit eget lille kort.</p>
+					</div>
+				</header>
+				<div class="kc-frame">
+					<div class="kc16-stack">
+						<div class="kc16-item kc16-item--done"><span>01 · Emne</span><strong>Booking</strong></div>
+						<div class="kc16-item kc16-item--done"><span>02 · Navn</span><strong>Anna Holm</strong></div>
+						<div class="kc16-item kc16-item--active">
+							<span>03 · E-mail</span>
+							<div class="kc-input" style="padding:6px 10px;font-size:12px;">anna@example.dk</div>
+						</div>
+						<div class="kc16-item"><span>04 · Besked</span></div>
+					</div>
+				</div>
+			</article>
+
+			<!-- 17. Dark glas over hero -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">17</span>
+					<div>
+						<h2>Glas på mørk hero</h2>
+						<p>Flydende form over studio-billede.</p>
+					</div>
+				</header>
+				<div class="kc-frame kc17-frame">
+					<div class="kc17-glass">
+						<span class="kc-eyebrow">Kontakt</span>
+						<h3>Sig hej</h3>
+						<div class="kc-input kc-input--dark">Navn</div>
+						<div class="kc-input kc-input--dark">E-mail</div>
+						<div class="kc-input kc-input--dark" style="min-height:56px;">Besked</div>
+						<button class="kc-btn kc-btn--accent">Send →</button>
+					</div>
+				</div>
+			</article>
+
+			<!-- 18. To spor — Book / Spørg -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">18</span>
+					<div>
+						<h2>To spor</h2>
+						<p>Book studie eller spørg om andet.</p>
+					</div>
+				</header>
+				<div class="kc-frame">
+					<div class="kc18-split">
+						<div class="kc18-side">
+							<span class="kc-eyebrow">Spor A</span>
+							<h3><em>Book studie</em></h3>
+							<p>Tid, setup, pris — direkte i kalenderen.</p>
+							<span class="kc-arrow">→</span>
+						</div>
+						<div class="kc18-side kc18-side--alt">
+							<span class="kc-eyebrow">Spor B</span>
+							<h3><em>Spørg om alt andet</em></h3>
+							<p>Formular, mail eller telefon — dit valg.</p>
+							<span class="kc-arrow">→</span>
+						</div>
+					</div>
+				</div>
+			</article>
+
+			<!-- 19. Kort + form -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">19</span>
+					<div>
+						<h2>Kort + form</h2>
+						<p>Google-kort + formular side om side.</p>
+					</div>
+				</header>
+				<div class="kc-frame">
+					<div class="kc19-split">
+						<div class="kc19-map">
+							<span class="kc19-pin">📍</span>
+							<span class="kc19-city">Aarhus</span>
+						</div>
+						<div class="kc19-form">
+							<div class="kc-input">Navn</div>
+							<div class="kc-input">E-mail</div>
+							<div class="kc-input" style="min-height:56px;">Besked</div>
+							<button class="kc-btn kc-btn--primary">Send →</button>
+						</div>
+					</div>
+				</div>
+			</article>
+
+			<!-- 20. Avis-redaktion -->
+			<article class="kc-card">
+				<header class="kc-card__head">
+					<span class="kc-card__num">20</span>
+					<div>
+						<h2>Avis-redaktion</h2>
+						<p>Editorial serif, "Skriv til redaktionen".</p>
+					</div>
+				</header>
+				<div class="kc-frame kc20-frame">
+					<div class="kc20-masthead">
+						<span>STUDIE 247 — ugebrev nr. 18</span>
+						<span>Aarhus · fredag</span>
+					</div>
+					<h3 class="kc20-head"><em>Skriv</em> til redaktionen</h3>
+					<p class="kc20-byline">Alle henvendelser læses af én der lytter.</p>
+					<div class="kc-input">Navn & e-mail</div>
+					<div class="kc-input" style="min-height:72px;">Dit indlæg …</div>
+					<button class="kc-btn kc-btn--primary">Indsend →</button>
+				</div>
+			</article>
+
 		</div>
 	</div>
 </section>
@@ -569,6 +808,196 @@ get_header();
 }
 .kc10-glass h3 { font-family: var(--font-sans); font-size: 1.1rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
 .kc10-glass .kc-eyebrow { color: var(--s247-bone-60); }
+
+/* Delimiter mellem book- og kontakt-koncepter */
+.kc-divider {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	gap: var(--sp-4);
+	margin: var(--sp-6) 0 var(--sp-2);
+}
+.kc-divider::before, .kc-divider::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: var(--color-border);
+}
+.kc-divider span {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: var(--color-accent);
+}
+
+/* 11 — Emne-vælger */
+.kc11-topics { display: flex; gap: 6px; flex-wrap: wrap; }
+.kc11-pill {
+	padding: 7px 14px;
+	border: 1px solid var(--color-border);
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+}
+.kc11-pill--on { background: var(--color-ink); color: var(--s247-bone); border-color: var(--color-ink); }
+
+/* 12 — Visitkort-split */
+.kc12-split { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border-radius: 12px; overflow: hidden; }
+.kc12-card {
+	background: var(--color-ink); color: var(--s247-bone); padding: var(--sp-5);
+	display: flex; flex-direction: column; gap: 6px;
+	font-size: 12px;
+}
+.kc12-card h3 { font-family: var(--font-serif); font-style: italic; font-size: 1.5rem; font-weight: 400; color: var(--color-accent); margin: 4px 0 var(--sp-3); }
+.kc12-card p { margin: 0; color: var(--s247-bone-80); }
+.kc12-card .kc-eyebrow { color: var(--s247-bone-60); }
+.kc12-form { background: #FFF; padding: var(--sp-5); display: flex; flex-direction: column; gap: 8px; }
+
+/* 13 — Editorial løfte */
+.kc13-promise {
+	font-family: var(--font-sans);
+	font-size: 1.5rem;
+	font-weight: 700;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+	margin: var(--sp-2) 0 var(--sp-4);
+}
+.kc13-promise em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--color-accent); }
+
+/* 14 — Form + direkte */
+.kc14-split { display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--sp-4); }
+.kc14-form { display: flex; flex-direction: column; gap: 8px; }
+.kc14-direct {
+	display: flex; flex-direction: column; gap: 8px;
+	padding: var(--sp-4);
+	background: var(--color-surface);
+	border-radius: 10px;
+	font-size: 12px;
+}
+.kc14-direct a { color: var(--color-ink); text-decoration: none; font-weight: 600; cursor: pointer; }
+.kc14-direct a:hover { color: var(--color-accent); }
+
+/* 15 — Spørgsmåls-flow */
+.kc15-q {
+	font-family: var(--font-sans);
+	font-weight: 700;
+	font-size: 1.5rem;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+	margin: 4px 0 var(--sp-3);
+}
+.kc15-q em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--color-accent); }
+
+/* 16 — Stablede kort */
+.kc16-stack { display: flex; flex-direction: column; gap: 8px; }
+.kc16-item {
+	padding: 12px 14px;
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	display: flex; justify-content: space-between; align-items: center;
+	gap: var(--sp-3);
+	font-size: 13px;
+}
+.kc16-item span {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	color: var(--color-ink-mute);
+}
+.kc16-item strong { color: var(--color-accent); font-weight: 700; }
+.kc16-item--done { background: var(--color-surface); }
+.kc16-item--active { border-color: var(--color-ink); flex-direction: column; align-items: stretch; gap: 8px; }
+
+/* 17 — Glas på mørk */
+.kc17-frame {
+	background:
+		radial-gradient(ellipse at 70% 40%, rgba(158,43,37,0.35) 0%, transparent 55%),
+		linear-gradient(135deg, #1e1e1e 0%, #2a1f1d 100%);
+	padding: var(--sp-6);
+}
+.kc17-glass {
+	background: rgba(244, 233, 221, 0.1);
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+	border: 1px solid rgba(244, 233, 221, 0.2);
+	border-radius: 14px;
+	padding: var(--sp-5);
+	color: var(--s247-bone);
+	display: flex; flex-direction: column; gap: 8px;
+}
+.kc17-glass h3 { font-family: var(--font-sans); font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.kc17-glass .kc-eyebrow { color: var(--s247-bone-60); }
+
+/* 18 — To spor */
+.kc18-split { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border-radius: 12px; overflow: hidden; min-height: 220px; }
+.kc18-side {
+	padding: var(--sp-5);
+	display: flex; flex-direction: column;
+	gap: var(--sp-2);
+	background: #FFF;
+	position: relative;
+}
+.kc18-side h3 { font-family: var(--font-sans); font-size: 1.1rem; font-weight: 700; margin: 6px 0 0; }
+.kc18-side h3 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--color-accent); }
+.kc18-side p { font-size: 12px; color: var(--color-ink-mute); line-height: 1.4; margin: 0; }
+.kc18-side .kc-arrow { margin-top: auto; align-self: flex-end; font-size: 1.25rem; color: var(--color-accent); }
+.kc18-side--alt { background: var(--color-ink); color: var(--s247-bone); }
+.kc18-side--alt p { color: var(--s247-bone-60); }
+
+/* 19 — Kort + form */
+.kc19-split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); align-items: stretch; }
+.kc19-map {
+	position: relative;
+	background:
+		radial-gradient(circle at 60% 45%, rgba(158,43,37,0.25) 0%, transparent 40%),
+		linear-gradient(135deg, #eadfd0 0%, #d5c6b0 50%, #b6a68c 100%);
+	border-radius: 10px;
+	display: grid;
+	place-items: center;
+	min-height: 180px;
+}
+.kc19-pin { position: absolute; top: 40%; left: 55%; font-size: 24px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2)); }
+.kc19-city {
+	position: absolute; top: 55%; left: 50%;
+	font-family: var(--font-serif); font-style: italic;
+	color: var(--color-accent); font-size: 1.1rem; font-weight: 700;
+}
+.kc19-form { display: flex; flex-direction: column; gap: 8px; }
+
+/* 20 — Avis-redaktion */
+.kc20-frame {
+	background: #f4e9dd;
+	font-family: Georgia, "Times New Roman", serif;
+}
+.kc20-masthead {
+	display: flex; justify-content: space-between;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.2em;
+	padding-bottom: var(--sp-2);
+	border-bottom: 2px solid var(--color-ink);
+	color: var(--color-ink);
+}
+.kc20-head {
+	font-family: Georgia, serif;
+	font-size: 1.75rem;
+	font-weight: 900;
+	letter-spacing: -0.02em;
+	margin: var(--sp-3) 0 4px;
+	color: var(--color-ink);
+}
+.kc20-head em { font-family: Georgia, serif; font-style: italic; font-weight: 400; color: var(--color-accent); }
+.kc20-byline {
+	font-family: Georgia, serif; font-style: italic;
+	color: var(--color-ink-mute); font-size: 13px;
+	margin: 0 0 var(--sp-4);
+	border-bottom: 1px solid rgba(40,40,40,0.2);
+	padding-bottom: var(--sp-3);
+}
+.kc20-frame .kc-input { background: #FFF; border-radius: 4px; }
 </style>
 
 <?php get_footer(); ?>
