@@ -5,10 +5,16 @@
 $title_a = get_theme_mod( 's247_moods_title_a', 'Tilpas studiet til dit' );
 $title_b = get_theme_mod( 's247_moods_title_b', 'Brand' );
 
+$mood_defaults = array(
+	1 => array( 'label' => 'Lyst & let',              'icon' => 'sun' ),
+	2 => array( 'label' => 'Afdæmpet & cinematisk',   'icon' => 'moon' ),
+	3 => array( 'label' => 'Varmt & hyggeligt',       'icon' => 'home' ),
+);
+
 $moods = array();
 for ( $i = 1; $i <= 3; $i++ ) {
-	$label = get_theme_mod( "s247_mood{$i}_label" );
-	$icon  = get_theme_mod( "s247_mood{$i}_icon", 'sparkle' );
+	$label = get_theme_mod( "s247_mood{$i}_label", $mood_defaults[ $i ]['label'] );
+	$icon  = get_theme_mod( "s247_mood{$i}_icon",  $mood_defaults[ $i ]['icon'] );
 	$image = get_theme_mod( "s247_mood{$i}_image" );
 	if ( $label ) {
 		$moods[] = array( 'label' => $label, 'icon' => $icon, 'image' => $image );
