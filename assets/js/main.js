@@ -132,6 +132,72 @@
 	});
 
 	// ──────────────────────────────────────────────
+	// Book — kalender-grid step flow
+	// ──────────────────────────────────────────────
+	const bookPicker = document.querySelector('[data-book-picker]');
+	if (bookPicker) {
+		const slots    = bookPicker.querySelector('[data-book-slots]');
+		const picked   = bookPicker.querySelector('[data-book-picked]');
+		const form     = document.querySelector('[data-book-form]');
+		const dateIn   = form?.querySelector('[data-field-date]');
+		const timeIn   = form?.querySelector('[data-field-time]');
+		const durIn    = form?.querySelector('[data-field-duration]');
+		const sumDate  = document.querySelector('[data-sum-date]');
+		const sumTime  = document.querySelector('[data-sum-time]');
+		const sumDur   = document.querySelector('[data-sum-duration]');
+		const submit   = form?.querySelector('[data-book-submit]');
+		const hint     = form?.querySelector('[data-book-hint]');
+
+		const fmtDate = (iso) => {
+			const d = new Date(iso + 'T00:00:00');
+			const days = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+			const months = ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'];
+			return `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]}`;
+		};
+
+		const checkReady = () => {
+			const ready = dateIn.value && timeIn.value && durIn.value;
+			if (submit) submit.disabled = !ready;
+			if (hint) hint.textContent = ready
+				? 'Klar — tjek opsummeringen og udfyld dine oplysninger.'
+				: 'Vælg dato, tid og varighed for at fortsætte.';
+		};
+
+		bookPicker.querySelectorAll('.book2__day[data-date]').forEach((d) => {
+			d.addEventListener('click', () => {
+				bookPicker.querySelectorAll('.book2__day.is-selected').forEach((x) => x.classList.remove('is-selected'));
+				d.classList.add('is-selected');
+				const iso = d.dataset.date;
+				if (dateIn) dateIn.value = iso;
+				if (sumDate) { sumDate.textContent = fmtDate(iso); sumDate.dataset.filled = '1'; }
+				if (picked) picked.textContent = 'Valgt: ' + fmtDate(iso);
+				if (slots) slots.hidden = false;
+				checkReady();
+			});
+		});
+
+		bookPicker.querySelectorAll('.book2__time').forEach((t) => {
+			t.addEventListener('click', () => {
+				bookPicker.querySelectorAll('.book2__time.is-selected').forEach((x) => x.classList.remove('is-selected'));
+				t.classList.add('is-selected');
+				if (timeIn) timeIn.value = t.dataset.time;
+				if (sumTime) { sumTime.textContent = t.dataset.time; sumTime.dataset.filled = '1'; }
+				checkReady();
+			});
+		});
+
+		bookPicker.querySelectorAll('.book2__dur').forEach((d) => {
+			d.addEventListener('click', () => {
+				bookPicker.querySelectorAll('.book2__dur.is-selected').forEach((x) => x.classList.remove('is-selected'));
+				d.classList.add('is-selected');
+				if (durIn) durIn.value = d.dataset.duration;
+				if (sumDur) { sumDur.textContent = d.dataset.duration; sumDur.dataset.filled = '1'; }
+				checkReady();
+			});
+		});
+	}
+
+	// ──────────────────────────────────────────────
 	// Studiet — reels click-to-play
 	// ──────────────────────────────────────────────
 	document.querySelectorAll('[data-reel]').forEach((reel) => {
