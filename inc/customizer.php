@@ -137,14 +137,20 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		's247_moods_title_a' => array( 'label' => __( 'Overskrift — del 1 (sans)', 'studie247' ), 'type' => 'text',     'default' => 'Tilpas studiet til dit' ),
 		's247_moods_title_b' => array( 'label' => __( 'Overskrift — del 2 (accent)', 'studie247' ), 'type' => 'text',   'default' => 'Brand' ),
 	);
-	for ( $i = 1; $i <= 3; $i++ ) {
-		$defaults = array(
-			1 => array( 'Lyst & let', 'sun' ),
-			2 => array( 'Afdæmpet & cinematisk', 'moon' ),
-			3 => array( 'Varmt & hyggeligt', 'home' ),
-		);
-		$mood_fields[ "s247_mood{$i}_label" ] = array( 'label' => sprintf( __( 'Stemning %d — label', 'studie247' ), $i ), 'type' => 'text', 'default' => $defaults[ $i ][0] );
-		$mood_fields[ "s247_mood{$i}_icon" ]  = array( 'label' => sprintf( __( 'Stemning %d — ikon', 'studie247' ), $i ),  'type' => 'select', 'default' => $defaults[ $i ][1], 'choices' => $icon_choices );
+	$mood_defaults = array(
+		1 => array( 'Lyst & let', 'sun' ),
+		2 => array( 'Afdæmpet & cinematisk', 'moon' ),
+		3 => array( 'Varmt & hyggeligt', 'home' ),
+		4 => array( '', 'sparkle' ),
+		5 => array( '', 'video' ),
+		6 => array( '', 'mic' ),
+		7 => array( '', 'camera' ),
+		8 => array( '', 'play' ),
+		9 => array( '', 'sparkle' ),
+	);
+	for ( $i = 1; $i <= 9; $i++ ) {
+		$mood_fields[ "s247_mood{$i}_label" ] = array( 'label' => sprintf( __( 'Stemning %d — label', 'studie247' ), $i ), 'type' => 'text', 'default' => $mood_defaults[ $i ][0] );
+		$mood_fields[ "s247_mood{$i}_icon" ]  = array( 'label' => sprintf( __( 'Stemning %d — ikon', 'studie247' ), $i ),  'type' => 'select', 'default' => $mood_defaults[ $i ][1], 'choices' => $icon_choices );
 		$mood_fields[ "s247_mood{$i}_image" ] = array( 'label' => sprintf( __( 'Stemning %d — billede', 'studie247' ), $i ), 'type' => 'image', 'default' => '' );
 	}
 
