@@ -2828,3 +2828,31 @@ body.team-modal-open { overflow: hidden; }
 	letter-spacing: -0.02em;
 	margin: 0;
 }
+
+/* Book — optagne dage / tider */
+.book2__legend-dot--booked { background: repeating-linear-gradient(45deg, rgba(40,40,40,0.25) 0 4px, transparent 4px 8px); border: 1px solid rgba(40,40,40,0.2); }
+
+.book2__day--booked {
+	position: relative;
+	background: repeating-linear-gradient(45deg, rgba(40, 40, 40, 0.08) 0 4px, transparent 4px 8px) !important;
+	color: var(--color-ink-mute) !important;
+	cursor: not-allowed;
+	opacity: 0.55;
+	text-decoration: none !important;
+}
+
+.book2__day--booked::after {
+	content: "✕";
+	position: absolute;
+	bottom: 4px;
+	right: 6px;
+	font-size: 9px;
+	color: var(--color-accent);
+}
+
+.book2__time.is-disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+	text-decoration: line-through;
+	pointer-events: none;
+}

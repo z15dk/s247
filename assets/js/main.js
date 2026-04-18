@@ -148,6 +148,23 @@
 		const submit   = form?.querySelector('[data-book-submit]');
 		const hint     = form?.querySelector('[data-book-hint]');
 
+		let bookedMap = {};
+		try { bookedMap = JSON.parse(bookPicker.dataset.booked || '{}'); } catch (e) {}
+
+		const applyBookedFor = (iso) => {
+			const blocked = bookedMap[iso] || [];
+			bookPicker.querySelectorAll('.book2__time').forEach((t) => {
+				const h = parseInt(t.dataset.time, 10);
+				const isBlocked = blocked.includes(h);
+				t.classList.toggle('is-disabled', isBlocked);
+				if (isBlocked && t.classList.contains('is-selected')) {
+					t.classList.remove('is-selected');
+					if (timeIn) timeIn.value = '';
+					if (sumTime) { sumTime.textContent = '—'; delete sumTime.dataset.filled; }
+				}
+			});
+		};
+
 		const fmtDate = (iso) => {
 			const d = new Date(iso + 'T00:00:00');
 			const days = ['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
@@ -172,6 +189,7 @@
 				if (sumDate) { sumDate.textContent = fmtDate(iso); sumDate.dataset.filled = '1'; }
 				if (picked) picked.textContent = 'Valgt: ' + fmtDate(iso);
 				if (slots) slots.hidden = false;
+				applyBookedFor(iso);
 				checkReady();
 			});
 		});

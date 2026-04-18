@@ -44,11 +44,32 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 
 	if ( empty( $errors ) ) {
 		$prod_label = '';
+		$prod_id    = 0;
 		if ( $form_prod ) {
 			$p = get_page_by_path( $form_prod, OBJECT, 'udlejning_item' );
-			$prod_label = $p ? $p->post_title : $form_prod;
+			if ( $p ) { $prod_label = $p->post_title; $prod_id = $p->ID; }
+			else      { $prod_label = $form_prod; }
 		}
 		$date_dk = $form_date ? date_i18n( 'l j. F Y', strtotime( $form_date ) ) : $form_date;
+
+		// Gem som booking-post.
+		$booking_id = wp_insert_post( array(
+			'post_type'   => 'booking',
+			'post_status' => 'publish',
+			'post_title'  => sprintf( '%s — %s %s', $form_name, $form_date, $form_start ),
+		) );
+		if ( $booking_id && ! is_wp_error( $booking_id ) ) {
+			update_post_meta( $booking_id, '_s247_date',     $form_date );
+			update_post_meta( $booking_id, '_s247_start',    $form_start );
+			update_post_meta( $booking_id, '_s247_duration', $form_dur );
+			update_post_meta( $booking_id, '_s247_name',     $form_name );
+			update_post_meta( $booking_id, '_s247_email',    $form_email );
+			update_post_meta( $booking_id, '_s247_phone',    $form_phone );
+			update_post_meta( $booking_id, '_s247_notes',    $form_notes );
+			update_post_meta( $booking_id, '_s247_produkt',  $form_prod );
+			if ( $prod_id )  { update_post_meta( $booking_id, '_s247_produkt_id', $prod_id ); }
+			if ( $form_type ){ update_post_meta( $booking_id, '_s247_type',       $form_type ); }
+		}
 
 		$admin_to      = 'info@s247.dk';
 		$admin_subject = sprintf( '[Studie 247] Ny booking fra %s — %s', $form_name, $date_dk );
@@ -78,6 +99,70 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		if ( $form_prod ) { $redirect = add_query_arg( 'produkt', $form_prod, $redirect ); }
 		wp_safe_redirect( $redirect );
 		exit;
+	}
+}
+
+// Hent alle fremtidige bookinger og byg blokerings-map.
+$today_key = date( 'Y-m-d' );
+$booked_map = array(); // 'YYYY-MM-DD' => array( 8, 9, 10 ... ) = blokerede timer (int)
+$fully_booked = array(); // dage hvor alle slots er taget
+
+$booking_posts = get_posts( array(
+	'post_type'      => 'booking',
+	'post_status'    => 'publish',
+	'posts_per_page' => -1,
+	'meta_query'     => array(
+		array(
+			'key'     => '_s247_date',
+			'value'   => $today_key,
+			'compare' => '>=',
+			'type'    => 'DATE',
+		),
+	),
+) );
+
+foreach ( $booking_posts as $b ) {
+	$d   = get_post_meta( $b->ID, '_s247_date', true );
+	$s   = get_post_meta( $b->ID, '_s247_start', true );
+	$dur = get_post_meta( $b->ID, '_s247_duration', true );
+	if ( ! $d || ! $s ) { continue; }
+	$start_h = (int) substr( $s, 0, 2 );
+
+	// Bestem hvor mange timer og dage der er blokeret.
+	$hours = 0;
+	$days  = 1;
+	switch ( $dur ) {
+		case '2 timer': $hours = 2; break;
+		case '4 timer': $hours = 4; break;
+		case '8 timer':
+		case '1 dag':   $hours = 13; break; // hele dagen (08-20)
+		case '2 dage':  $hours = 13; $days = 2; break;
+		case '1 uge':   $hours = 13; $days = 7; break;
+		default:        $hours = 2; break;
+	}
+
+	for ( $di = 0; $di < $days; $di++ ) {
+		$day_key = date( 'Y-m-d', strtotime( $d . ' +' . $di . ' days' ) );
+		if ( ! isset( $booked_map[ $day_key ] ) ) {
+			$booked_map[ $day_key ] = array();
+		}
+		// Første dag: blokér fra start_h; efterfølgende dage: fra 08.
+		$block_start = ( 0 === $di ) ? $start_h : 8;
+		$remaining   = ( 0 === $di ) ? $hours   : 13;
+		for ( $h = $block_start; $h < $block_start + $remaining && $h <= 20; $h++ ) {
+			if ( ! in_array( $h, $booked_map[ $day_key ], true ) ) {
+				$booked_map[ $day_key ][] = $h;
+			}
+		}
+	}
+}
+
+// Beregn fuldt bookede dage (alle 13 slots 08-20 er taget).
+$all_slots = range( 8, 20 );
+foreach ( $booked_map as $day => $hours_arr ) {
+	sort( $hours_arr );
+	if ( count( array_intersect( $all_slots, $hours_arr ) ) >= count( $all_slots ) ) {
+		$fully_booked[] = $day;
 	}
 }
 
@@ -121,7 +206,7 @@ get_header();
 		<?php else : ?>
 			<div class="book2__layout">
 				<!-- Venstre: kalender + valg -->
-				<div class="book2__picker" data-book-picker>
+				<div class="book2__picker" data-book-picker data-booked="<?php echo esc_attr( wp_json_encode( $booked_map ) ); ?>">
 					<div class="book2__calendar">
 						<div class="book2__cal-head">
 							<a class="book2__cal-nav" href="<?php echo esc_url( add_query_arg( 'ym', $prev_ym ) ); ?>" aria-label="<?php esc_attr_e( 'Forrige måned', 'studie247' ); ?>">‹</a>
@@ -151,7 +236,12 @@ get_header();
 								if ( $date === $today ) {
 									$cls .= ' book2__day--today';
 								}
-								$attrs = $ts >= $today_ts ? 'data-date="' . esc_attr( $date ) . '"' : 'aria-disabled="true"';
+								$is_full = in_array( $date, $fully_booked, true );
+								if ( $is_full ) {
+									$cls .= ' book2__day--booked';
+								}
+								$disabled = ( $ts < $today_ts || $is_full );
+								$attrs    = $disabled ? 'aria-disabled="true"' : 'data-date="' . esc_attr( $date ) . '"';
 								printf(
 									'<button type="button" class="%s" %s>%d</button>',
 									esc_attr( $cls ),
@@ -164,6 +254,7 @@ get_header();
 						<p class="book2__cal-legend">
 							<span><span class="book2__legend-dot book2__legend-dot--today"></span> I dag</span>
 							<span><span class="book2__legend-dot book2__legend-dot--on"></span> Valgt</span>
+							<span><span class="book2__legend-dot book2__legend-dot--booked"></span> Optaget</span>
 							<span><span class="book2__legend-dot book2__legend-dot--past"></span> Lukket</span>
 						</p>
 					</div>
