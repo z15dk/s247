@@ -33,6 +33,10 @@ function studie247_udlejning_import_page() {
 	) {
 		$tmp  = $_FILES['s247_csv']['tmp_name'];
 		$name = isset( $_FILES['s247_csv']['name'] ) ? strtolower( $_FILES['s247_csv']['name'] ) : '';
+		// Global flag for WebP-konvertering under denne import.
+		if ( ! defined( 'S247_IMPORT_WEBP' ) ) {
+			define( 'S247_IMPORT_WEBP', ! empty( $_POST['s247_webp'] ) );
+		}
 		if ( substr( $name, -4 ) === '.zip' ) {
 			$result = studie247_udlejning_import_zip( $tmp, ! empty( $_POST['s247_download_images'] ) );
 		} else {
@@ -96,6 +100,12 @@ function studie247_udlejning_import_page() {
 				<label>
 					<input type="checkbox" name="s247_download_images" value="1" checked>
 					<?php esc_html_e( 'Hent billeder (fra image_url eller fra ZIP\'ens images/-mappe)', 'studie247' ); ?>
+				</label>
+			</p>
+			<p>
+				<label>
+					<input type="checkbox" name="s247_webp" value="1">
+					<?php esc_html_e( 'Konvertér til WebP (kræver Imagick eller GD med webp-support — prøv uden hvis importen fejler)', 'studie247' ); ?>
 				</label>
 			</p>
 			<p>
@@ -358,8 +368,11 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 
 			if ( $attach_id && ! is_wp_error( $attach_id ) ) {
 				set_post_thumbnail( $post_id, $attach_id );
+				$result['messages'][] = sprintf( 'Række %d (%s): hoved-billede importeret (ID %d).', $row_num, $title, $attach_id );
 			} elseif ( is_wp_error( $attach_id ) ) {
-				$result['messages'][] = sprintf( 'Række %d: billede-fejl — %s', $row_num, $attach_id->get_error_message() );
+				$result['messages'][] = sprintf( 'Række %d (%s): billede-fejl — %s', $row_num, $title, $attach_id->get_error_message() );
+			} elseif ( ! empty( $data['image_url'] ) || ! empty( $data['image_file'] ) ) {
+				$result['messages'][] = sprintf( 'Række %d (%s): billedet blev ikke importeret (ukendt årsag).', $row_num, $title );
 			}
 
 			// Tilstands-billeder (intern doku) — state_image_1..4 og state_url_1..4.
@@ -493,8 +506,8 @@ function studie247_sideload_local( $local_path, $post_id, $alt_text = '' ) {
 		return new WP_Error( 'copy_failed', 'Kunne ikke kopiere billedet ind i mediebiblioteket.' );
 	}
 
-	// Konvertér til WebP (skip SVG og allerede-WebP).
-	if ( ! in_array( $ext, array( 'webp', 'svg' ), true ) ) {
+	// Konvertér til WebP (kun hvis slået til).
+	if ( defined( 'S247_IMPORT_WEBP' ) && S247_IMPORT_WEBP && ! in_array( $ext, array( 'webp', 'svg' ), true ) ) {
 		$webp = studie247_to_webp( $dest );
 		if ( $webp ) {
 			@unlink( $dest );
@@ -551,9 +564,13 @@ function studie247_sideload_url( $url, $post_id, $alt_text = '' ) {
 	require_once ABSPATH . 'wp-admin/includes/file.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 
-	$tmp = download_url( $url, 45 );
+	$tmp = download_url( $url, 60 );
 	if ( is_wp_error( $tmp ) ) {
-		return $tmp;
+		return new WP_Error( 'download_failed', sprintf( 'Download fejl for %s: %s', esc_url( $url ), $tmp->get_error_message() ) );
+	}
+	if ( ! is_readable( $tmp ) || filesize( $tmp ) < 100 ) {
+		@unlink( $tmp );
+		return new WP_Error( 'empty_download', 'Billedet blev downloadet men filen er tom/for lille: ' . esc_url( $url ) );
 	}
 
 	$path = parse_url( $url, PHP_URL_PATH );
@@ -587,8 +604,8 @@ function studie247_sideload_url( $url, $post_id, $alt_text = '' ) {
 	$name = sanitize_file_name( $name );
 	$ext  = strtolower( pathinfo( $name, PATHINFO_EXTENSION ) );
 
-	// Konvertér til WebP inden vi giver filen til WordPress.
-	if ( ! in_array( $ext, array( 'webp', 'svg' ), true ) ) {
+	// Konvertér til WebP (kun hvis slået til).
+	if ( defined( 'S247_IMPORT_WEBP' ) && S247_IMPORT_WEBP && ! in_array( $ext, array( 'webp', 'svg' ), true ) ) {
 		$webp = studie247_to_webp( $tmp );
 		if ( $webp ) {
 			@unlink( $tmp );
