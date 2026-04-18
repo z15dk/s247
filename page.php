@@ -38,6 +38,14 @@ get_header();
 	</div>
 </section>
 
+<?php
+// Hvis dette er Om-siden (slug eller titel), vis team-sektionen automatisk.
+$is_om_page = is_page( 'om' ) || is_page( 'om-os' ) || ( is_page() && 0 === strcasecmp( trim( get_the_title() ), 'om' ) );
+if ( $is_om_page ) {
+	get_template_part( 'template-parts/section', 'team' );
+}
+?>
+
 <?php get_template_part( 'template-parts/section', 'cta' ); ?>
 
 <?php
