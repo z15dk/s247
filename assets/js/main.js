@@ -116,6 +116,22 @@
 	});
 
 	// ──────────────────────────────────────────────
+	// Kontakt — Vælg side (radiogruppe)
+	// ──────────────────────────────────────────────
+	const sideButtons = document.querySelectorAll('.side[data-side]');
+	const sideInput   = document.querySelector('[data-side-input]');
+	sideButtons.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			sideButtons.forEach((b) => {
+				const on = b === btn;
+				b.classList.toggle('is-selected', on);
+				b.setAttribute('aria-checked', on ? 'true' : 'false');
+			});
+			if (sideInput) sideInput.value = btn.dataset.side;
+		});
+	});
+
+	// ──────────────────────────────────────────────
 	// Smooth scroll for on-page anchor links
 	// ──────────────────────────────────────────────
 	document.querySelectorAll('a[href^="#"]').forEach((a) => {
