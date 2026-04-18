@@ -132,6 +132,31 @@
 	});
 
 	// ──────────────────────────────────────────────
+	// Studiet — reels click-to-play
+	// ──────────────────────────────────────────────
+	document.querySelectorAll('[data-reel]').forEach((reel) => {
+		const video = reel.querySelector('[data-reel-video]');
+		const btn   = reel.querySelector('[data-reel-play]');
+		if (!video || !btn) return;
+
+		const start = () => {
+			video.muted = false;
+			video.controls = true;
+			video.play().catch(() => {
+				// If unmuted play is blocked, fall back to muted.
+				video.muted = true;
+				video.play();
+			});
+			reel.classList.add('is-playing');
+		};
+
+		btn.addEventListener('click', start);
+		video.addEventListener('click', () => {
+			if (!reel.classList.contains('is-playing')) start();
+		});
+	});
+
+	// ──────────────────────────────────────────────
 	// Studiet — setup switcher
 	// ──────────────────────────────────────────────
 	document.querySelectorAll('[data-studiet-setups]').forEach((root) => {

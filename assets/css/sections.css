@@ -2377,3 +2377,50 @@ body.team-modal-open { overflow: hidden; }
 @media (min-width: 720px) {
 	.studiet-guide__step { grid-template-columns: 120px 1fr; gap: var(--sp-8); }
 }
+
+/* Reels click-to-play */
+.reel__media { cursor: pointer; }
+
+.reel__play {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	background: linear-gradient(180deg, rgba(20, 20, 20, 0.1) 0%, rgba(20, 20, 20, 0.4) 100%);
+	border: 0;
+	color: var(--s247-bone);
+	cursor: pointer;
+	transition: background var(--dur) var(--ease);
+}
+
+.reel__play::before {
+	content: "";
+	position: absolute;
+	width: 64px;
+	height: 64px;
+	background: rgba(244, 233, 221, 0.15);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	border: 1px solid rgba(244, 233, 221, 0.35);
+	border-radius: 50%;
+	transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.reel__play .icon {
+	position: relative;
+	z-index: 1;
+	transform: translateX(2px);
+}
+
+.reel__play:hover::before {
+	background: var(--color-accent);
+	border-color: var(--color-accent);
+	transform: scale(1.08);
+}
+
+.reel.is-playing .reel__play,
+.reel__media.is-playing .reel__play,
+.is-playing .reel__play { display: none; }

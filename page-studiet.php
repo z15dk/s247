@@ -192,11 +192,21 @@ for ( $i = 1; $i <= 5; $i++ ) {
 		<div class="studiet-reels__grid">
 			<?php foreach ( $reels as $reel ) : ?>
 				<figure class="reel">
-					<div class="reel__media">
+					<div class="reel__media" data-reel>
 						<?php if ( $reel['video'] ) : ?>
-							<video autoplay muted loop playsinline <?php echo $reel['poster'] ? 'poster="' . esc_url( $reel['poster'] ) . '"' : ''; ?>>
+							<video
+								muted
+								loop
+								playsinline
+								preload="metadata"
+								<?php echo $reel['poster'] ? 'poster="' . esc_url( $reel['poster'] ) . '"' : ''; ?>
+								data-reel-video
+							>
 								<source src="<?php echo esc_url( $reel['video'] ); ?>" type="video/mp4">
 							</video>
+							<button type="button" class="reel__play" aria-label="<?php esc_attr_e( 'Afspil video', 'studie247' ); ?>" data-reel-play>
+								<?php echo studie247_icon( 'play', 28 ); ?>
+							</button>
 						<?php elseif ( $reel['poster'] ) : ?>
 							<img src="<?php echo esc_url( $reel['poster'] ); ?>" alt="<?php echo esc_attr( $reel['title'] ); ?>" loading="lazy">
 						<?php else : ?>
