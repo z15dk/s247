@@ -52,10 +52,10 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		}
 		$date_dk = $form_date ? date_i18n( 'l j. F Y', strtotime( $form_date ) ) : $form_date;
 
-		// Gem som booking-post.
+		// Gem som booking-post (afventer godkendelse).
 		$booking_id = wp_insert_post( array(
 			'post_type'   => 'booking',
-			'post_status' => 'publish',
+			'post_status' => 'pending',
 			'post_title'  => sprintf( '%s — %s %s', $form_name, $form_date, $form_start ),
 		) );
 		if ( $booking_id && ! is_wp_error( $booking_id ) ) {
@@ -83,12 +83,12 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			'Reply-To: ' . $form_name . ' <' . $form_email . '>',
 		) );
 
-		$user_subject  = 'Tak for din booking — Studie 247';
-		$user_body     = "Hej {$form_name},\n\nTak for din booking-anmodning.\n\n";
+		$user_subject  = 'Booking modtaget — afventer godkendelse — Studie 247';
+		$user_body     = "Hej {$form_name},\n\nVi har modtaget din booking-anmodning og reserveret tiden foreløbigt.\n\n";
 		if ( $prod_label ) { $user_body .= "Produkt: {$prod_label}\n"; }
 		$user_body    .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
 		if ( $form_notes ) { $user_body .= "\nDine noter:\n{$form_notes}\n"; }
-		$user_body    .= "\nVi bekræfter tilgængelighed inden for 24 timer.\n\n— Studie 247\ninfo@s247.dk";
+		$user_body    .= "\nDin booking er markeret som 'afventer godkendelse'. Du hører fra os inden for 24 timer på hverdage med endelig bekræftelse.\n\n— Studie 247\ninfo@s247.dk";
 		@wp_mail( $form_email, $user_subject, $user_body, array(
 			'Content-Type: text/plain; charset=UTF-8',
 			'From: Studie 247 <info@s247.dk>',
@@ -109,7 +109,7 @@ $fully_booked = array(); // dage hvor alle slots er taget
 
 $booking_posts = get_posts( array(
 	'post_type'      => 'booking',
-	'post_status'    => 'publish',
+	'post_status'    => array( 'publish', 'pending' ),
 	'posts_per_page' => -1,
 	'meta_query'     => array(
 		array(

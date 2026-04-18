@@ -32,6 +32,7 @@ require_once STUDIE247_DIR . '/inc/svg-upload.php';
 require_once STUDIE247_DIR . '/inc/admin-style.php';
 require_once STUDIE247_DIR . '/inc/udlejning-import.php';
 require_once STUDIE247_DIR . '/inc/booking-inspection.php';
+require_once STUDIE247_DIR . '/inc/booking-approval.php';
 
 /**
  * Auto-render team sektion efter indhold på Om-siden,
