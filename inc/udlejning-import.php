@@ -26,11 +26,18 @@ add_action( 'admin_menu', function () {
 
 function studie247_udlejning_import_page() {
 	$result = null;
+
 	if ( ! empty( $_POST['s247_udlejning_csv_nonce'] )
 		&& wp_verify_nonce( $_POST['s247_udlejning_csv_nonce'], 's247_udlejning_csv' )
 		&& ! empty( $_FILES['s247_csv']['tmp_name'] )
 	) {
-		$result = studie247_udlejning_import_csv( $_FILES['s247_csv']['tmp_name'], ! empty( $_POST['s247_download_images'] ) );
+		$tmp  = $_FILES['s247_csv']['tmp_name'];
+		$name = isset( $_FILES['s247_csv']['name'] ) ? strtolower( $_FILES['s247_csv']['name'] ) : '';
+		if ( substr( $name, -4 ) === '.zip' ) {
+			$result = studie247_udlejning_import_zip( $tmp, ! empty( $_POST['s247_download_images'] ) );
+		} else {
+			$result = studie247_udlejning_import_csv( $tmp, ! empty( $_POST['s247_download_images'] ) );
+		}
 	}
 	?>
 	<div class="wrap">
@@ -66,21 +73,25 @@ function studie247_udlejning_import_page() {
 		<?php endif; ?>
 
 		<p style="max-width:720px;">
-			<?php esc_html_e( 'Upload en CSV-fil med kolonner: ', 'studie247' ); ?>
-			<code>title, excerpt, content, pris_dag, pris_uge, deposit, sku, in_stock, kategori, image_url</code>.
-			<?php esc_html_e( 'Kun "title" er påkrævet. Hvis "sku" eller "title" matcher et eksisterende produkt, opdateres det.', 'studie247' ); ?>
+			<?php esc_html_e( 'Upload enten en CSV-fil eller en ZIP. Kolonner: ', 'studie247' ); ?>
+			<code>title, excerpt, content, pris_dag, pris_uge, deposit, sku, in_stock, kategori, image_url, image_file</code>.
+			<?php esc_html_e( 'Kun "title" er påkrævet. Eksisterende produkter matches via SKU → title og opdateres i stedet for at duplikere.', 'studie247' ); ?>
+		</p>
+		<p style="max-width:720px;background:#fff;border-left:3px solid #9E2B25;padding:10px 14px;">
+			<strong><?php esc_html_e( 'ZIP-smart-import:', 'studie247' ); ?></strong>
+			<?php esc_html_e( 'Pak CSV + en billed-mappe sammen (fx "produkter.csv" og "images/sony-fs6.jpg"). I CSV\'en skriver du bare filnavnet i "image_file" (fx sony-fs6.jpg). Systemet finder billedet i ZIP\'en og uploader det automatisk.', 'studie247' ); ?>
 		</p>
 
 		<form method="post" enctype="multipart/form-data" style="background:#fff;padding:20px;border:1px solid #ccd0d4;max-width:720px;">
 			<?php wp_nonce_field( 's247_udlejning_csv', 's247_udlejning_csv_nonce' ); ?>
 			<p>
-				<label for="s247_csv"><strong><?php esc_html_e( 'Vælg CSV-fil', 'studie247' ); ?></strong></label><br>
-				<input type="file" name="s247_csv" id="s247_csv" accept=".csv,text/csv" required>
+				<label for="s247_csv"><strong><?php esc_html_e( 'Vælg CSV eller ZIP', 'studie247' ); ?></strong></label><br>
+				<input type="file" name="s247_csv" id="s247_csv" accept=".csv,.zip,text/csv,application/zip" required>
 			</p>
 			<p>
 				<label>
 					<input type="checkbox" name="s247_download_images" value="1" checked>
-					<?php esc_html_e( 'Hent billeder fra "image_url" og tilføj dem til mediebiblioteket', 'studie247' ); ?>
+					<?php esc_html_e( 'Hent billeder (fra image_url eller fra ZIP\'ens images/-mappe)', 'studie247' ); ?>
 				</label>
 			</p>
 			<p>
@@ -136,7 +147,7 @@ add_action( 'admin_init', function () {
  *
  * @return array { 'created' => int, 'updated' => int, 'skipped' => int, 'messages' => array, 'error' => string }
  */
-function studie247_udlejning_import_csv( $path, $download_images = true ) {
+function studie247_udlejning_import_csv( $path, $download_images = true, $image_dir = '' ) {
 	$result = array(
 		'created'  => 0,
 		'updated'  => 0,
@@ -247,16 +258,29 @@ function studie247_udlejning_import_csv( $path, $download_images = true ) {
 			}
 		}
 
-		// Billede
-		if ( $download_images && ! empty( $data['image_url'] ) && filter_var( $data['image_url'], FILTER_VALIDATE_URL ) ) {
+		// Billede — prioritet: image_file (lokal fra ZIP) → image_url (remote).
+		if ( $download_images ) {
 			require_once ABSPATH . 'wp-admin/includes/media.php';
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 			require_once ABSPATH . 'wp-admin/includes/image.php';
-			$attach_id = media_sideload_image( $data['image_url'], $post_id, null, 'id' );
-			if ( ! is_wp_error( $attach_id ) ) {
+
+			$attach_id = 0;
+
+			if ( ! empty( $data['image_file'] ) && $image_dir ) {
+				$local = studie247_find_image_in_dir( $image_dir, $data['image_file'] );
+				if ( $local ) {
+					$attach_id = studie247_sideload_local( $local, $post_id );
+				}
+			}
+
+			if ( ! $attach_id && ! empty( $data['image_url'] ) && filter_var( $data['image_url'], FILTER_VALIDATE_URL ) ) {
+				$attach_id = media_sideload_image( $data['image_url'], $post_id, null, 'id' );
+			}
+
+			if ( $attach_id && ! is_wp_error( $attach_id ) ) {
 				set_post_thumbnail( $post_id, $attach_id );
-			} else {
-				$result['messages'][] = sprintf( 'Række %d: kunne ikke hente billede — %s', $row_num, $attach_id->get_error_message() );
+			} elseif ( is_wp_error( $attach_id ) ) {
+				$result['messages'][] = sprintf( 'Række %d: billede-fejl — %s', $row_num, $attach_id->get_error_message() );
 			}
 		}
 
@@ -269,4 +293,130 @@ function studie247_udlejning_import_csv( $path, $download_images = true ) {
 	fclose( $handle );
 
 	return $result;
+}
+
+/**
+ * ZIP-import: pak CSV + images/ mappe ud og kør CSV-importen.
+ */
+function studie247_udlejning_import_zip( $zip_path, $download_images = true ) {
+	$result = array(
+		'created'  => 0,
+		'updated'  => 0,
+		'skipped'  => 0,
+		'messages' => array(),
+		'error'    => '',
+	);
+
+	if ( ! class_exists( 'ZipArchive' ) ) {
+		$result['error'] = __( 'PHP mangler ZipArchive-udvidelsen. Upload CSV alene, eller bed serveren om at aktivere php-zip.', 'studie247' );
+		return $result;
+	}
+
+	$zip = new ZipArchive();
+	if ( true !== $zip->open( $zip_path ) ) {
+		$result['error'] = __( 'Kunne ikke åbne ZIP-filen.', 'studie247' );
+		return $result;
+	}
+
+	$upload_dir = wp_upload_dir();
+	$tmp_base   = trailingslashit( $upload_dir['basedir'] ) . 's247-import-' . wp_generate_password( 8, false );
+	if ( ! wp_mkdir_p( $tmp_base ) ) {
+		$zip->close();
+		$result['error'] = __( 'Kunne ikke oprette midlertidig mappe til udpakning.', 'studie247' );
+		return $result;
+	}
+
+	$zip->extractTo( $tmp_base );
+	$zip->close();
+
+	// Find den første CSV-fil (rekursivt).
+	$csv_path = '';
+	$rii      = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $tmp_base, RecursiveDirectoryIterator::SKIP_DOTS ) );
+	foreach ( $rii as $file ) {
+		if ( $file->isFile() && strtolower( $file->getExtension() ) === 'csv' ) {
+			$csv_path = $file->getPathname();
+			break;
+		}
+	}
+
+	if ( ! $csv_path ) {
+		studie247_rrmdir( $tmp_base );
+		$result['error'] = __( 'Der blev ikke fundet en CSV-fil i ZIP\'en.', 'studie247' );
+		return $result;
+	}
+
+	// Brug hele udpaknings-mappen som billede-rod; helper søger rekursivt.
+	$result = studie247_udlejning_import_csv( $csv_path, $download_images, $tmp_base );
+
+	// Ryd op.
+	studie247_rrmdir( $tmp_base );
+
+	return $result;
+}
+
+/**
+ * Find en fil (ved navn) rekursivt i en mappe. Match er case-insensitive.
+ */
+function studie247_find_image_in_dir( $dir, $filename ) {
+	$filename = strtolower( basename( $filename ) );
+	if ( ! is_dir( $dir ) ) { return ''; }
+	$rii = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, RecursiveDirectoryIterator::SKIP_DOTS ) );
+	foreach ( $rii as $file ) {
+		if ( $file->isFile() && strtolower( $file->getFilename() ) === $filename ) {
+			return $file->getPathname();
+		}
+	}
+	return '';
+}
+
+/**
+ * Kopier en lokal fil ind i mediebiblioteket og returnér attachment-ID.
+ */
+function studie247_sideload_local( $local_path, $post_id ) {
+	$mime_ok = array( 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg' );
+	$ext     = strtolower( pathinfo( $local_path, PATHINFO_EXTENSION ) );
+	if ( ! in_array( $ext, $mime_ok, true ) ) {
+		return new WP_Error( 'bad_ext', 'Ikke-understøttet billedformat: ' . $ext );
+	}
+
+	$filename = wp_unique_filename( wp_upload_dir()['path'], basename( $local_path ) );
+	$dest     = trailingslashit( wp_upload_dir()['path'] ) . $filename;
+	if ( ! @copy( $local_path, $dest ) ) {
+		return new WP_Error( 'copy_failed', 'Kunne ikke kopiere billedet ind i mediebiblioteket.' );
+	}
+
+	$filetype = wp_check_filetype( $filename, null );
+	$attach   = array(
+		'post_mime_type' => $filetype['type'] ?: 'image/jpeg',
+		'post_title'     => preg_replace( '/\.[^.]+$/', '', $filename ),
+		'post_content'   => '',
+		'post_status'    => 'inherit',
+	);
+	$attach_id = wp_insert_attachment( $attach, $dest, $post_id );
+	if ( is_wp_error( $attach_id ) ) { return $attach_id; }
+
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+	$meta = wp_generate_attachment_metadata( $attach_id, $dest );
+	wp_update_attachment_metadata( $attach_id, $meta );
+
+	return $attach_id;
+}
+
+/**
+ * Rekursiv mappe-sletning.
+ */
+function studie247_rrmdir( $dir ) {
+	if ( ! is_dir( $dir ) ) { return; }
+	$items = @scandir( $dir );
+	if ( ! $items ) { return; }
+	foreach ( $items as $item ) {
+		if ( '.' === $item || '..' === $item ) { continue; }
+		$path = trailingslashit( $dir ) . $item;
+		if ( is_dir( $path ) ) {
+			studie247_rrmdir( $path );
+		} else {
+			@unlink( $path );
+		}
+	}
+	@rmdir( $dir );
 }
