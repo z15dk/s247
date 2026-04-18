@@ -34,6 +34,8 @@ $intro = get_theme_mod( 's247_om_intro' );
 	</div>
 </section>
 
+<?php get_template_part( 'template-parts/section', 'team' ); ?>
+
 <?php get_template_part( 'template-parts/section', 'cta' ); ?>
 
 <?php get_footer();
