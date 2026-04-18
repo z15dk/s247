@@ -29,3 +29,21 @@ require_once STUDIE247_DIR . '/inc/template-tags.php';
 require_once STUDIE247_DIR . '/inc/customizer.php';
 require_once STUDIE247_DIR . '/inc/svg-icons.php';
 require_once STUDIE247_DIR . '/inc/svg-upload.php';
+
+/**
+ * Auto-render team sektion efter indhold på Om-siden,
+ * uanset hvilken page-template der bruges.
+ */
+add_filter( 'the_content', function ( $content ) {
+	if ( ! is_singular( 'page' ) || ! in_the_loop() || ! is_main_query() ) {
+		return $content;
+	}
+	$title = strtolower( trim( get_the_title() ) );
+	$slug  = get_post_field( 'post_name', get_the_ID() );
+	if ( $slug === 'om' || $slug === 'om-os' || $title === 'om' || $title === 'om os' ) {
+		ob_start();
+		get_template_part( 'template-parts/section', 'team' );
+		$content .= ob_get_clean();
+	}
+	return $content;
+}, 20 );
