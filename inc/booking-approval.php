@@ -61,6 +61,30 @@ function studie247_render_booking_approval( $post ) {
 
 	<hr style="margin:14px 0;">
 	<?php
+	$is_internal_now = '1' === get_post_meta( $post->ID, '_s247_internal', true );
+	$internal_url    = wp_nonce_url(
+		admin_url( 'admin-post.php?action=s247_toggle_internal&booking=' . $post->ID ),
+		's247_internal_' . $post->ID
+	);
+	?>
+	<p style="margin:0 0 8px;font-size:12px;">
+		<strong><?php esc_html_e( 'Intern brug:', 'studie247' ); ?></strong>
+		<?php if ( $is_internal_now ) : ?>
+			<span style="color:#0a7c2f;font-weight:700;">✓ <?php esc_html_e( 'Ja — prisen er fjernet', 'studie247' ); ?></span>
+		<?php else : ?>
+			<span style="color:#666;"><?php esc_html_e( 'Nej', 'studie247' ); ?></span>
+		<?php endif; ?>
+	</p>
+	<p style="margin:0 0 12px;">
+		<a href="<?php echo esc_url( $internal_url ); ?>" class="button">
+			<?php echo $is_internal_now
+				? '↩ ' . esc_html__( 'Fjern intern-markering', 'studie247' )
+				: '⚙ ' . esc_html__( 'Markér som intern brug', 'studie247' ); ?>
+		</a>
+	</p>
+
+	<hr style="margin:14px 0;">
+	<?php
 	$produkt_id = (int) get_post_meta( $post->ID, '_s247_produkt_id', true );
 	$is_rental  = $produkt_id > 0;
 	$date       = get_post_meta( $post->ID, '_s247_date', true );
@@ -133,6 +157,43 @@ function studie247_render_booking_approval( $post ) {
 }
 
 /* ───────── admin-post handlers ───────── */
+
+/**
+ * Toggle intern-brug på en booking.
+ * Intern = ingen pris (skjul/nulstil _s247_estimated_price), men alt
+ * andet (kunde-info, kalender-blokering, godkendelse) virker som normalt.
+ * Den oprindelige pris gemmes i _s247_estimated_price_original så den
+ * kan gendannes hvis man fjerner intern-markeringen.
+ */
+add_action( 'admin_post_s247_toggle_internal', function () {
+	$id = isset( $_GET['booking'] ) ? (int) $_GET['booking'] : 0;
+	if ( ! $id || ! current_user_can( 'edit_post', $id ) ) { wp_die( 'Nope.' ); }
+	check_admin_referer( 's247_internal_' . $id );
+
+	$is_internal = '1' === get_post_meta( $id, '_s247_internal', true );
+	if ( $is_internal ) {
+		// Tag intern-markering af + gendan oprindelig pris hvis vi har en.
+		delete_post_meta( $id, '_s247_internal' );
+		$original = get_post_meta( $id, '_s247_estimated_price_original', true );
+		if ( '' !== $original ) {
+			update_post_meta( $id, '_s247_estimated_price', (int) $original );
+		}
+		delete_post_meta( $id, '_s247_estimated_price_original' );
+		$msg = 'internal_off';
+	} else {
+		// Markér som intern + gem oprindelig pris + nulstil den aktive.
+		$current = (int) get_post_meta( $id, '_s247_estimated_price', true );
+		if ( $current > 0 ) {
+			update_post_meta( $id, '_s247_estimated_price_original', $current );
+		}
+		update_post_meta( $id, '_s247_estimated_price', 0 );
+		update_post_meta( $id, '_s247_internal', '1' );
+		$msg = 'internal_on';
+	}
+	wp_safe_redirect( add_query_arg( 's247_msg', $msg, get_edit_post_link( $id, 'raw' ) ) );
+	exit;
+} );
+
 add_action( 'admin_post_s247_approve_booking', function () {
 	$id = isset( $_GET['booking'] ) ? (int) $_GET['booking'] : 0;
 	if ( ! $id || ! current_user_can( 'edit_post', $id ) ) { wp_die( 'Nope.' ); }
@@ -219,7 +280,70 @@ add_action( 'admin_notices', function () {
 	if ( 'rejected' === $msg ) {
 		echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__( 'Booking afvist. Tiden er frigivet og kunden er informeret.', 'studie247' ) . '</p></div>';
 	}
+	if ( 'internal_on' === $msg ) {
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Markeret som intern brug. Prisen er nulstillet.', 'studie247' ) . '</p></div>';
+	}
+	if ( 'internal_off' === $msg ) {
+		echo '<div class="notice notice-info is-dismissible"><p>' . esc_html__( 'Intern-markering fjernet. Oprindelig pris gendannet.', 'studie247' ) . '</p></div>';
+	}
 } );
+
+/* ───────── Admin-liste: type-kolonne + intern-badge ───────── */
+add_filter( 'manage_booking_posts_columns', function ( $cols ) {
+	$new = array();
+	foreach ( $cols as $k => $v ) {
+		$new[ $k ] = $v;
+		if ( 'title' === $k ) {
+			$new['s247_type'] = __( 'Type', 'studie247' );
+			$new['s247_when'] = __( 'Hvornår', 'studie247' );
+			$new['s247_price'] = __( 'Pris', 'studie247' );
+		}
+	}
+	return $new;
+} );
+
+add_action( 'manage_booking_posts_custom_column', function ( $col, $post_id ) {
+	switch ( $col ) {
+		case 's247_type':
+			$pid      = (int) get_post_meta( $post_id, '_s247_produkt_id', true );
+			$internal = '1' === get_post_meta( $post_id, '_s247_internal', true );
+			if ( $pid ) {
+				printf(
+					'<span style="color:#9E2B25;font-weight:700;">⎁ %s</span><br><span style="color:#666;font-size:11px;">%s</span>',
+					esc_html__( 'Udstyrs-udlejning', 'studie247' ),
+					esc_html( get_the_title( $pid ) )
+				);
+			} else {
+				echo '<span style="color:#0a7c2f;font-weight:700;">▣ ' . esc_html__( 'Studie-booking', 'studie247' ) . '</span>';
+			}
+			if ( $internal ) {
+				echo '<br><span style="display:inline-block;margin-top:4px;padding:2px 8px;background:#2b5e2b;color:#fff;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:0.05em;">INTERN</span>';
+			}
+			break;
+		case 's247_when':
+			$date  = get_post_meta( $post_id, '_s247_date', true );
+			$start = get_post_meta( $post_id, '_s247_start', true );
+			$dur   = get_post_meta( $post_id, '_s247_duration', true );
+			if ( $date ) {
+				echo esc_html( date_i18n( 'j. M Y', strtotime( $date ) ) );
+				if ( $start ) { echo ' · ' . esc_html( $start ); }
+				if ( $dur )   { echo '<br><span style="color:#666;font-size:11px;">' . esc_html( $dur ) . '</span>'; }
+			} else {
+				echo '—';
+			}
+			break;
+		case 's247_price':
+			$p = (int) get_post_meta( $post_id, '_s247_estimated_price', true );
+			if ( '1' === get_post_meta( $post_id, '_s247_internal', true ) ) {
+				echo '<span style="color:#2b5e2b;">0 kr</span><br><span style="color:#666;font-size:10px;">(intern)</span>';
+			} elseif ( $p > 0 ) {
+				echo esc_html( number_format( $p, 0, ',', '.' ) ) . ' kr';
+			} else {
+				echo '—';
+			}
+			break;
+	}
+}, 10, 2 );
 
 /* ───────── Dashboard-widget: afventende bookinger ───────── */
 add_action( 'wp_dashboard_setup', function () {
