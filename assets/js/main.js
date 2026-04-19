@@ -308,7 +308,8 @@
 			const t    = useType?.value || '';
 			const edit = currentEdit();
 			if (useOptions) useOptions.hidden = !t;
-			if (panels.podcast)        panels.podcast.hidden        = t !== 'podcast';
+			// Podcast-type (Lyd/Video) vises KUN ved Podcast + Redigering.
+			if (panels.podcast)        panels.podcast.hidden        = !(t === 'podcast' && edit === 'redigering');
 			if (panels.podcastEditing) panels.podcastEditing.hidden = !(t === 'podcast' && edit === 'redigering');
 			if (panels.videoEditing)   panels.videoEditing.hidden   = !(videoEditingTypes.includes(t) && edit === 'redigering');
 			if (panels.someFormat)     panels.someFormat.hidden     = !(t === 'some-content' && edit === 'redigering');
