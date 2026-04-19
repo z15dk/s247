@@ -224,6 +224,11 @@
 		const priceWeek     = parseInt(bookPicker.dataset.priceWeek || '0', 10);
 		const sumPrice      = document.querySelector('[data-sum-price]');
 
+		let studioPrices = {};
+		let studioHours  = {};
+		try { studioPrices = JSON.parse(bookPicker.dataset.studioPrices || '{}'); } catch (e) {}
+		try { studioHours  = JSON.parse(bookPicker.dataset.studioHours  || '{}'); } catch (e) {}
+
 		// Multiplikator-tabel matcher PHP (page-booking-studie.php).
 		const rentalTable = {
 			'1 dag':  { base: 'dag', mult: 1   },
@@ -238,12 +243,51 @@
 
 		const updatePrice = () => {
 			if (!sumPrice) return;
-			const row = rentalTable[durIn.value];
-			if (!row) { sumPrice.textContent = '—'; delete sumPrice.dataset.filled; return; }
-			const basePrice = row.base === 'uge' ? priceWeek : priceDay;
-			if (!basePrice) { sumPrice.textContent = '—'; delete sumPrice.dataset.filled; return; }
-			sumPrice.textContent = formatDKK(basePrice * row.mult);
+			let total = 0;
+			if (isProductMode) {
+				const row = rentalTable[durIn.value];
+				if (row) {
+					const base = row.base === 'uge' ? priceWeek : priceDay;
+					if (base) total = base * row.mult;
+				}
+			} else {
+				// Studie: direkte opslag i pris-tabel.
+				if (durIn.value && studioPrices[durIn.value]) {
+					total = studioPrices[durIn.value];
+				}
+			}
+			if (!total) { sumPrice.textContent = '—'; delete sumPrice.dataset.filled; return; }
+			sumPrice.textContent = formatDKK(total);
 			sumPrice.dataset.filled = '1';
+		};
+
+		/**
+		 * Disabler varigheds-knapper der ville overlappe med eksisterende
+		 * bookinger på den valgte dato (kun studie-mode).
+		 */
+		const applyDurationConstraints = () => {
+			if (isProductMode) return;
+			const iso = dateIn.value;
+			const startH = timeIn.value ? parseInt(timeIn.value.slice(0, 2), 10) : null;
+			const blocked = (iso && bookedMap[iso]) || [];
+			bookPicker.querySelectorAll('.book2__dur').forEach((btn) => {
+				const dur  = btn.dataset.duration;
+				const need = studioHours[dur] || 0;
+				let wouldOverlap = false;
+				if (startH !== null && need > 0) {
+					for (let h = startH; h < startH + need && h <= 20; h++) {
+						if (blocked.includes(h)) { wouldOverlap = true; break; }
+					}
+				}
+				btn.classList.toggle('is-disabled', wouldOverlap);
+				btn.disabled = wouldOverlap;
+				if (wouldOverlap && btn.classList.contains('is-selected')) {
+					btn.classList.remove('is-selected');
+					if (durIn) durIn.value = '';
+					if (sumDur) { sumDur.textContent = '—'; delete sumDur.dataset.filled; }
+					updatePrice();
+				}
+			});
 		};
 
 		// ─── Studie-mode: formål-dropdown styrer betinget synlige felter ───
@@ -309,27 +353,31 @@
 				if (picked) picked.textContent = 'Valgt: ' + fmtDate(iso);
 				if (slots) slots.hidden = false;
 				applyBookedFor(iso);
+				applyDurationConstraints();
 				checkReady();
 			});
 		});
 
 		bookPicker.querySelectorAll('.book2__time').forEach((t) => {
 			t.addEventListener('click', () => {
+				if (t.disabled || t.classList.contains('is-disabled')) return;
 				bookPicker.querySelectorAll('.book2__time.is-selected').forEach((x) => x.classList.remove('is-selected'));
 				t.classList.add('is-selected');
 				if (timeIn) timeIn.value = t.dataset.time;
 				if (sumTime) { sumTime.textContent = t.dataset.time; sumTime.dataset.filled = '1'; }
+				applyDurationConstraints();
 				checkReady();
 			});
 		});
 
 		bookPicker.querySelectorAll('.book2__dur').forEach((d) => {
 			d.addEventListener('click', () => {
+				if (d.disabled || d.classList.contains('is-disabled')) return;
 				bookPicker.querySelectorAll('.book2__dur.is-selected').forEach((x) => x.classList.remove('is-selected'));
 				d.classList.add('is-selected');
 				if (durIn) durIn.value = d.dataset.duration;
 				if (sumDur) { sumDur.textContent = d.dataset.duration; sumDur.dataset.filled = '1'; }
-				if (isProductMode) updatePrice();
+				updatePrice();
 				checkReady();
 			});
 		});

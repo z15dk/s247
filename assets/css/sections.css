@@ -3206,6 +3206,13 @@ body.team-modal-open { overflow: hidden; }
 	color: var(--s247-bone);
 	border-color: var(--color-accent);
 }
+.book2__dur.is-disabled,
+.book2__dur[disabled] {
+	opacity: 0.35;
+	cursor: not-allowed;
+	text-decoration: line-through;
+	pointer-events: none;
+}
 
 /* Aside / summary */
 .book2__side {
@@ -3369,6 +3376,12 @@ body.team-modal-open { overflow: hidden; }
 .book-consent a {
 	color: var(--color-accent);
 	text-decoration: underline;
+}
+
+.book-consent--optional {
+	background: transparent;
+	border: 1px dashed var(--color-border);
+	padding: var(--sp-3);
 }
 
 [data-book-submit][disabled] {
