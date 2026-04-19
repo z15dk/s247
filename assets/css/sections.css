@@ -2741,15 +2741,6 @@ body.team-modal-open { overflow: hidden; }
 	max-width: 48ch;
 }
 
-.studiet-guide__cta-actions {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: var(--sp-3);
-}
-@media (min-width: 820px) {
-	.studiet-guide__cta-actions { align-items: flex-end; }
-}
 
 .studiet-guide__cta-link {
 	display: inline-flex;
