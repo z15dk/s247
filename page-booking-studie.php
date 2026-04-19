@@ -24,6 +24,13 @@ if ( $form_prod ) {
 	$product = get_page_by_path( $form_prod, OBJECT, 'udlejning_item' );
 }
 
+// Produkt-mode: varighed angives i dage/uger, ikke timer, og produkt-
+// forespørgsler deler ikke samme kalender-kapacitet som studie-booking.
+$is_product = (bool) $product;
+$duration_options = $is_product
+	? array( '1 dag', '2 dage', '3 dage', '4 dage', '1 uge', '2 uger' )
+	: array( '2 timer', '4 timer', '6 timer', '8 timer', '1 dag' );
+
 // POST handler.
 if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_nonce'], 's247_book' ) ) {
 	$form_name  = sanitize_text_field( wp_unslash( $_POST['s247_name']  ?? '' ) );
@@ -122,6 +129,10 @@ $booking_posts = get_posts( array(
 ) );
 
 foreach ( $booking_posts as $b ) {
+	// Produkt-bookinger blokerer ikke studie-timer (og omvendt) — de
+	// bruger samme booking-CPT men forskellig kapacitet.
+	if ( get_post_meta( $b->ID, '_s247_produkt', true ) ) { continue; }
+
 	$d   = get_post_meta( $b->ID, '_s247_date', true );
 	$s   = get_post_meta( $b->ID, '_s247_start', true );
 	$dur = get_post_meta( $b->ID, '_s247_duration', true );
@@ -197,7 +208,7 @@ get_header();
 		<?php else : ?>
 			<div class="book2__layout">
 				<!-- Venstre: kalender + valg -->
-				<div class="book2__picker" data-book-picker data-booked="<?php echo esc_attr( wp_json_encode( $booked_map ) ); ?>">
+				<div class="book2__picker" data-book-picker data-book-mode="<?php echo $is_product ? 'product' : 'studio'; ?>" data-booked="<?php echo esc_attr( wp_json_encode( $booked_map ) ); ?>">
 					<div class="book2__calendar">
 						<div class="book2__cal-head">
 							<a class="book2__cal-nav" href="<?php echo esc_url( add_query_arg( 'ym', $prev_ym ) ); ?>" aria-label="<?php esc_attr_e( 'Forrige måned', 'studie247' ); ?>">‹</a>
@@ -251,18 +262,23 @@ get_header();
 					</div>
 
 					<div class="book2__slots" data-book-slots hidden>
-						<h3 class="book2__section-title"><span class="book2__step-num">02</span> <?php esc_html_e( 'Vælg tidspunkt', 'studie247' ); ?></h3>
+						<h3 class="book2__section-title">
+							<span class="book2__step-num">02</span>
+							<?php echo $is_product ? esc_html__( 'Vælg lejeperiode', 'studie247' ) : esc_html__( 'Vælg tidspunkt', 'studie247' ); ?>
+						</h3>
 						<p class="book2__picked" data-book-picked></p>
-						<div class="book2__time-grid">
-							<?php for ( $h = 8; $h <= 20; $h++ ) :
-								$val = sprintf( '%02d:00', $h ); ?>
-								<button type="button" class="book2__time" data-time="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( $val ); ?></button>
-							<?php endfor; ?>
-						</div>
+						<?php if ( ! $is_product ) : ?>
+							<div class="book2__time-grid">
+								<?php for ( $h = 8; $h <= 20; $h++ ) :
+									$val = sprintf( '%02d:00', $h ); ?>
+									<button type="button" class="book2__time" data-time="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( $val ); ?></button>
+								<?php endfor; ?>
+							</div>
+						<?php endif; ?>
 						<div class="book2__duration">
-							<span class="book2__dur-label"><?php esc_html_e( 'Varighed', 'studie247' ); ?></span>
+							<span class="book2__dur-label"><?php echo $is_product ? esc_html__( 'Varighed', 'studie247' ) : esc_html__( 'Varighed', 'studie247' ); ?></span>
 							<div class="book2__dur-grid">
-								<?php foreach ( array( '2 timer', '4 timer', '6 timer', '8 timer', '1 dag' ) as $opt ) : ?>
+								<?php foreach ( $duration_options as $opt ) : ?>
 									<button type="button" class="book2__dur" data-duration="<?php echo esc_attr( $opt ); ?>"><?php echo esc_html( $opt ); ?></button>
 								<?php endforeach; ?>
 							</div>
@@ -293,10 +309,12 @@ get_header();
 					<?php endif; ?>
 
 					<div class="book2__summary">
-						<h3 class="book2__section-title"><span class="book2__step-num">01</span> <?php esc_html_e( 'Din booking', 'studie247' ); ?></h3>
+						<h3 class="book2__section-title"><span class="book2__step-num">01</span> <?php echo $is_product ? esc_html__( 'Din forespørgsel', 'studie247' ) : esc_html__( 'Din booking', 'studie247' ); ?></h3>
 						<dl class="book2__sum-list">
-							<div><dt><?php esc_html_e( 'Dato', 'studie247' ); ?></dt><dd data-sum-date>—</dd></div>
-							<div><dt><?php esc_html_e( 'Tid', 'studie247' ); ?></dt><dd data-sum-time>—</dd></div>
+							<div><dt><?php echo $is_product ? esc_html__( 'Start-dato', 'studie247' ) : esc_html__( 'Dato', 'studie247' ); ?></dt><dd data-sum-date>—</dd></div>
+							<?php if ( ! $is_product ) : ?>
+								<div><dt><?php esc_html_e( 'Tid', 'studie247' ); ?></dt><dd data-sum-time>—</dd></div>
+							<?php endif; ?>
 							<div><dt><?php esc_html_e( 'Varighed', 'studie247' ); ?></dt><dd data-sum-duration>—</dd></div>
 						</dl>
 					</div>
@@ -306,7 +324,7 @@ get_header();
 						<input type="hidden" name="s247_produkt"  value="<?php echo esc_attr( $form_prod ); ?>">
 						<input type="hidden" name="s247_type"     value="<?php echo esc_attr( $form_type ); ?>">
 						<input type="hidden" name="s247_date"     value="" data-field-date>
-						<input type="hidden" name="s247_start"    value="" data-field-time>
+						<input type="hidden" name="s247_start"    value="<?php echo $is_product ? '10:00' : ''; ?>" data-field-time>
 						<input type="hidden" name="s247_duration" value="" data-field-duration>
 
 						<h3 class="book2__section-title"><span class="book2__step-num">03</span> <?php esc_html_e( 'Dine oplysninger', 'studie247' ); ?></h3>
@@ -338,10 +356,10 @@ get_header();
 						</label>
 
 						<button type="submit" class="btn btn--primary btn--lg" data-book-submit disabled>
-							<?php esc_html_e( 'Send booking-anmodning', 'studie247' ); ?>
+							<?php echo $is_product ? esc_html__( 'Send forespørgsel', 'studie247' ) : esc_html__( 'Send booking-anmodning', 'studie247' ); ?>
 							<?php echo studie247_icon( 'arrow-right', 16 ); ?>
 						</button>
-						<p class="book-form__note" data-book-hint><?php esc_html_e( 'Vælg dato, tid og varighed for at fortsætte.', 'studie247' ); ?></p>
+						<p class="book-form__note" data-book-hint><?php echo $is_product ? esc_html__( 'Vælg start-dato og varighed for at fortsætte.', 'studie247' ) : esc_html__( 'Vælg dato, tid og varighed for at fortsætte.', 'studie247' ); ?></p>
 					</form>
 				</aside>
 			</div>

@@ -219,12 +219,15 @@
 			return `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]}`;
 		};
 
+		const isProductMode = bookPicker.dataset.bookMode === 'product';
 		const checkReady = () => {
 			const ready = dateIn.value && timeIn.value && durIn.value;
 			if (submit) submit.disabled = !ready;
 			if (hint) hint.textContent = ready
 				? 'Klar — tjek opsummeringen og udfyld dine oplysninger.'
-				: 'Vælg dato, tid og varighed for at fortsætte.';
+				: (isProductMode
+					? 'Vælg start-dato og varighed for at fortsætte.'
+					: 'Vælg dato, tid og varighed for at fortsætte.');
 		};
 
 		bookPicker.querySelectorAll('.book2__day[data-date]').forEach((d) => {
