@@ -430,6 +430,31 @@ for ( $i = 1; $i <= 4; $i++ ) {
 				<?php if ( $gc_lead ) : ?>
 					<p class="studiet-guide__cta-lead"><?php echo wp_kses_post( $gc_lead ); ?></p>
 				<?php endif; ?>
+			</div>
+
+			<div class="studiet-guide__cta-right">
+				<?php if ( $gc_has_media ) : ?>
+					<div class="studiet-guide__cta-media" data-reel>
+						<?php if ( $gc_video ) : ?>
+							<video
+								muted
+								loop
+								playsinline
+								preload="metadata"
+								<?php echo $gc_poster ? 'poster="' . esc_url( $gc_poster ) . '"' : ''; ?>
+								data-reel-video
+							>
+								<source src="<?php echo esc_url( $gc_video ); ?>" type="video/mp4">
+							</video>
+							<button type="button" class="reel__play" aria-label="<?php esc_attr_e( 'Afspil rundvisning', 'studie247' ); ?>" data-reel-play>
+								<?php echo studie247_icon( 'play', 28 ); ?>
+							</button>
+						<?php elseif ( $gc_poster ) : ?>
+							<img src="<?php echo esc_url( $gc_poster ); ?>" alt="<?php esc_attr_e( 'Rundvisning', 'studie247' ); ?>" loading="lazy">
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+
 				<div class="studiet-guide__cta-actions">
 					<?php if ( $gc_button && $gc_button_url ) : ?>
 						<a class="btn btn--primary btn--xl" href="<?php echo esc_url( $gc_button_url ); ?>">
@@ -445,28 +470,6 @@ for ( $i = 1; $i <= 4; $i++ ) {
 					<?php endif; ?>
 				</div>
 			</div>
-
-			<?php if ( $gc_has_media ) : ?>
-				<div class="studiet-guide__cta-media" data-reel>
-					<?php if ( $gc_video ) : ?>
-						<video
-							muted
-							loop
-							playsinline
-							preload="metadata"
-							<?php echo $gc_poster ? 'poster="' . esc_url( $gc_poster ) . '"' : ''; ?>
-							data-reel-video
-						>
-							<source src="<?php echo esc_url( $gc_video ); ?>" type="video/mp4">
-						</video>
-						<button type="button" class="reel__play" aria-label="<?php esc_attr_e( 'Afspil rundvisning', 'studie247' ); ?>" data-reel-play>
-							<?php echo studie247_icon( 'play', 28 ); ?>
-						</button>
-					<?php elseif ( $gc_poster ) : ?>
-						<img src="<?php echo esc_url( $gc_poster ); ?>" alt="<?php esc_attr_e( 'Rundvisning', 'studie247' ); ?>" loading="lazy">
-					<?php endif; ?>
-				</div>
-			<?php endif; ?>
 		</div>
 	</div>
 </section>
