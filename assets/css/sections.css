@@ -1037,6 +1037,19 @@
 	letter-spacing: -0.01em;
 }
 
+.site-footer__heart {
+	display: inline-block;
+	color: var(--color-accent);
+	margin-left: 4px;
+	animation: s247-heartbeat 1.6s ease-in-out infinite;
+	transform-origin: center;
+}
+@keyframes s247-heartbeat {
+	0%, 30%, 60%, 100% { transform: scale(1); }
+	40% { transform: scale(1.25); }
+	50% { transform: scale(1.1); }
+}
+
 .site-footer__bottom {
 	margin-top: var(--sp-12);
 	padding-top: var(--sp-6);
@@ -2613,6 +2626,10 @@ body.team-modal-open { overflow: hidden; }
 		grid-template-columns: 1.4fr 1fr;
 		gap: var(--sp-10);
 	}
+	/* Når video/poster er uploadet: venstre tekst-kolonne + højre medie. */
+	.studiet-guide__cta.has-media {
+		grid-template-columns: 1fr 1fr;
+	}
 }
 
 .studiet-guide__cta-left,
@@ -2620,6 +2637,48 @@ body.team-modal-open { overflow: hidden; }
 	position: relative;
 	z-index: 1;
 }
+
+.studiet-guide__cta-actions { margin-top: var(--sp-5); }
+
+/* Video/billede i guide-CTA */
+.studiet-guide__cta-media {
+	position: relative;
+	aspect-ratio: 4 / 3;
+	border-radius: var(--radius-lg, 14px);
+	overflow: hidden;
+	background: rgba(0, 0, 0, 0.35);
+	z-index: 1;
+}
+.studiet-guide__cta-media video,
+.studiet-guide__cta-media img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+.studiet-guide__cta-media .reel__play {
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	width: 64px;
+	height: 64px;
+	display: grid;
+	place-items: center;
+	border: 0;
+	background: rgba(255,255,255,0.92);
+	color: var(--color-ink);
+	border-radius: 50%;
+	cursor: pointer;
+	box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+	transition: transform 160ms ease, background 160ms ease;
+}
+.studiet-guide__cta-media .reel__play:hover {
+	transform: scale(1.08);
+	background: #fff;
+}
+.studiet-guide__cta-media.is-playing .reel__play { display: none; }
 
 .studiet-guide__timer {
 	display: inline-flex;

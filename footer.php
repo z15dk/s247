@@ -34,7 +34,6 @@
 				<ul>
 					<li><a href="<?php echo esc_url( home_url( '/services/' ) ); ?>"><?php esc_html_e( 'Services', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/studiet/' ) ); ?>"><?php esc_html_e( 'Studiet', 'studie247' ); ?></a></li>
-					<li><a href="<?php echo esc_url( home_url( '/priser/' ) ); ?>"><?php esc_html_e( 'Priser', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/udlejning/' ) ); ?>"><?php esc_html_e( 'Udlejning', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/om/' ) ); ?>"><?php esc_html_e( 'Om', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>"><?php esc_html_e( 'Kontakt', 'studie247' ); ?></a></li>
@@ -46,7 +45,10 @@
 				<ul>
 					<li><a href="mailto:hej@studie247.dk">hej@studie247.dk</a></li>
 					<li><a href="tel:+4500000000">+45 00 00 00 00</a></li>
-					<li style="color:var(--s247-bone-60);"><?php esc_html_e( 'Aarhus', 'studie247' ); ?></li>
+					<li style="color:var(--s247-bone-60);">
+						<?php esc_html_e( 'Amager', 'studie247' ); ?>
+						<span class="site-footer__heart" aria-hidden="true">♥</span>
+					</li>
 					<li style="color:var(--s247-bone-60);"><?php esc_html_e( 'CVR: 00000000', 'studie247' ); ?></li>
 				</ul>
 			</div>
@@ -55,7 +57,7 @@
 				<h3><?php esc_html_e( 'Book', 'studie247' ); ?></h3>
 				<ul>
 					<li><a href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>"><?php esc_html_e( 'Book studie', 'studie247' ); ?></a></li>
-					<li><a href="<?php echo esc_url( home_url( '/priser/' ) ); ?>"><?php esc_html_e( 'Se priser', 'studie247' ); ?></a></li>
+					<li><a href="<?php echo esc_url( home_url( '/udlejning/' ) ); ?>"><?php esc_html_e( 'Lej udstyr', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>"><?php esc_html_e( 'Få et tilbud', 'studie247' ); ?></a></li>
 				</ul>
 			</div>

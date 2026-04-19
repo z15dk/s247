@@ -234,6 +234,19 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		's247_studiet_guide_title_a' => array( 'label' => 'Guide — overskrift del 1 (sans)', 'type' => 'text', 'default' => 'Sådan booker du' ),
 		's247_studiet_guide_title_b' => array( 'label' => 'Guide — overskrift del 2 (kursiv)', 'type' => 'text', 'default' => 'uden at græde' ),
 
+		// Guide-CTA (mørkt card efter guide-stepsene).
+		's247_studiet_guide_cta_badge'     => array( 'label' => 'Guide-CTA — badge-tal',            'type' => 'text', 'default' => '60' ),
+		's247_studiet_guide_cta_badge_unit'=> array( 'label' => 'Guide-CTA — badge-enhed',          'type' => 'text', 'default' => 'sek' ),
+		's247_studiet_guide_cta_title_a'   => array( 'label' => 'Guide-CTA — overskrift del 1',     'type' => 'text', 'default' => 'Så kort tager det.' ),
+		's247_studiet_guide_cta_title_b'   => array( 'label' => 'Guide-CTA — overskrift del 2 (kursiv)', 'type' => 'text', 'default' => 'Gå i gang.' ),
+		's247_studiet_guide_cta_lead'      => array( 'label' => 'Guide-CTA — under-tekst',          'type' => 'textarea', 'default' => 'Vil du se rummet først? Kig forbi til en gratis rundvisning — 15 min, ingen forpligtelser.' ),
+		's247_studiet_guide_cta_button'    => array( 'label' => 'Guide-CTA — primær knap tekst',    'type' => 'text', 'default' => 'Book studiet' ),
+		's247_studiet_guide_cta_button_url'=> array( 'label' => 'Guide-CTA — primær knap URL',      'type' => 'url',  'default' => '/booking-studie/' ),
+		's247_studiet_guide_cta_link'      => array( 'label' => 'Guide-CTA — sekundær link tekst',  'type' => 'text', 'default' => 'eller tag en rundvisning først' ),
+		's247_studiet_guide_cta_link_url'  => array( 'label' => 'Guide-CTA — sekundær link URL',    'type' => 'url',  'default' => '/kontakt-os/?emne=rundvisning' ),
+		's247_studiet_guide_cta_video'     => array( 'label' => 'Guide-CTA — video (MP4 URL)',      'type' => 'url',   'default' => '' ),
+		's247_studiet_guide_cta_poster'    => array( 'label' => 'Guide-CTA — video-poster/billede', 'type' => 'image', 'default' => '' ),
+
 		// Stats-strip under hero (4 kolonner).
 		's247_studiet_stat1_num'   => array( 'label' => 'Stat 1 — tal',   'type' => 'text', 'default' => '200' ),
 		's247_studiet_stat1_unit'  => array( 'label' => 'Stat 1 — enhed', 'type' => 'text', 'default' => 'm²' ),

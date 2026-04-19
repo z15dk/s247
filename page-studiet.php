@@ -395,30 +395,78 @@ for ( $i = 1; $i <= 4; $i++ ) {
 			<?php endforeach; ?>
 		</ol>
 
-		<div class="studiet-guide__cta">
+		<?php
+		$gc_badge      = get_theme_mod( 's247_studiet_guide_cta_badge', '60' );
+		$gc_badge_unit = get_theme_mod( 's247_studiet_guide_cta_badge_unit', 'sek' );
+		$gc_title_a    = get_theme_mod( 's247_studiet_guide_cta_title_a', 'Så kort tager det.' );
+		$gc_title_b    = get_theme_mod( 's247_studiet_guide_cta_title_b', 'Gå i gang.' );
+		$gc_lead       = get_theme_mod( 's247_studiet_guide_cta_lead', 'Vil du se rummet først? Kig forbi til en gratis rundvisning — 15 min, ingen forpligtelser.' );
+		$gc_button     = get_theme_mod( 's247_studiet_guide_cta_button', 'Book studiet' );
+		$gc_button_url = get_theme_mod( 's247_studiet_guide_cta_button_url', home_url( '/booking-studie/' ) );
+		$gc_link       = get_theme_mod( 's247_studiet_guide_cta_link', 'eller tag en rundvisning først' );
+		$gc_link_url   = get_theme_mod( 's247_studiet_guide_cta_link_url', home_url( '/kontakt-os/?emne=rundvisning' ) );
+		$gc_video      = get_theme_mod( 's247_studiet_guide_cta_video', '' );
+		$gc_poster     = get_theme_mod( 's247_studiet_guide_cta_poster', '' );
+		$gc_has_media  = $gc_video || $gc_poster;
+		?>
+		<div class="studiet-guide__cta<?php echo $gc_has_media ? ' has-media' : ''; ?>">
 			<div class="studiet-guide__cta-left">
-				<span class="studiet-guide__timer" aria-hidden="true">
-					<span class="studiet-guide__timer-num">60</span>
-					<span class="studiet-guide__timer-unit"><?php esc_html_e( 'sek', 'studie247' ); ?></span>
-				</span>
-				<h3 class="studiet-guide__cta-title">
-					<?php esc_html_e( 'Så kort tager det.', 'studie247' ); ?>
-					<em><?php esc_html_e( 'Gå i gang.', 'studie247' ); ?></em>
-				</h3>
-				<p class="studiet-guide__cta-lead">
-					<?php esc_html_e( 'Vil du se rummet først? Kig forbi til en gratis rundvisning — 15 min, ingen forpligtelser.', 'studie247' ); ?>
-				</p>
+				<?php if ( $gc_badge || $gc_badge_unit ) : ?>
+					<span class="studiet-guide__timer" aria-hidden="true">
+						<?php if ( $gc_badge ) : ?>
+							<span class="studiet-guide__timer-num"><?php echo esc_html( $gc_badge ); ?></span>
+						<?php endif; ?>
+						<?php if ( $gc_badge_unit ) : ?>
+							<span class="studiet-guide__timer-unit"><?php echo esc_html( $gc_badge_unit ); ?></span>
+						<?php endif; ?>
+					</span>
+				<?php endif; ?>
+				<?php if ( $gc_title_a || $gc_title_b ) : ?>
+					<h3 class="studiet-guide__cta-title">
+						<?php echo esc_html( $gc_title_a ); ?>
+						<?php if ( $gc_title_b ) : ?><em><?php echo esc_html( $gc_title_b ); ?></em><?php endif; ?>
+					</h3>
+				<?php endif; ?>
+				<?php if ( $gc_lead ) : ?>
+					<p class="studiet-guide__cta-lead"><?php echo wp_kses_post( $gc_lead ); ?></p>
+				<?php endif; ?>
+				<div class="studiet-guide__cta-actions">
+					<?php if ( $gc_button && $gc_button_url ) : ?>
+						<a class="btn btn--primary btn--xl" href="<?php echo esc_url( $gc_button_url ); ?>">
+							<?php echo esc_html( $gc_button ); ?>
+							<?php echo studie247_icon( 'arrow-right', 18 ); ?>
+						</a>
+					<?php endif; ?>
+					<?php if ( $gc_link && $gc_link_url ) : ?>
+						<a class="studiet-guide__cta-link" href="<?php echo esc_url( $gc_link_url ); ?>">
+							<?php echo esc_html( $gc_link ); ?>
+							<?php echo studie247_icon( 'arrow-right', 14 ); ?>
+						</a>
+					<?php endif; ?>
+				</div>
 			</div>
-			<div class="studiet-guide__cta-actions">
-				<a class="btn btn--primary btn--xl" href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>">
-					<?php esc_html_e( 'Book studiet', 'studie247' ); ?>
-					<?php echo studie247_icon( 'arrow-right', 18 ); ?>
-				</a>
-				<a class="studiet-guide__cta-link" href="<?php echo esc_url( add_query_arg( 'emne', 'rundvisning', home_url( '/kontakt-os/' ) ) ); ?>">
-					<?php esc_html_e( 'eller tag en rundvisning først', 'studie247' ); ?>
-					<?php echo studie247_icon( 'arrow-right', 14 ); ?>
-				</a>
-			</div>
+
+			<?php if ( $gc_has_media ) : ?>
+				<div class="studiet-guide__cta-media" data-reel>
+					<?php if ( $gc_video ) : ?>
+						<video
+							muted
+							loop
+							playsinline
+							preload="metadata"
+							<?php echo $gc_poster ? 'poster="' . esc_url( $gc_poster ) . '"' : ''; ?>
+							data-reel-video
+						>
+							<source src="<?php echo esc_url( $gc_video ); ?>" type="video/mp4">
+						</video>
+						<button type="button" class="reel__play" aria-label="<?php esc_attr_e( 'Afspil rundvisning', 'studie247' ); ?>" data-reel-play>
+							<?php echo studie247_icon( 'play', 28 ); ?>
+						</button>
+					<?php elseif ( $gc_poster ) : ?>
+						<img src="<?php echo esc_url( $gc_poster ); ?>" alt="<?php esc_attr_e( 'Rundvisning', 'studie247' ); ?>" loading="lazy">
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
 		</div>
 	</div>
 </section>
