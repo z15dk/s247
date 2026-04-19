@@ -2845,6 +2845,23 @@ body.team-modal-open { overflow: hidden; }
 	line-height: 1.4;
 }
 
+.book-form__bulk-hint {
+	margin: var(--sp-3) 0 0;
+	padding: var(--sp-3) var(--sp-4);
+	background: var(--color-surface-deep);
+	border-left: 3px solid var(--color-accent);
+	border-radius: var(--radius-sm);
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--color-ink-soft);
+}
+
+.book-form__bulk-hint a {
+	color: var(--color-accent);
+	font-weight: 700;
+	text-decoration: underline;
+}
+
 .book-success {
 	max-width: 640px;
 	padding: var(--sp-10);

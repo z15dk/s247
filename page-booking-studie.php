@@ -470,6 +470,14 @@ get_header();
 							<?php echo studie247_icon( 'arrow-right', 16 ); ?>
 						</button>
 						<p class="book-form__note" data-book-hint><?php echo $is_product ? esc_html__( 'Vælg start-dato og varighed for at fortsætte.', 'studie247' ) : esc_html__( 'Vælg dato, tid og varighed for at fortsætte.', 'studie247' ); ?></p>
+						<?php if ( $is_product ) : ?>
+							<p class="book-form__bulk-hint">
+								<?php esc_html_e( 'Skal du bruge flere produkter?', 'studie247' ); ?>
+								<a href="mailto:udlejning@s247.dk?subject=Udlejning%20%E2%80%94%20flere%20produkter">
+									<?php esc_html_e( 'Send en mail til udlejning@s247.dk', 'studie247' ); ?>
+								</a>
+							</p>
+						<?php endif; ?>
 					</form>
 				</aside>
 			</div>
