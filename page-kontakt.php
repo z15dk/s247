@@ -51,7 +51,7 @@ if ( ! empty( $_POST['s247_contact_nonce'] ) && wp_verify_nonce( $_POST['s247_co
 		@wp_mail( $admin_to, $admin_subject, $admin_body, $admin_headers );
 
 		$user_subject  = 'Tak for din henvendelse — Studie 247';
-		$user_body     = "Hej {$form_name},\n\nTak for at du skrev til os. Vi vender tilbage så hurtigt vi kan — typisk inden for 24 timer på hverdage.\n";
+		$user_body     = "Hej {$form_name},\n\nTak for at du kontaktede os. Vi vender tilbage til dig hurtigst muligt — typisk inden for 24 timer på hverdage.\n";
 		if ( $side_label ) {
 			$user_body .= "\nDu valgte: {$side_label}\n";
 		}

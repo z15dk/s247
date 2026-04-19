@@ -211,14 +211,15 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			'Reply-To: ' . $form_name . ' <' . $form_email . '>',
 		) );
 
-		$user_subject  = 'Booking modtaget — afventer godkendelse — Studie 247';
-		$user_body     = "Hej {$form_name},\n\nVi har modtaget din booking-anmodning og reserveret tiden foreløbigt.\n\n";
+		$booking_label = $prod_label ? $prod_label : 'studiet';
+		$user_subject  = sprintf( 'Tak for din booking af %s — Studie 247', $booking_label );
+		$user_body     = "Hej {$form_name},\n\nTak for din booking af {$booking_label}. Vi vender tilbage med en endelig bekræftelse hurtigst muligt — typisk inden for 24 timer på hverdage.\n\n";
 		if ( $prod_label ) { $user_body .= "Produkt: {$prod_label}\n"; }
 		$user_body    .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
 		if ( $estimated_price_fmt ) { $user_body .= "Estimeret pris: {$estimated_price_fmt}\n"; }
 		if ( $purpose_lines ) { $user_body .= "\n" . $purpose_lines; }
 		if ( $form_notes ) { $user_body .= "\nDine noter:\n{$form_notes}\n"; }
-		$user_body    .= "\nDin booking er markeret som 'afventer godkendelse'. Du hører fra os inden for 24 timer på hverdage med endelig bekræftelse.\n\n— Studie 247\ninfo@s247.dk";
+		$user_body    .= "\nDin booking er foreløbigt reserveret og afventer godkendelse.\n\n— Studie 247\ninfo@s247.dk";
 		@wp_mail( $form_email, $user_subject, $user_body, array(
 			'Content-Type: text/plain; charset=UTF-8',
 			'From: Studie 247 <info@s247.dk>',
