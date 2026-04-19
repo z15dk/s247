@@ -212,15 +212,26 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		) );
 
 		$booking_label = $prod_label ? $prod_label : 'studiet';
-		$user_subject  = sprintf( 'Tak for din booking af %s — Studie 247', $booking_label );
-		$user_body     = "Hej {$form_name},\n\nTak for din booking af {$booking_label}. Vi vender tilbage med en endelig bekræftelse hurtigst muligt — typisk inden for 24 timer på hverdage.\n\n";
-		if ( $prod_label ) { $user_body .= "Produkt: {$prod_label}\n"; }
-		$user_body    .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
-		if ( $estimated_price_fmt ) { $user_body .= "Estimeret pris: {$estimated_price_fmt}\n"; }
-		if ( $purpose_lines ) { $user_body .= "\n" . $purpose_lines; }
-		if ( $form_notes ) { $user_body .= "\nDine noter:\n{$form_notes}\n"; }
-		$user_body    .= "\nDin booking er foreløbigt reserveret og afventer godkendelse.\n\n— Studie 247\ninfo@s247.dk";
-		@wp_mail( $form_email, $user_subject, $user_body, array(
+		$mail = studie247_render_mail_template( 'booking_received', array(
+			'navn'           => $form_name,
+			'email'          => $form_email,
+			'telefon'        => $form_phone,
+			'booking_label'  => $booking_label,
+			'produkt'        => $prod_label,
+			'dato'           => $date_dk,
+			'start'          => $form_start,
+			'varighed'       => $form_dur,
+			'pris'           => $estimated_price_fmt,
+			'noter'          => $form_notes,
+			'formaal'        => isset( $use_type_labels[ $form_use_type ] )       ? $use_type_labels[ $form_use_type ]             : '',
+			'oensker'        => isset( $edit_type_labels[ $form_edit_type ] )     ? $edit_type_labels[ $form_edit_type ]           : '',
+			'podcast_type'   => isset( $podcast_type_labels[ $form_podcast_type ] ) ? $podcast_type_labels[ $form_podcast_type ]   : '',
+			'tilkoeb'        => isset( $tilkoeb_labels[ $form_tilkoeb ] )         ? $tilkoeb_labels[ $form_tilkoeb ]               : '',
+			'antal_videoer'  => $form_video_count    ? (string) $form_video_count    : '',
+			'video_varighed' => $form_video_duration ? $form_video_duration . ' min' : '',
+			'format'         => $form_format,
+		) );
+		@wp_mail( $form_email, $mail['subject'], $mail['body'], array(
 			'Content-Type: text/plain; charset=UTF-8',
 			'From: Studie 247 <info@s247.dk>',
 			'Reply-To: info@s247.dk',

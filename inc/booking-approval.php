@@ -170,19 +170,16 @@ function studie247_send_booking_confirmation( $booking_id, $action ) {
 	$is_rental = (bool) $pid;
 
 	if ( 'approved' === $action ) {
-		if ( $is_rental ) {
-			$subject = 'Din lejeforespørgsel er godkendt — Studie 247';
-			$body    = "Hej {$name},\n\nDin lejeforespørgsel er godkendt. Vi glæder os til at udlåne udstyret til dig.\n\n";
-			if ( $prod ) { $body .= "Udstyr: {$prod}\n"; }
-			$body   .= "Start-dato: {$date_dk}\nVarighed: {$dur}\n";
-			$body   .= "\nVi kontakter dig for at aftale afhentning og eventuel depositums-betaling.\n\n— Studie 247\ninfo@s247.dk";
-		} else {
-			$subject = 'Din booking er godkendt — Studie 247';
-			$body    = "Hej {$name},\n\nDin booking er godkendt. Vi glæder os til at se dig.\n\n";
-			if ( $prod ) { $body .= "Produkt: {$prod}\n"; }
-			$body   .= "Dato: {$date_dk}\nStart: {$start}\nVarighed: {$dur}\n";
-			$body   .= "\nHar du spørgsmål inden da, så ring eller skriv.\n\n— Studie 247\ninfo@s247.dk";
-		}
+		$mail    = studie247_render_mail_template( 'booking_approved', array(
+			'navn'     => $name,
+			'email'    => $email,
+			'produkt'  => $prod,
+			'dato'     => $date_dk,
+			'start'    => $start,
+			'varighed' => $dur,
+		) );
+		$subject = $mail['subject'];
+		$body    = $mail['body'];
 	} else {
 		if ( $is_rental ) {
 			$subject = 'Lejeforespørgsel afvist — Studie 247';
