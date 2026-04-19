@@ -2112,14 +2112,18 @@ body.team-modal-open { overflow: hidden; }
 
 .studiet-setups__stage {
 	position: relative;
-	aspect-ratio: 4 / 5;
+	aspect-ratio: 4 / 3;
 	border-radius: var(--radius-lg);
 	overflow: hidden;
 	background: var(--color-surface-deep);
+	max-height: 70vh;
 }
 
 @media (min-width: 900px) {
-	.studiet-setups__stage { aspect-ratio: 4 / 5; }
+	.studiet-setups__stage {
+		aspect-ratio: 1 / 1;
+		max-height: 560px;
+	}
 }
 
 .studiet-setups__image {
