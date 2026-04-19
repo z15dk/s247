@@ -2880,6 +2880,12 @@ body.team-modal-open { overflow: hidden; }
 	margin: var(--sp-4) 0;
 }
 
+/* Gør hidden-attributten bindende — uden det overskriver display:flex nedenfor. */
+.book-options[hidden],
+.book-choice[hidden] {
+	display: none;
+}
+
 .book-choice {
 	border: 0;
 	padding: 0;
