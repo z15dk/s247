@@ -67,7 +67,6 @@
 		$menu_items = array(
 			array( 'Services',  '/services/',  false ),
 			array( 'Studiet',   '/studiet/',   false ),
-			array( 'Priser',    '/priser/',    false ),
 			array( 'Udlejning', '/udlejning/', true  ),
 			array( 'Om',        '/om/',        false ),
 			array( 'Kontakt',   '/kontakt/',   false ),
