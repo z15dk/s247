@@ -308,19 +308,40 @@ for ( $i = 1; $i <= 5; $i++ ) {
 					<a class="btn btn--primary btn--xl" href="<?php echo esc_url( $book_url ); ?>"><?php echo esc_html( $book_cta ); ?></a>
 				<?php endif; ?>
 			</div>
-			<?php if ( $book_psst || $book_psst_cta ) : ?>
-				<aside class="studiet-book__aside">
-					<?php if ( $book_psst ) : ?>
-						<p class="studiet-book__psst"><?php echo wp_kses_post( $book_psst ); ?></p>
-					<?php endif; ?>
-					<?php if ( $book_psst_cta && $book_psst_url ) : ?>
-						<a class="btn btn--ghost btn--on-dark" href="<?php echo esc_url( $book_psst_url ); ?>">
-							<?php echo esc_html( $book_psst_cta ); ?>
-							<?php echo studie247_icon( 'arrow-right', 16 ); ?>
-						</a>
-					<?php endif; ?>
-				</aside>
-			<?php endif; ?>
+			<?php
+			// Hent op til 4 udstyrs-items med billede til thumb-grid
+			$rent_preview = get_posts( array(
+				'post_type'      => 'udlejning_item',
+				'posts_per_page' => 4,
+				'orderby'        => 'rand',
+				'meta_query'     => array( array( 'key' => '_thumbnail_id', 'compare' => 'EXISTS' ) ),
+			) );
+			?>
+			<aside class="studiet-book__aside">
+				<span class="studiet-book__aside-eyebrow"><?php esc_html_e( 'Psst — du kan også leje udstyr', 'studie247' ); ?></span>
+
+				<?php if ( ! empty( $rent_preview ) ) : ?>
+					<div class="studiet-book__thumbs">
+						<?php foreach ( $rent_preview as $item ) : ?>
+							<a class="studiet-book__thumb" href="<?php echo esc_url( get_permalink( $item ) ); ?>" title="<?php echo esc_attr( $item->post_title ); ?>">
+								<?php echo get_the_post_thumbnail( $item, 's247-square', array( 'loading' => 'lazy', 'alt' => $item->post_title ) ); ?>
+							</a>
+						<?php endforeach; ?>
+					</div>
+					<p class="studiet-book__thumbs-lead">
+						<?php esc_html_e( 'Kameraer, lys, lyd og grip — klar fra dag til dag.', 'studie247' ); ?>
+					</p>
+				<?php elseif ( $book_psst ) : ?>
+					<p class="studiet-book__psst"><?php echo wp_kses_post( $book_psst ); ?></p>
+				<?php endif; ?>
+
+				<?php if ( $book_psst_cta && $book_psst_url ) : ?>
+					<a class="studiet-book__link" href="<?php echo esc_url( $book_psst_url ); ?>">
+						<?php echo esc_html( $book_psst_cta ); ?>
+						<?php echo studie247_icon( 'arrow-right', 14 ); ?>
+					</a>
+				<?php endif; ?>
+			</aside>
 		</div>
 	</div>
 </section>
