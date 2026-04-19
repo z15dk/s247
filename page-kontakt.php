@@ -53,6 +53,16 @@ if ( ! empty( $_POST['s247_contact_nonce'] ) && wp_verify_nonce( $_POST['s247_co
 		);
 		@wp_mail( $admin_to, $admin_subject, $admin_body, $admin_headers );
 
+		// Persister besked som CPT så dashboardet/CRM kan hente den.
+		studie247_save_kontakt_besked( array(
+			'name'    => $form_name,
+			'email'   => $form_email,
+			'phone'   => '',
+			'side'    => $form_side,
+			'message' => $form_msg,
+			'source'  => 'kontakt',
+		) );
+
 		$mail = studie247_render_mail_template( 'contact', array(
 			'navn'   => $form_name,
 			'email'  => $form_email,

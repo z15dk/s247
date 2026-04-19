@@ -18,7 +18,8 @@ add_action( 'init', function () {
 		),
 		'public'       => false,
 		'show_ui'      => true,
-		'show_in_rest' => false,
+		'show_in_rest' => true, // adgang er låst bag auth i inc/rest-api.php
+		'rest_base'    => 'booking',
 		'menu_icon'    => 'dashicons-calendar-alt',
 		'menu_position' => 20,
 		'capability_type' => 'post',

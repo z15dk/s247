@@ -35,6 +35,16 @@ if ( ! empty( $_POST['s247_ko_nonce'] ) && wp_verify_nonce( $_POST['s247_ko_nonc
 	}
 
 	if ( empty( $errors ) ) {
+		// Persister besked som CPT så dashboardet/CRM kan hente den.
+		studie247_save_kontakt_besked( array(
+			'name'    => $form_name,
+			'email'   => $form_email,
+			'phone'   => $form_phone,
+			'topic'   => $form_topic,
+			'message' => $form_message,
+			'source'  => 'kontakt-os',
+		) );
+
 		$admin_to      = 'info@s247.dk';
 		$admin_subject = sprintf( '[Studie 247] Ny henvendelse fra %s', $form_name );
 		$admin_body    = "Navn: {$form_name}\nEmail: {$form_email}\nTelefon: {$form_phone}\n";

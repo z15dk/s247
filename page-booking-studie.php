@@ -148,11 +148,9 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			if ( $form_company ) { update_post_meta( $booking_id, '_s247_company', $form_company ); }
 			if ( $form_cvr )     { update_post_meta( $booking_id, '_s247_cvr',     $form_cvr ); }
 			// GDPR: gem samtykke-tidsstempel + IP + user-agent som bevis for consent.
-			update_post_meta( $booking_id, '_s247_consent', array(
-				'timestamp'  => current_time( 'mysql' ),
-				'ip'         => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
-				'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 255 ) : '',
-			) );
+			update_post_meta( $booking_id, '_s247_consent_timestamp', current_time( 'mysql' ) );
+			update_post_meta( $booking_id, '_s247_consent_ip', isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '' );
+			update_post_meta( $booking_id, '_s247_consent_ua', isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 255 ) : '' );
 			update_post_meta( $booking_id, '_s247_notes',    $form_notes );
 			update_post_meta( $booking_id, '_s247_produkt',  $form_prod );
 			if ( $prod_id )  { update_post_meta( $booking_id, '_s247_produkt_id', $prod_id ); }
