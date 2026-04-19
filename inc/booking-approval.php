@@ -118,7 +118,15 @@ function studie247_render_booking_approval( $post ) {
 		<?php endif; ?>
 		<?php $phone = get_post_meta( $post->ID, '_s247_phone', true ); ?>
 		<?php if ( $phone ) : ?>
-			<a href="tel:<?php echo esc_attr( $phone ); ?>"><?php echo esc_html( $phone ); ?></a>
+			<a href="tel:<?php echo esc_attr( $phone ); ?>"><?php echo esc_html( $phone ); ?></a><br>
+		<?php endif; ?>
+		<?php $company = get_post_meta( $post->ID, '_s247_company', true ); ?>
+		<?php $cvr     = get_post_meta( $post->ID, '_s247_cvr', true ); ?>
+		<?php if ( $company ) : ?>
+			<strong><?php esc_html_e( 'Virksomhed:', 'studie247' ); ?></strong> <?php echo esc_html( $company ); ?><br>
+		<?php endif; ?>
+		<?php if ( $cvr ) : ?>
+			<strong>CVR:</strong> <?php echo esc_html( $cvr ); ?>
 		<?php endif; ?>
 	</p>
 	<?php
@@ -171,12 +179,14 @@ function studie247_send_booking_confirmation( $booking_id, $action ) {
 
 	if ( 'approved' === $action ) {
 		$mail    = studie247_render_mail_template( 'booking_approved', array(
-			'navn'     => $name,
-			'email'    => $email,
-			'produkt'  => $prod,
-			'dato'     => $date_dk,
-			'start'    => $start,
-			'varighed' => $dur,
+			'navn'       => $name,
+			'email'      => $email,
+			'produkt'    => $prod,
+			'dato'       => $date_dk,
+			'start'      => $start,
+			'varighed'   => $dur,
+			'virksomhed' => get_post_meta( $booking_id, '_s247_company', true ),
+			'cvr'        => get_post_meta( $booking_id, '_s247_cvr', true ),
 		) );
 		$subject = $mail['subject'];
 		$body    = $mail['body'];

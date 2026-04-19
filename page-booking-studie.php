@@ -8,13 +8,15 @@
 $errors    = array();
 $submitted = isset( $_GET['sendt'] ) && '1' === $_GET['sendt'];
 
-$form_name  = '';
-$form_email = '';
-$form_phone = '';
-$form_date  = '';
-$form_start = '';
-$form_dur   = '';
-$form_notes = '';
+$form_name    = '';
+$form_email   = '';
+$form_phone   = '';
+$form_company = '';
+$form_cvr     = '';
+$form_date    = '';
+$form_start   = '';
+$form_dur     = '';
+$form_notes   = '';
 $form_prod  = isset( $_GET['produkt'] ) ? sanitize_title( wp_unslash( $_GET['produkt'] ) ) : '';
 $form_type  = isset( $_GET['type'] ) ? sanitize_text_field( wp_unslash( $_GET['type'] ) ) : '';
 
@@ -84,7 +86,9 @@ function studie247_calc_rental_price( $price_day, $price_week, $duration ) {
 if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_nonce'], 's247_book' ) ) {
 	$form_name  = sanitize_text_field( wp_unslash( $_POST['s247_name']  ?? '' ) );
 	$form_email = sanitize_email(      wp_unslash( $_POST['s247_email'] ?? '' ) );
-	$form_phone = sanitize_text_field( wp_unslash( $_POST['s247_phone'] ?? '' ) );
+	$form_phone   = sanitize_text_field( wp_unslash( $_POST['s247_phone']   ?? '' ) );
+	$form_company = sanitize_text_field( wp_unslash( $_POST['s247_company'] ?? '' ) );
+	$form_cvr     = preg_replace( '/\D/', '', (string) wp_unslash( $_POST['s247_cvr'] ?? '' ) );
 	$form_date  = sanitize_text_field( wp_unslash( $_POST['s247_date']  ?? '' ) );
 	$form_start = sanitize_text_field( wp_unslash( $_POST['s247_start'] ?? '' ) );
 	$form_dur   = sanitize_text_field( wp_unslash( $_POST['s247_duration'] ?? '' ) );
@@ -140,6 +144,8 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			update_post_meta( $booking_id, '_s247_name',     $form_name );
 			update_post_meta( $booking_id, '_s247_email',    $form_email );
 			update_post_meta( $booking_id, '_s247_phone',    $form_phone );
+			if ( $form_company ) { update_post_meta( $booking_id, '_s247_company', $form_company ); }
+			if ( $form_cvr )     { update_post_meta( $booking_id, '_s247_cvr',     $form_cvr ); }
 			update_post_meta( $booking_id, '_s247_notes',    $form_notes );
 			update_post_meta( $booking_id, '_s247_produkt',  $form_prod );
 			if ( $prod_id )  { update_post_meta( $booking_id, '_s247_produkt_id', $prod_id ); }
@@ -200,6 +206,8 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		$admin_to      = 'info@s247.dk';
 		$admin_subject = sprintf( '[Studie 247] Ny booking fra %s — %s', $form_name, $date_dk );
 		$admin_body    = "Navn: {$form_name}\nEmail: {$form_email}\nTelefon: {$form_phone}\n";
+		if ( $form_company ) { $admin_body .= "Virksomhed: {$form_company}\n"; }
+		if ( $form_cvr )     { $admin_body .= "CVR: {$form_cvr}\n"; }
 		if ( $form_type )   { $admin_body .= "Type: {$form_type}\n"; }
 		if ( $prod_label )  { $admin_body .= "Produkt: {$prod_label}\n"; }
 		$admin_body   .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
@@ -216,6 +224,8 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			'navn'           => $form_name,
 			'email'          => $form_email,
 			'telefon'        => $form_phone,
+			'virksomhed'     => $form_company,
+			'cvr'            => $form_cvr,
 			'booking_label'  => $booking_label,
 			'produkt'        => $prod_label,
 			'dato'           => $date_dk,
@@ -591,6 +601,14 @@ get_header();
 						<label class="book-field">
 							<span class="book-field__label"><?php esc_html_e( 'Telefon', 'studie247' ); ?></span>
 							<input type="tel"   name="s247_phone" value="<?php echo esc_attr( $form_phone ); ?>">
+						</label>
+						<label class="book-field">
+							<span class="book-field__label"><?php esc_html_e( 'Virksomhed', 'studie247' ); ?> <span class="book-field__optional"><?php esc_html_e( '(valgfrit)', 'studie247' ); ?></span></span>
+							<input type="text" name="s247_company" value="<?php echo esc_attr( $form_company ); ?>" autocomplete="organization">
+						</label>
+						<label class="book-field">
+							<span class="book-field__label"><?php esc_html_e( 'CVR-nummer', 'studie247' ); ?> <span class="book-field__optional"><?php esc_html_e( '(valgfrit)', 'studie247' ); ?></span></span>
+							<input type="text" name="s247_cvr" value="<?php echo esc_attr( $form_cvr ); ?>" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="8 cifre">
 						</label>
 						<label class="book-field">
 							<span class="book-field__label"><?php esc_html_e( 'Noter', 'studie247' ); ?></span>

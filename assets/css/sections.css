@@ -2862,6 +2862,14 @@ body.team-modal-open { overflow: hidden; }
 	margin-bottom: 6px;
 }
 
+.book-field__optional {
+	color: var(--color-ink-mute);
+	opacity: 0.6;
+	text-transform: none;
+	letter-spacing: 0;
+	font-weight: 400;
+}
+
 [data-book-submit][disabled] {
 	opacity: 0.45;
 	cursor: not-allowed;
