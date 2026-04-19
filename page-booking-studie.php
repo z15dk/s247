@@ -159,6 +159,50 @@ foreach ( $booking_posts as $b ) {
 	}
 }
 
+// For produkt-mode: find dage hvor alle lager-enheder af produktet er
+// udlejet via GODKENDTE (publish) lejeforespørgsler. Afventende (pending)
+// forespørgsler blokerer IKKE — admin skal først godkende.
+if ( $is_product ) {
+	$antal = (int) get_post_meta( $product->ID, '_s247_antal', true );
+	if ( $antal < 1 ) { $antal = 1; }
+
+	$duration_days = array(
+		'1 dag'  => 1, '2 dage' => 2, '3 dage' => 3, '4 dage' => 4,
+		'1 uge'  => 7, '2 uger' => 14,
+	);
+
+	$rental_bookings = get_posts( array(
+		'post_type'      => 'booking',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'meta_query'     => array(
+			array( 'key' => '_s247_produkt_id', 'value' => $product->ID, 'compare' => '=' ),
+			array( 'key' => '_s247_date',       'value' => $today_key,   'compare' => '>=', 'type' => 'DATE' ),
+		),
+	) );
+
+	$rental_day_count = array(); // 'YYYY-MM-DD' => antal reservationer
+	foreach ( $rental_bookings as $rb ) {
+		$start_date = get_post_meta( $rb->ID, '_s247_date', true );
+		$rb_dur     = get_post_meta( $rb->ID, '_s247_duration', true );
+		$days       = isset( $duration_days[ $rb_dur ] ) ? $duration_days[ $rb_dur ] : 1;
+		if ( ! $start_date ) { continue; }
+		$cursor = strtotime( $start_date );
+		for ( $i = 0; $i < $days; $i++ ) {
+			$k = date( 'Y-m-d', $cursor );
+			$rental_day_count[ $k ] = ( $rental_day_count[ $k ] ?? 0 ) + 1;
+			$cursor = strtotime( '+1 day', $cursor );
+		}
+	}
+	// Fyldt op = alle lager-enheder taget den dag.
+	$fully_booked = array();
+	foreach ( $rental_day_count as $day => $count ) {
+		if ( $count >= $antal ) { $fully_booked[] = $day; }
+	}
+	// Produkt-mode bruger ikke per-time blokering.
+	$booked_map = array();
+}
+
 // Beregn fuldt bookede dage (alle 13 slots 08-20 er taget).
 $all_slots = range( 8, 20 );
 foreach ( $booked_map as $day => $hours_arr ) {

@@ -60,6 +60,28 @@ function studie247_render_booking_approval( $post ) {
 	<?php endif; ?>
 
 	<hr style="margin:14px 0;">
+	<?php
+	$produkt_id = (int) get_post_meta( $post->ID, '_s247_produkt_id', true );
+	$is_rental  = $produkt_id > 0;
+	$date       = get_post_meta( $post->ID, '_s247_date', true );
+	$dur        = get_post_meta( $post->ID, '_s247_duration', true );
+	?>
+	<p style="margin:0 0 10px;font-size:12px;">
+		<strong><?php esc_html_e( 'Type:', 'studie247' ); ?></strong>
+		<?php if ( $is_rental ) : ?>
+			<span style="color:#9E2B25;font-weight:700;"><?php esc_html_e( 'Udstyrs-udlejning', 'studie247' ); ?></span><br>
+			<strong><?php esc_html_e( 'Udstyr:', 'studie247' ); ?></strong>
+			<a href="<?php echo esc_url( get_edit_post_link( $produkt_id ) ); ?>"><?php echo esc_html( get_the_title( $produkt_id ) ); ?></a><br>
+			<?php if ( $date ) : ?>
+				<strong><?php esc_html_e( 'Periode:', 'studie247' ); ?></strong>
+				<?php echo esc_html( date_i18n( 'j. M Y', strtotime( $date ) ) ); ?>
+				<?php if ( $dur ) : ?> — <?php echo esc_html( $dur ); ?><?php endif; ?>
+			<?php endif; ?>
+		<?php else : ?>
+			<?php esc_html_e( 'Studie-booking', 'studie247' ); ?>
+		<?php endif; ?>
+	</p>
+	<hr style="margin:10px 0;">
 	<p style="margin:0;font-size:12px;color:#666;">
 		<strong><?php esc_html_e( 'Kunde:', 'studie247' ); ?></strong>
 		<?php echo esc_html( get_post_meta( $post->ID, '_s247_name', true ) ); ?><br>
@@ -118,18 +140,36 @@ function studie247_send_booking_confirmation( $booking_id, $action ) {
 		'Reply-To: info@s247.dk',
 	);
 
+	$is_rental = (bool) $pid;
+
 	if ( 'approved' === $action ) {
-		$subject = 'Booking bekræftet — Studie 247';
-		$body    = "Hej {$name},\n\nDin booking er bekræftet! Vi glæder os til at se dig.\n\n";
-		if ( $prod ) { $body .= "Produkt: {$prod}\n"; }
-		$body   .= "Dato: {$date_dk}\nStart: {$start}\nVarighed: {$dur}\n";
-		$body   .= "\nHar du spørgsmål inden da, så ring eller skriv.\n\n— Studie 247\ninfo@s247.dk";
+		if ( $is_rental ) {
+			$subject = 'Lejeforespørgsel bekræftet — Studie 247';
+			$body    = "Hej {$name},\n\nDin lejeforespørgsel er godkendt. Vi glæder os til at udlåne udstyret til dig.\n\n";
+			if ( $prod ) { $body .= "Udstyr: {$prod}\n"; }
+			$body   .= "Start-dato: {$date_dk}\nVarighed: {$dur}\n";
+			$body   .= "\nVi kontakter dig for at aftale afhentning og eventuel depositums-betaling.\n\n— Studie 247\ninfo@s247.dk";
+		} else {
+			$subject = 'Booking bekræftet — Studie 247';
+			$body    = "Hej {$name},\n\nDin booking er bekræftet! Vi glæder os til at se dig.\n\n";
+			if ( $prod ) { $body .= "Produkt: {$prod}\n"; }
+			$body   .= "Dato: {$date_dk}\nStart: {$start}\nVarighed: {$dur}\n";
+			$body   .= "\nHar du spørgsmål inden da, så ring eller skriv.\n\n— Studie 247\ninfo@s247.dk";
+		}
 	} else {
-		$subject = 'Booking aflyst — Studie 247';
-		$body    = "Hej {$name},\n\nVi er nødt til at aflyse følgende booking:\n\n";
-		if ( $prod ) { $body .= "Produkt: {$prod}\n"; }
-		$body   .= "Dato: {$date_dk}\nStart: {$start}\nVarighed: {$dur}\n";
-		$body   .= "\nSkriv til os hvis du vil booke en anden tid — vi hjælper dig gerne med at finde en løsning.\n\n— Studie 247\ninfo@s247.dk";
+		if ( $is_rental ) {
+			$subject = 'Lejeforespørgsel afvist — Studie 247';
+			$body    = "Hej {$name},\n\nVi kan desværre ikke imødekomme følgende lejeforespørgsel:\n\n";
+			if ( $prod ) { $body .= "Udstyr: {$prod}\n"; }
+			$body   .= "Start-dato: {$date_dk}\nVarighed: {$dur}\n";
+			$body   .= "\nSkriv endelig til os hvis du vil prøve et andet tidspunkt eller et andet stykke udstyr.\n\n— Studie 247\ninfo@s247.dk";
+		} else {
+			$subject = 'Booking aflyst — Studie 247';
+			$body    = "Hej {$name},\n\nVi er nødt til at aflyse følgende booking:\n\n";
+			if ( $prod ) { $body .= "Produkt: {$prod}\n"; }
+			$body   .= "Dato: {$date_dk}\nStart: {$start}\nVarighed: {$dur}\n";
+			$body   .= "\nSkriv til os hvis du vil booke en anden tid — vi hjælper dig gerne med at finde en løsning.\n\n— Studie 247\ninfo@s247.dk";
+		}
 	}
 
 	@wp_mail( $email, $subject, $body, $headers );
