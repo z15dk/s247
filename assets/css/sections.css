@@ -2644,12 +2644,6 @@ body.team-modal-open { overflow: hidden; }
 	flex-direction: column;
 	align-items: flex-start;
 	gap: var(--sp-3);
-	/* Bryd ud af kortets padding så Book-knappen flugter med
-	   den absolutte venstre kant af det mørke kort. */
-	margin-left: calc(var(--sp-10) * -1);
-}
-@media (max-width: 819px) {
-	.studiet-guide__cta-actions { margin-left: 0; }
 }
 
 /* Video/billede i guide-CTA */
