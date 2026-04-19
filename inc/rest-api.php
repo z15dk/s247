@@ -104,7 +104,14 @@ add_action( 'init', function () {
 	foreach ( $all as $post_type => $fields ) {
 		foreach ( $fields as $key => $type ) {
 			register_post_meta( $post_type, $key, array(
-				'show_in_rest' => true,
+				// Eksplicit schema — underscore-prefixede meta kan ellers blive
+				// filtreret væk af is_protected_meta() selv når show_in_rest=true.
+				'show_in_rest' => array(
+					'schema' => array(
+						'type'    => $type,
+						'default' => 'integer' === $type ? 0 : '',
+					),
+				),
 				'single'       => true,
 				'type'         => $type,
 				'auth_callback' => function () {
@@ -114,6 +121,40 @@ add_action( 'init', function () {
 		}
 	}
 }, 20 );
+
+/**
+ * Belt-and-suspenders: eksponer meta også via register_rest_field, som
+ * tilføjer et "s247_meta"-objekt på toppen af response'en. Det garanterer
+ * at CRM'et får dataen selv hvis standard meta-objektet er tomt pga.
+ * is_protected_meta-filtrering eller anden WP-quirk.
+ */
+add_action( 'rest_api_init', function () {
+	$map = array(
+		'udlejning_item' => studie247_rest_udlejning_fields(),
+		'booking'        => studie247_rest_booking_fields(),
+		'kontakt_besked' => studie247_rest_kontakt_besked_fields(),
+	);
+	foreach ( $map as $post_type => $fields ) {
+		register_rest_field( $post_type, 's247_meta', array(
+			'get_callback' => function ( $object ) use ( $fields ) {
+				// Kræver auth for booking/kontakt_besked (samme gate som routes);
+				// for udlejning_item: returnerer altid så pris/lager er offentligt.
+				$id  = (int) ( $object['id'] ?? 0 );
+				$out = array();
+				foreach ( $fields as $key => $type ) {
+					$val = get_post_meta( $id, $key, true );
+					if ( 'integer' === $type ) { $val = (int) $val; }
+					$out[ $key ] = $val;
+				}
+				return $out;
+			},
+			'schema' => array(
+				'type'        => 'object',
+				'description' => 'Alle _s247_* meta-felter som objekt (kræver auth for booking og kontakt_besked).',
+			),
+		) );
+	}
+} );
 
 /* ─────────────────────────────────────────────────────────────
  * Auth-gate: booking + kontakt_besked kræver edit_posts
