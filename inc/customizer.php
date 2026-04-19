@@ -233,6 +233,23 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		's247_studiet_guide_eyebrow' => array( 'label' => 'Guide — eyebrow',            'type' => 'text', 'default' => 'Guide' ),
 		's247_studiet_guide_title_a' => array( 'label' => 'Guide — overskrift del 1 (sans)', 'type' => 'text', 'default' => 'Sådan booker du' ),
 		's247_studiet_guide_title_b' => array( 'label' => 'Guide — overskrift del 2 (kursiv)', 'type' => 'text', 'default' => 'uden at græde' ),
+
+		// Stats-strip under hero (4 kolonner).
+		's247_studiet_stat1_num'   => array( 'label' => 'Stat 1 — tal',   'type' => 'text', 'default' => '200' ),
+		's247_studiet_stat1_unit'  => array( 'label' => 'Stat 1 — enhed', 'type' => 'text', 'default' => 'm²' ),
+		's247_studiet_stat1_label' => array( 'label' => 'Stat 1 — label', 'type' => 'text', 'default' => 'Produktionsrum' ),
+
+		's247_studiet_stat2_num'   => array( 'label' => 'Stat 2 — tal',   'type' => 'text', 'default' => '4K' ),
+		's247_studiet_stat2_unit'  => array( 'label' => 'Stat 2 — enhed', 'type' => 'text', 'default' => '' ),
+		's247_studiet_stat2_label' => array( 'label' => 'Stat 2 — label', 'type' => 'text', 'default' => 'Kameraer klar' ),
+
+		's247_studiet_stat3_num'   => array( 'label' => 'Stat 3 — tal',   'type' => 'text', 'default' => '48' ),
+		's247_studiet_stat3_unit'  => array( 'label' => 'Stat 3 — enhed', 'type' => 'text', 'default' => 'kanaler' ),
+		's247_studiet_stat3_label' => array( 'label' => 'Stat 3 — label', 'type' => 'text', 'default' => 'Lyd-mixer' ),
+
+		's247_studiet_stat4_num'   => array( 'label' => 'Stat 4 — tal',   'type' => 'text', 'default' => '24/7' ),
+		's247_studiet_stat4_unit'  => array( 'label' => 'Stat 4 — enhed', 'type' => 'text', 'default' => '' ),
+		's247_studiet_stat4_label' => array( 'label' => 'Stat 4 — label', 'type' => 'text', 'default' => 'Book online' ),
 	);
 
 	/* 6 setup-valg */

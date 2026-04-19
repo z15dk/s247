@@ -131,31 +131,39 @@ for ( $i = 1; $i <= 5; $i++ ) {
 	</div>
 </section>
 
-<!-- 1b) STATS STRIP — wow-tal med ét blik -->
+<!-- 1b) STATS STRIP — wow-tal med ét blik (redigeres i Customizer → Studiet-side) -->
+<?php
+$stats = array();
+for ( $i = 1; $i <= 4; $i++ ) {
+	$num   = get_theme_mod( "s247_studiet_stat{$i}_num", '' );
+	$unit  = get_theme_mod( "s247_studiet_stat{$i}_unit", '' );
+	$label = get_theme_mod( "s247_studiet_stat{$i}_label", '' );
+	if ( $num || $label ) {
+		$stats[] = array( 'num' => $num, 'unit' => $unit, 'label' => $label );
+	}
+}
+?>
+<?php if ( ! empty( $stats ) ) : ?>
 <section class="studiet-stats">
 	<div class="wrap wrap--wide">
 		<div class="studiet-stats__grid">
-			<div class="studiet-stats__item">
-				<span class="studiet-stats__num">200</span>
-				<span class="studiet-stats__unit">m²</span>
-				<span class="studiet-stats__label"><?php esc_html_e( 'Produktions­rum', 'studie247' ); ?></span>
-			</div>
-			<div class="studiet-stats__item">
-				<span class="studiet-stats__num">4K</span>
-				<span class="studiet-stats__label"><?php esc_html_e( 'Kameraer klar', 'studie247' ); ?></span>
-			</div>
-			<div class="studiet-stats__item">
-				<span class="studiet-stats__num">48</span>
-				<span class="studiet-stats__unit">kanaler</span>
-				<span class="studiet-stats__label"><?php esc_html_e( 'Lyd-mixer', 'studie247' ); ?></span>
-			</div>
-			<div class="studiet-stats__item">
-				<span class="studiet-stats__num">24/7</span>
-				<span class="studiet-stats__label"><?php esc_html_e( 'Book online', 'studie247' ); ?></span>
-			</div>
+			<?php foreach ( $stats as $s ) : ?>
+				<div class="studiet-stats__item">
+					<?php if ( $s['num'] ) : ?>
+						<span class="studiet-stats__num"><?php echo esc_html( $s['num'] ); ?></span>
+					<?php endif; ?>
+					<?php if ( $s['unit'] ) : ?>
+						<span class="studiet-stats__unit"><?php echo esc_html( $s['unit'] ); ?></span>
+					<?php endif; ?>
+					<?php if ( $s['label'] ) : ?>
+						<span class="studiet-stats__label"><?php echo esc_html( $s['label'] ); ?></span>
+					<?php endif; ?>
+				</div>
+			<?php endforeach; ?>
 		</div>
 	</div>
 </section>
+<?php endif; ?>
 
 <!-- 2) SETUP SWITCHER -->
 <?php if ( ! empty( $setups ) ) : ?>
