@@ -29,24 +29,26 @@ $guide_eyebrow = get_theme_mod( 's247_studiet_guide_eyebrow', 'Guide' );
 $guide_title_a = get_theme_mod( 's247_studiet_guide_title_a', 'Sådan booker du' );
 $guide_title_b = get_theme_mod( 's247_studiet_guide_title_b', 'uden at græde' );
 
-/* Standard setups (bruges hvis customizer er tom) */
+/* Standard setups (bruges hvis customizer er tom).
+   'use_type' mapper til formål-dropdown på /booking-studie/. */
 $setup_defaults = array(
-	1 => array( 'label' => 'Podcast',         'desc' => '2-4 personer, 3 kameravinkler, rig til lyd.' ),
-	2 => array( 'label' => 'Video-interview', 'desc' => 'Cinematisk setup med prompter og dedikeret lys.' ),
-	3 => array( 'label' => 'Talking-head',    'desc' => 'Ren simpel baggrund, én person, hurtigt i gang.' ),
-	4 => array( 'label' => 'Produkt / foto',  'desc' => 'Cyklorama, softboxe, klar til still og bevægelse.' ),
-	5 => array( 'label' => '',                'desc' => '' ),
-	6 => array( 'label' => '',                'desc' => '' ),
+	1 => array( 'label' => 'Podcast',         'desc' => '2-4 personer, 3 kameravinkler, rig til lyd.',            'use_type' => 'podcast' ),
+	2 => array( 'label' => 'Video-interview', 'desc' => 'Cinematisk setup med prompter og dedikeret lys.',        'use_type' => 'kursusvideo' ),
+	3 => array( 'label' => 'Talking-head',    'desc' => 'Ren simpel baggrund, én person, hurtigt i gang.',        'use_type' => 'undervisningsvideo' ),
+	4 => array( 'label' => 'Produkt / foto',  'desc' => 'Cyklorama, softboxe, klar til still og bevægelse.',      'use_type' => 'some-content' ),
+	5 => array( 'label' => '',                'desc' => '',                                                       'use_type' => '' ),
+	6 => array( 'label' => '',                'desc' => '',                                                       'use_type' => '' ),
 );
 
 /* Samle setups */
 $setups = array();
 for ( $i = 1; $i <= 6; $i++ ) {
-	$label = get_theme_mod( "s247_studiet_setup{$i}_label", $setup_defaults[ $i ]['label'] );
-	$image = get_theme_mod( "s247_studiet_setup{$i}_image" );
-	$desc  = get_theme_mod( "s247_studiet_setup{$i}_desc",  $setup_defaults[ $i ]['desc'] );
+	$label    = get_theme_mod( "s247_studiet_setup{$i}_label", $setup_defaults[ $i ]['label'] );
+	$image    = get_theme_mod( "s247_studiet_setup{$i}_image" );
+	$desc     = get_theme_mod( "s247_studiet_setup{$i}_desc",  $setup_defaults[ $i ]['desc'] );
+	$use_type = get_theme_mod( "s247_studiet_setup{$i}_use_type", $setup_defaults[ $i ]['use_type'] );
 	if ( $label ) {
-		$setups[] = array( 'label' => $label, 'desc' => $desc, 'image' => $image );
+		$setups[] = array( 'label' => $label, 'desc' => $desc, 'image' => $image, 'use_type' => $use_type );
 	}
 }
 
@@ -129,6 +131,32 @@ for ( $i = 1; $i <= 5; $i++ ) {
 	</div>
 </section>
 
+<!-- 1b) STATS STRIP — wow-tal med ét blik -->
+<section class="studiet-stats">
+	<div class="wrap wrap--wide">
+		<div class="studiet-stats__grid">
+			<div class="studiet-stats__item">
+				<span class="studiet-stats__num">200</span>
+				<span class="studiet-stats__unit">m²</span>
+				<span class="studiet-stats__label"><?php esc_html_e( 'Produktions­rum', 'studie247' ); ?></span>
+			</div>
+			<div class="studiet-stats__item">
+				<span class="studiet-stats__num">4K</span>
+				<span class="studiet-stats__label"><?php esc_html_e( 'Kameraer klar', 'studie247' ); ?></span>
+			</div>
+			<div class="studiet-stats__item">
+				<span class="studiet-stats__num">48</span>
+				<span class="studiet-stats__unit">kanaler</span>
+				<span class="studiet-stats__label"><?php esc_html_e( 'Lyd-mixer', 'studie247' ); ?></span>
+			</div>
+			<div class="studiet-stats__item">
+				<span class="studiet-stats__num">24/7</span>
+				<span class="studiet-stats__label"><?php esc_html_e( 'Book online', 'studie247' ); ?></span>
+			</div>
+		</div>
+	</div>
+</section>
+
 <!-- 2) SETUP SWITCHER -->
 <?php if ( ! empty( $setups ) ) : ?>
 <section class="section studiet-setups">
@@ -152,6 +180,15 @@ for ( $i = 1; $i <= 5; $i++ ) {
 						<?php else : ?>
 							<div class="studiet-setups__placeholder"><?php esc_html_e( 'Upload billede i Customizer', 'studie247' ); ?></div>
 						<?php endif; ?>
+						<?php
+						$setup_book_url = $setup['use_type']
+							? add_query_arg( 'use_type', $setup['use_type'], home_url( '/booking-studie/' ) )
+							: home_url( '/booking-studie/' );
+						?>
+						<a class="studiet-setups__book btn btn--primary" href="<?php echo esc_url( $setup_book_url ); ?>">
+							<?php printf( esc_html__( 'Book til %s', 'studie247' ), esc_html( $setup['label'] ) ); ?>
+							<?php echo studie247_icon( 'arrow-right', 16 ); ?>
+						</a>
 					</div>
 				<?php endforeach; ?>
 			</div>
@@ -178,6 +215,31 @@ for ( $i = 1; $i <= 5; $i++ ) {
 	</div>
 </section>
 <?php endif; ?>
+
+<!-- 2b) MID-PAGE CTA BANNER — stor og direkte -->
+<section class="studiet-banner">
+	<div class="wrap wrap--wide">
+		<div class="studiet-banner__inner">
+			<span class="eyebrow eyebrow--on-dark eyebrow--no-line"><?php esc_html_e( 'Klar til at optage?', 'studie247' ); ?></span>
+			<h2 class="studiet-banner__title">
+				<?php esc_html_e( 'Vælg en dag.', 'studie247' ); ?>
+				<em><?php esc_html_e( 'Vi står klar.', 'studie247' ); ?></em>
+			</h2>
+			<p class="studiet-banner__lead">
+				<?php esc_html_e( 'Fra 6 timer til hele dage. Kalender altid opdateret — vælg slot, betal, mød op.', 'studie247' ); ?>
+			</p>
+			<div class="studiet-banner__ctas">
+				<a class="btn btn--primary btn--xl" href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>">
+					<?php esc_html_e( 'Book studiet nu', 'studie247' ); ?>
+					<?php echo studie247_icon( 'arrow-right', 18 ); ?>
+				</a>
+				<a class="btn btn--ghost btn--on-dark" href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>">
+					<?php esc_html_e( 'Stil et spørgsmål', 'studie247' ); ?>
+				</a>
+			</div>
+		</div>
+	</div>
+</section>
 
 <!-- 3) REELS — 3 portrait videos -->
 <?php if ( ! empty( $reels ) ) : ?>
@@ -288,6 +350,14 @@ for ( $i = 1; $i <= 5; $i++ ) {
 				</li>
 			<?php endforeach; ?>
 		</ol>
+
+		<div class="studiet-guide__cta">
+			<h3 class="studiet-guide__cta-title"><?php esc_html_e( 'Klar? Det tager under 60 sekunder.', 'studie247' ); ?></h3>
+			<a class="btn btn--primary btn--xl" href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>">
+				<?php esc_html_e( 'Book studiet', 'studie247' ); ?>
+				<?php echo studie247_icon( 'arrow-right', 18 ); ?>
+			</a>
+		</div>
 	</div>
 </section>
 <?php endif; ?>

@@ -2412,6 +2412,128 @@ body.team-modal-open { overflow: hidden; }
 	max-width: 68ch;
 }
 
+/* Final CTA under guide */
+.studiet-guide__cta {
+	margin-top: var(--sp-12);
+	padding: var(--sp-10) var(--sp-6);
+	text-align: center;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+}
+.studiet-guide__cta-title {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-size: 1.6rem;
+	color: var(--color-ink);
+	margin: 0 0 var(--sp-5);
+	line-height: 1.2;
+}
+
+/* ─── Stats-strip (efter hero) ─── */
+.studiet-stats {
+	padding: var(--sp-10) 0;
+	border-bottom: 1px solid var(--color-border);
+	background: var(--color-bg);
+}
+.studiet-stats__grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: var(--sp-6) var(--sp-4);
+}
+@media (min-width: 700px) {
+	.studiet-stats__grid { grid-template-columns: repeat(4, 1fr); }
+}
+.studiet-stats__item {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 2px;
+	padding-left: var(--sp-4);
+	border-left: 2px solid var(--color-accent);
+}
+.studiet-stats__num {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 800;
+	font-size: clamp(2.5rem, 6vw, 4rem);
+	line-height: 1;
+	color: var(--color-accent);
+	letter-spacing: -0.02em;
+}
+.studiet-stats__unit {
+	font-family: var(--font-mono);
+	font-size: 13px;
+	color: var(--color-ink-soft);
+	text-transform: lowercase;
+}
+.studiet-stats__label {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	color: var(--color-ink-mute);
+	margin-top: 4px;
+}
+
+/* ─── Book-CTA pr. setup (floating nederst på billedet) ─── */
+.studiet-setups__image { position: relative; }
+.studiet-setups__book {
+	position: absolute;
+	left: var(--sp-5);
+	bottom: var(--sp-5);
+	box-shadow: 0 6px 24px rgba(0,0,0,0.28);
+}
+
+/* ─── Mid-page banner ─── */
+.studiet-banner {
+	padding: var(--sp-16) 0;
+	background: linear-gradient(135deg, #18120f 0%, #2a1f1a 100%);
+	color: var(--color-ink-on-dark);
+	position: relative;
+	overflow: hidden;
+}
+.studiet-banner::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background-image:
+		radial-gradient(circle at 15% 20%, rgba(158,43,37,0.25) 0%, transparent 40%),
+		radial-gradient(circle at 85% 80%, rgba(158,43,37,0.15) 0%, transparent 45%);
+	pointer-events: none;
+}
+.studiet-banner__inner {
+	position: relative;
+	max-width: 780px;
+}
+.studiet-banner__title {
+	font-family: var(--font-sans);
+	font-weight: 800;
+	font-size: clamp(2.2rem, 5vw, 3.8rem);
+	line-height: 1.05;
+	letter-spacing: -0.025em;
+	color: var(--color-ink-on-dark);
+	margin: var(--sp-3) 0 var(--sp-4);
+}
+.studiet-banner__title em {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	color: var(--color-accent);
+}
+.studiet-banner__lead {
+	font-size: var(--fs-lg);
+	line-height: 1.5;
+	color: color-mix(in srgb, var(--color-ink-on-dark) 85%, transparent);
+	margin: 0 0 var(--sp-6);
+	max-width: 58ch;
+}
+.studiet-banner__ctas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sp-3);
+}
+
 .studiet-guide__joke em {
 	color: var(--color-accent);
 	font-style: normal;

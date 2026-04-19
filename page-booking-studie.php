@@ -20,6 +20,9 @@ $form_notes   = '';
 $form_prod  = isset( $_GET['produkt'] ) ? sanitize_title( wp_unslash( $_GET['produkt'] ) ) : '';
 $form_type  = isset( $_GET['type'] ) ? sanitize_text_field( wp_unslash( $_GET['type'] ) ) : '';
 
+// Pre-seed formål-dropdown fra URL (fx /booking-studie/?use_type=podcast).
+$form_use_type = isset( $_GET['use_type'] ) ? sanitize_text_field( wp_unslash( $_GET['use_type'] ) ) : '';
+
 // Find produkt hvis slug er sat.
 $product = null;
 if ( $form_prod ) {
@@ -96,7 +99,7 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 	$form_prod  = sanitize_title(      wp_unslash( $_POST['s247_produkt'] ?? '' ) );
 	$form_type  = sanitize_text_field( wp_unslash( $_POST['s247_type']  ?? '' ) );
 
-	$form_use_type      = sanitize_text_field( wp_unslash( $_POST['s247_use_type']      ?? '' ) );
+	$form_use_type      = sanitize_text_field( wp_unslash( $_POST['s247_use_type']      ?? $form_use_type ) );
 	$form_edit_type     = sanitize_text_field( wp_unslash( $_POST['s247_edit_type']     ?? '' ) );
 	$form_podcast_type  = sanitize_text_field( wp_unslash( $_POST['s247_podcast_type']  ?? '' ) );
 	$form_tilkoeb       = sanitize_text_field( wp_unslash( $_POST['s247_tilkoeb']       ?? '' ) );
@@ -528,11 +531,11 @@ get_header();
 								<span class="book-field__label"><?php esc_html_e( 'Hvad skal studiet bruges til?', 'studie247' ); ?></span>
 								<select name="s247_use_type" data-use-type required>
 									<option value=""><?php esc_html_e( '— Vælg —', 'studie247' ); ?></option>
-									<option value="podcast"><?php esc_html_e( 'Podcast', 'studie247' ); ?></option>
-									<option value="kursusvideo"><?php esc_html_e( 'Kursusvideo', 'studie247' ); ?></option>
-									<option value="undervisningsvideo"><?php esc_html_e( 'Undervisningsvideo', 'studie247' ); ?></option>
-									<option value="some-content"><?php esc_html_e( 'SoMe Content', 'studie247' ); ?></option>
-									<option value="annonce-video"><?php esc_html_e( 'Annonce-video', 'studie247' ); ?></option>
+									<option value="podcast"            <?php selected( $form_use_type, 'podcast' ); ?>><?php esc_html_e( 'Podcast', 'studie247' ); ?></option>
+									<option value="kursusvideo"        <?php selected( $form_use_type, 'kursusvideo' ); ?>><?php esc_html_e( 'Kursusvideo', 'studie247' ); ?></option>
+									<option value="undervisningsvideo" <?php selected( $form_use_type, 'undervisningsvideo' ); ?>><?php esc_html_e( 'Undervisningsvideo', 'studie247' ); ?></option>
+									<option value="some-content"       <?php selected( $form_use_type, 'some-content' ); ?>><?php esc_html_e( 'SoMe Content', 'studie247' ); ?></option>
+									<option value="annonce-video"      <?php selected( $form_use_type, 'annonce-video' ); ?>><?php esc_html_e( 'Annonce-video', 'studie247' ); ?></option>
 								</select>
 							</label>
 

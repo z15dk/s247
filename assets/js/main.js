@@ -294,6 +294,8 @@
 
 		if (useType) {
 			useType.addEventListener('change', () => { updatePanels(); checkReady(); });
+			// Hvis use_type er prefilled via ?use_type= (fra /studiet/), åbn panels med det samme.
+			if (useType.value) { updatePanels(); }
 		}
 		editTypeInputs.forEach((i) => i.addEventListener('change', updatePanels));
 
