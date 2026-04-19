@@ -1,36 +1,28 @@
 <?php
 /**
- * Template Name: Udlejning (shop)
+ * Archive: udlejning_item — /udlejning/ og /udlejning-kategori/{slug}/.
+ *
+ * Ren CPT-arkiv med shop-grid og kategori-filtre. Holder design i sync
+ * med page-udlejning.php ved at genbruge template-parts/product-card.php.
  *
  * @package Studie247
  */
 
 get_header();
 
-$active_cat = isset( $_GET['kat'] ) ? sanitize_title( wp_unslash( $_GET['kat'] ) ) : '';
-
-$query_args = array(
-	'post_type'      => 'udlejning_item',
-	'posts_per_page' => -1,
-	'orderby'        => 'menu_order title',
-	'order'          => 'ASC',
-);
-if ( $active_cat ) {
-	$query_args['tax_query'] = array(
-		array(
-			'taxonomy' => 'udlejning_kategori',
-			'field'    => 'slug',
-			'terms'    => $active_cat,
-		),
-	);
+$active_cat = '';
+if ( is_tax( 'udlejning_kategori' ) ) {
+	$term = get_queried_object();
+	if ( $term && ! is_wp_error( $term ) ) {
+		$active_cat = $term->slug;
+	}
 }
 
-$products   = new WP_Query( $query_args );
+$base_url   = get_post_type_archive_link( 'udlejning_item' );
 $categories = get_terms( array(
 	'taxonomy'   => 'udlejning_kategori',
 	'hide_empty' => true,
 ) );
-$base_url = get_permalink();
 ?>
 
 <section class="shop">
@@ -38,7 +30,11 @@ $base_url = get_permalink();
 		<header class="shop__head">
 			<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Udstyrs-udlejning', 'studie247' ); ?></span>
 			<h1 class="shop__title">
-				<?php esc_html_e( 'Lej det', 'studie247' ); ?> <em><?php esc_html_e( 'rigtige grej', 'studie247' ); ?></em>
+				<?php if ( is_tax( 'udlejning_kategori' ) ) : ?>
+					<?php single_term_title(); ?>
+				<?php else : ?>
+					<?php esc_html_e( 'Lej det', 'studie247' ); ?> <em><?php esc_html_e( 'rigtige grej', 'studie247' ); ?></em>
+				<?php endif; ?>
 			</h1>
 			<p class="shop__lead">
 				<?php esc_html_e( 'Kameraer, lys, mikrofoner og grip — klar fra dag til dag. Reservér online, hent i studiet eller få leveret.', 'studie247' ); ?>
@@ -53,7 +49,7 @@ $base_url = get_permalink();
 				<?php foreach ( $categories as $cat ) : ?>
 					<a
 						class="shop__filter<?php echo $active_cat === $cat->slug ? ' is-active' : ''; ?>"
-						href="<?php echo esc_url( add_query_arg( 'kat', $cat->slug, $base_url ) ); ?>"
+						href="<?php echo esc_url( get_term_link( $cat ) ); ?>"
 					>
 						<?php echo esc_html( $cat->name ); ?>
 						<span class="shop__filter-count"><?php echo (int) $cat->count; ?></span>
@@ -62,20 +58,15 @@ $base_url = get_permalink();
 			</nav>
 		<?php endif; ?>
 
-		<?php if ( $products->have_posts() ) : ?>
+		<?php if ( have_posts() ) : ?>
 			<div class="shop__grid">
-				<?php while ( $products->have_posts() ) : $products->the_post(); ?>
+				<?php while ( have_posts() ) : the_post(); ?>
 					<?php get_template_part( 'template-parts/product-card' ); ?>
-				<?php endwhile; wp_reset_postdata(); ?>
+				<?php endwhile; ?>
 			</div>
 		<?php else : ?>
 			<div class="shop__empty">
 				<p><?php esc_html_e( 'Ingen udstyr matcher filteret endnu.', 'studie247' ); ?></p>
-				<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
-					<p style="color:var(--color-ink-mute);font-size:var(--fs-sm);margin-top:var(--sp-3);">
-						<?php esc_html_e( 'Admin: tilføj udstyr under Udlejning → Tilføj udstyr. Husk et billede og en kategori.', 'studie247' ); ?>
-					</p>
-				<?php endif; ?>
 			</div>
 		<?php endif; ?>
 	</div>
