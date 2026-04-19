@@ -2508,11 +2508,13 @@ body.team-modal-open { overflow: hidden; }
 }
 
 /* ─── Book-CTA pr. setup (floating nederst på billedet) ─── */
-.studiet-setups__image { position: relative; }
+/* .studiet-setups__image har allerede position:absolute i stage-stacking,
+   så CTA'en får automatisk dette som containing block. */
 .studiet-setups__book {
 	position: absolute;
 	left: var(--sp-5);
 	bottom: var(--sp-5);
+	z-index: 2;
 	box-shadow: 0 6px 24px rgba(0,0,0,0.28);
 }
 
