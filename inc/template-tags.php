@@ -8,6 +8,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Hent URL til privatlivspolitik. Foretrækker WPs indbyggede (Indstillinger
+ * → Privatliv). Falder tilbage til /privatlivspolitik/ hvis ikke sat.
+ */
+function studie247_privacy_url() {
+	$url = function_exists( 'get_privacy_policy_url' ) ? get_privacy_policy_url() : '';
+	if ( ! $url ) {
+		$url = home_url( '/privatlivspolitik/' );
+	}
+	return $url;
+}
+
+/**
+ * Render GDPR-samtykke-checkbox. Bruges i kontakt- og booking-formularer.
+ * Kræver attributten name="s247_consent" så serverside kan validere.
+ */
+function studie247_consent_field( $checked = false ) {
+	$url = studie247_privacy_url();
+	?>
+	<label class="book-consent">
+		<input type="checkbox" name="s247_consent" value="1" required <?php checked( $checked ); ?>>
+		<span>
+			<?php
+			printf(
+				/* translators: %s: link til privatlivspolitik */
+				esc_html__( 'Jeg accepterer at Studie 247 gemmer mine oplysninger for at kunne besvare min henvendelse. Læs %s.', 'studie247' ),
+				'<a href="' . esc_url( $url ) . '" target="_blank" rel="noopener">' . esc_html__( 'privatlivspolitikken', 'studie247' ) . '</a>'
+			);
+			?>
+		</span>
+	</label>
+	<?php
+}
+
+/**
  * Split a heading into "sans first word" + "italic rest" per brand guide.
  *
  * Eg. "Vores services" → <span class="h-sans">Vores</span> <em class="h-italic">services</em>

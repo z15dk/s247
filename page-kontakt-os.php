@@ -30,6 +30,9 @@ if ( ! empty( $_POST['s247_ko_nonce'] ) && wp_verify_nonce( $_POST['s247_ko_nonc
 	if ( ! is_email( $form_email ) ) {
 		$errors[] = __( 'Indtast en gyldig email.', 'studie247' );
 	}
+	if ( empty( $_POST['s247_consent'] ) ) {
+		$errors[] = __( 'Du skal acceptere privatlivspolitikken for at kunne sende beskeden.', 'studie247' );
+	}
 
 	if ( empty( $errors ) ) {
 		$admin_to      = 'info@s247.dk';
@@ -139,6 +142,7 @@ get_header();
 							<input type="tel" name="s247_phone" value="<?php echo esc_attr( $form_phone ); ?>" placeholder="+45 …">
 						</label>
 						<p class="ko-note">Vi foretrækker mail, men ringer gerne hvis det er nemmere.</p>
+						<?php studie247_consent_field(); ?>
 						<div class="ko-actions">
 							<button type="button" class="btn btn--ghost" data-ko-prev="2">← Tilbage</button>
 							<button type="submit" class="btn btn--primary btn--lg">Send besked <?php echo studie247_icon( 'arrow-right', 16 ); ?></button>

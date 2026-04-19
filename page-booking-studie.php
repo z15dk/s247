@@ -109,6 +109,7 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 	if ( ! $form_date )              { $errors[] = __( 'Vælg en dato.', 'studie247' ); }
 	if ( ! $form_start )             { $errors[] = __( 'Vælg et start-tidspunkt.', 'studie247' ); }
 	if ( ! $form_dur )               { $errors[] = __( 'Vælg varighed.', 'studie247' ); }
+	if ( empty( $_POST['s247_consent'] ) ) { $errors[] = __( 'Du skal acceptere privatlivspolitikken for at kunne sende booking.', 'studie247' ); }
 
 	if ( empty( $errors ) ) {
 		$prod_label = '';
@@ -146,6 +147,12 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			update_post_meta( $booking_id, '_s247_phone',    $form_phone );
 			if ( $form_company ) { update_post_meta( $booking_id, '_s247_company', $form_company ); }
 			if ( $form_cvr )     { update_post_meta( $booking_id, '_s247_cvr',     $form_cvr ); }
+			// GDPR: gem samtykke-tidsstempel + IP + user-agent som bevis for consent.
+			update_post_meta( $booking_id, '_s247_consent', array(
+				'timestamp'  => current_time( 'mysql' ),
+				'ip'         => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
+				'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 255 ) : '',
+			) );
 			update_post_meta( $booking_id, '_s247_notes',    $form_notes );
 			update_post_meta( $booking_id, '_s247_produkt',  $form_prod );
 			if ( $prod_id )  { update_post_meta( $booking_id, '_s247_produkt_id', $prod_id ); }
@@ -614,6 +621,8 @@ get_header();
 							<span class="book-field__label"><?php esc_html_e( 'Noter', 'studie247' ); ?></span>
 							<textarea name="s247_notes" rows="3" placeholder="<?php esc_attr_e( 'Ekstra ønsker eller spørgsmål?', 'studie247' ); ?>"><?php echo esc_textarea( $form_notes ); ?></textarea>
 						</label>
+
+						<?php studie247_consent_field(); ?>
 
 						<button type="submit" class="btn btn--primary btn--lg" data-book-submit disabled>
 							<?php echo $is_product ? esc_html__( 'Send forespørgsel', 'studie247' ) : esc_html__( 'Send booking-anmodning', 'studie247' ); ?>

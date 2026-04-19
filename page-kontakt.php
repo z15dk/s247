@@ -28,6 +28,9 @@ if ( ! empty( $_POST['s247_contact_nonce'] ) && wp_verify_nonce( $_POST['s247_co
 	if ( strlen( $form_msg ) < 5 ) {
 		$errors[] = __( 'Skriv en kort besked.', 'studie247' );
 	}
+	if ( empty( $_POST['s247_consent'] ) ) {
+		$errors[] = __( 'Du skal acceptere privatlivspolitikken for at kunne sende beskeden.', 'studie247' );
+	}
 
 	if ( empty( $errors ) ) {
 		$side_label = '';
@@ -147,6 +150,7 @@ get_header();
 					<span class="screen-reader-text"><?php esc_html_e( 'Besked', 'studie247' ); ?></span>
 					<textarea name="message" rows="3" placeholder="<?php esc_attr_e( 'Kort om projektet — og hvilken side?', 'studie247' ); ?>" required><?php echo esc_textarea( $form_msg ); ?></textarea>
 				</label>
+				<?php studie247_consent_field(); ?>
 				<button type="submit" class="kontakt-submit">
 					<?php esc_html_e( 'Send valg', 'studie247' ); ?> <span aria-hidden="true">→</span>
 				</button>

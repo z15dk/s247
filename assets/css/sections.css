@@ -2870,6 +2870,29 @@ body.team-modal-open { overflow: hidden; }
 	font-weight: 400;
 }
 
+.book-consent {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: var(--sp-3) 0;
+	padding: var(--sp-3);
+	background: var(--color-surface-deep);
+	border-radius: var(--radius-sm);
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--color-ink-soft);
+	cursor: pointer;
+}
+.book-consent input[type="checkbox"] {
+	margin-top: 3px;
+	accent-color: var(--color-accent);
+	flex-shrink: 0;
+}
+.book-consent a {
+	color: var(--color-accent);
+	text-decoration: underline;
+}
+
 [data-book-submit][disabled] {
 	opacity: 0.45;
 	cursor: not-allowed;
