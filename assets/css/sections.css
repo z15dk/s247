@@ -2856,6 +2856,105 @@ body.team-modal-open { overflow: hidden; }
 	color: var(--color-ink-soft);
 }
 
+/* Formål-dropdown + betingede felter */
+.book-field select {
+	width: 100%;
+	padding: 10px 14px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: #FFFFFF;
+	font-family: inherit;
+	font-size: var(--fs-base);
+	color: var(--color-ink);
+	cursor: pointer;
+}
+.book-field select:focus {
+	outline: 2px solid var(--color-accent);
+	outline-offset: 1px;
+}
+
+.book-options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-4);
+	margin: var(--sp-4) 0;
+}
+
+.book-choice {
+	border: 0;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.book-choice legend {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--color-ink-mute);
+	padding: 0 0 4px;
+	margin: 0;
+}
+.book-choice__opt {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: #FFFFFF;
+	font-size: 13px;
+	cursor: pointer;
+	transition: border-color 120ms ease, background 120ms ease;
+}
+.book-choice__opt:hover {
+	border-color: var(--color-ink-mute);
+}
+.book-choice__opt:has(input:checked) {
+	border-color: var(--color-accent);
+	background: color-mix(in srgb, var(--color-accent) 8%, #FFFFFF);
+	color: var(--color-accent);
+	font-weight: 600;
+}
+.book-choice__opt input {
+	accent-color: var(--color-accent);
+}
+
+.book-choice--sliders {
+	gap: var(--sp-4);
+}
+
+.book-slider {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.book-slider__label {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--color-ink-mute);
+}
+.book-slider__label output {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 800;
+	font-size: 1.1rem;
+	color: var(--color-accent);
+	text-transform: none;
+	letter-spacing: 0;
+}
+.book-slider input[type="range"] {
+	width: 100%;
+	accent-color: var(--color-accent);
+}
+
 .book-form__bulk-hint a {
 	color: var(--color-accent);
 	font-weight: 700;

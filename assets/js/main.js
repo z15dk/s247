@@ -246,15 +246,56 @@
 			sumPrice.dataset.filled = '1';
 		};
 
+		// ─── Studie-mode: formål-dropdown styrer betinget synlige felter ───
+		const useType        = form?.querySelector('[data-use-type]');
+		const useOptions     = form?.querySelector('[data-use-options]');
+		const editTypeInputs = form?.querySelectorAll('[data-edit-type]') || [];
+		const panels = {
+			podcast:           form?.querySelector('[data-panel="podcast"]'),
+			podcastEditing:    form?.querySelector('[data-panel="podcast-editing"]'),
+			videoEditing:      form?.querySelector('[data-panel="video-editing"]'),
+			someFormat:        form?.querySelector('[data-panel="some-format"]'),
+		};
+		const videoEditingTypes = ['kursusvideo', 'undervisningsvideo', 'some-content', 'annonce-video'];
+
+		const currentEdit = () => form?.querySelector('[data-edit-type]:checked')?.value || '';
+
+		const updatePanels = () => {
+			const t    = useType?.value || '';
+			const edit = currentEdit();
+			if (useOptions) useOptions.hidden = !t;
+			if (panels.podcast)        panels.podcast.hidden        = t !== 'podcast';
+			if (panels.podcastEditing) panels.podcastEditing.hidden = !(t === 'podcast' && edit === 'redigering');
+			if (panels.videoEditing)   panels.videoEditing.hidden   = !(videoEditingTypes.includes(t) && edit === 'redigering');
+			if (panels.someFormat)     panels.someFormat.hidden     = !(t === 'some-content' && edit === 'redigering');
+		};
+
+		const videoCount     = form?.querySelector('[data-video-count]');
+		const videoCountOut  = form?.querySelector('[data-video-count-out]');
+		const videoDur       = form?.querySelector('[data-video-duration]');
+		const videoDurOut    = form?.querySelector('[data-video-duration-out]');
+		if (videoCount && videoCountOut) {
+			videoCount.addEventListener('input', () => { videoCountOut.textContent = videoCount.value; });
+		}
+		if (videoDur && videoDurOut) {
+			videoDur.addEventListener('input', () => { videoDurOut.textContent = videoDur.value + ' min'; });
+		}
+
 		const checkReady = () => {
-			const ready = dateIn.value && timeIn.value && durIn.value;
+			let ready = dateIn.value && timeIn.value && durIn.value;
+			if (!isProductMode && useType) ready = ready && !!useType.value;
 			if (submit) submit.disabled = !ready;
 			if (hint) hint.textContent = ready
 				? 'Klar — tjek opsummeringen og udfyld dine oplysninger.'
 				: (isProductMode
 					? 'Vælg start-dato og varighed for at fortsætte.'
-					: 'Vælg dato, tid og varighed for at fortsætte.');
+					: 'Vælg formål, dato, tid og varighed for at fortsætte.');
 		};
+
+		if (useType) {
+			useType.addEventListener('change', () => { updatePanels(); checkReady(); });
+		}
+		editTypeInputs.forEach((i) => i.addEventListener('change', updatePanels));
 
 		bookPicker.querySelectorAll('.book2__day[data-date]').forEach((d) => {
 			d.addEventListener('click', () => {

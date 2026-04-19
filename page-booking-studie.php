@@ -29,7 +29,7 @@ if ( $form_prod ) {
 $is_product = (bool) $product;
 $duration_options = $is_product
 	? array( '1 dag', '2 dage', '3 dage', '4 dage', '1 uge', '2 uger' )
-	: array( '2 timer', '4 timer', '6 timer', '8 timer', '1 dag' );
+	: array( '6 timer', '12 timer' );
 
 // Pris-multiplikatorer for udlejning.
 $rental_price_table = array(
@@ -92,6 +92,14 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 	$form_prod  = sanitize_title(      wp_unslash( $_POST['s247_produkt'] ?? '' ) );
 	$form_type  = sanitize_text_field( wp_unslash( $_POST['s247_type']  ?? '' ) );
 
+	$form_use_type      = sanitize_text_field( wp_unslash( $_POST['s247_use_type']      ?? '' ) );
+	$form_edit_type     = sanitize_text_field( wp_unslash( $_POST['s247_edit_type']     ?? '' ) );
+	$form_podcast_type  = sanitize_text_field( wp_unslash( $_POST['s247_podcast_type']  ?? '' ) );
+	$form_tilkoeb       = sanitize_text_field( wp_unslash( $_POST['s247_tilkoeb']       ?? '' ) );
+	$form_video_count   = (int)                  ( $_POST['s247_video_count']    ?? 0 );
+	$form_video_duration= (int)                  ( $_POST['s247_video_duration'] ?? 0 );
+	$form_format        = sanitize_text_field( wp_unslash( $_POST['s247_format']        ?? '' ) );
+
 	if ( ! $form_name )              { $errors[] = __( 'Udfyld dit navn.', 'studie247' ); }
 	if ( ! is_email( $form_email ) ) { $errors[] = __( 'Indtast en gyldig email.', 'studie247' ); }
 	if ( ! $form_date )              { $errors[] = __( 'Vælg en dato.', 'studie247' ); }
@@ -137,6 +145,56 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			if ( $prod_id )  { update_post_meta( $booking_id, '_s247_produkt_id', $prod_id ); }
 			if ( $form_type ){ update_post_meta( $booking_id, '_s247_type',       $form_type ); }
 			if ( $estimated_price ) { update_post_meta( $booking_id, '_s247_estimated_price', $estimated_price ); }
+			if ( $form_use_type )     { update_post_meta( $booking_id, '_s247_use_type',      $form_use_type ); }
+			if ( $form_edit_type )    { update_post_meta( $booking_id, '_s247_edit_type',     $form_edit_type ); }
+			if ( $form_podcast_type ) { update_post_meta( $booking_id, '_s247_podcast_type',  $form_podcast_type ); }
+			if ( $form_tilkoeb )      { update_post_meta( $booking_id, '_s247_tilkoeb',       $form_tilkoeb ); }
+			if ( $form_video_count )  { update_post_meta( $booking_id, '_s247_video_count',   $form_video_count ); }
+			if ( $form_video_duration ) { update_post_meta( $booking_id, '_s247_video_duration', $form_video_duration ); }
+			if ( $form_format )       { update_post_meta( $booking_id, '_s247_format',        $form_format ); }
+		}
+
+		// Menneske-læsbare labels til mails.
+		$use_type_labels = array(
+			'podcast'            => 'Podcast',
+			'kursusvideo'        => 'Kursusvideo',
+			'undervisningsvideo' => 'Undervisningsvideo',
+			'some-content'       => 'SoMe Content',
+			'annonce-video'      => 'Annonce-video',
+		);
+		$edit_type_labels = array(
+			'redigering' => 'Redigering',
+			'kun-filer'  => 'Kun filerne',
+		);
+		$podcast_type_labels = array(
+			'lyd'   => 'Lyd-podcast',
+			'video' => 'Video-podcast',
+		);
+		$tilkoeb_labels = array(
+			'jingle-standard'      => 'Musikjingle — standard',
+			'jingle-skraeddersyet' => 'Musikjingle — skræddersyet',
+		);
+		$purpose_lines = '';
+		if ( $form_use_type && isset( $use_type_labels[ $form_use_type ] ) ) {
+			$purpose_lines .= "Formål: " . $use_type_labels[ $form_use_type ] . "\n";
+		}
+		if ( $form_edit_type && isset( $edit_type_labels[ $form_edit_type ] ) ) {
+			$purpose_lines .= "Ønsker: " . $edit_type_labels[ $form_edit_type ] . "\n";
+		}
+		if ( $form_podcast_type && isset( $podcast_type_labels[ $form_podcast_type ] ) ) {
+			$purpose_lines .= "Podcast-type: " . $podcast_type_labels[ $form_podcast_type ] . "\n";
+		}
+		if ( $form_tilkoeb && isset( $tilkoeb_labels[ $form_tilkoeb ] ) ) {
+			$purpose_lines .= "Tilkøb: " . $tilkoeb_labels[ $form_tilkoeb ] . "\n";
+		}
+		if ( $form_video_count ) {
+			$purpose_lines .= "Antal videoer: {$form_video_count}\n";
+		}
+		if ( $form_video_duration ) {
+			$purpose_lines .= "Varighed pr. video: {$form_video_duration} min\n";
+		}
+		if ( $form_format ) {
+			$purpose_lines .= "Format: {$form_format}\n";
 		}
 
 		$admin_to      = 'info@s247.dk';
@@ -146,6 +204,7 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		if ( $prod_label )  { $admin_body .= "Produkt: {$prod_label}\n"; }
 		$admin_body   .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
 		if ( $estimated_price_fmt ) { $admin_body .= "Estimeret pris: {$estimated_price_fmt}\n"; }
+		if ( $purpose_lines ) { $admin_body .= "\n" . $purpose_lines; }
 		if ( $form_notes ) { $admin_body .= "\nNoter:\n{$form_notes}\n"; }
 		@wp_mail( $admin_to, $admin_subject, $admin_body, array(
 			'Content-Type: text/plain; charset=UTF-8',
@@ -157,6 +216,7 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		if ( $prod_label ) { $user_body .= "Produkt: {$prod_label}\n"; }
 		$user_body    .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
 		if ( $estimated_price_fmt ) { $user_body .= "Estimeret pris: {$estimated_price_fmt}\n"; }
+		if ( $purpose_lines ) { $user_body .= "\n" . $purpose_lines; }
 		if ( $form_notes ) { $user_body .= "\nDine noter:\n{$form_notes}\n"; }
 		$user_body    .= "\nDin booking er markeret som 'afventer godkendelse'. Du hører fra os inden for 24 timer på hverdage med endelig bekræftelse.\n\n— Studie 247\ninfo@s247.dk";
 		@wp_mail( $form_email, $user_subject, $user_body, array(
@@ -203,13 +263,10 @@ foreach ( $booking_posts as $b ) {
 	$start_h = (int) substr( $s, 0, 2 );
 
 	// Bestem hvor mange timer der er blokeret (max 1 dag).
-	$hours = 2;
+	$hours = 6;
 	switch ( $dur ) {
-		case '2 timer': $hours = 2;  break;
-		case '4 timer': $hours = 4;  break;
-		case '6 timer': $hours = 6;  break;
-		case '8 timer':
-		case '1 dag':   $hours = 13; break; // hele dagen (08-20)
+		case '6 timer':  $hours = 6;  break;
+		case '12 timer': $hours = 13; break; // hele dagen (08-20)
 	}
 
 	if ( ! isset( $booked_map[ $d ] ) ) {
@@ -437,7 +494,70 @@ get_header();
 						<input type="hidden" name="s247_start"    value="<?php echo $is_product ? '10:00' : ''; ?>" data-field-time>
 						<input type="hidden" name="s247_duration" value="" data-field-duration>
 
-						<h3 class="book2__section-title"><span class="book2__step-num">03</span> <?php esc_html_e( 'Dine oplysninger', 'studie247' ); ?></h3>
+						<?php if ( ! $is_product ) : ?>
+							<h3 class="book2__section-title"><span class="book2__step-num">03</span> <?php esc_html_e( 'Formål', 'studie247' ); ?></h3>
+
+							<label class="book-field">
+								<span class="book-field__label"><?php esc_html_e( 'Hvad skal studiet bruges til?', 'studie247' ); ?></span>
+								<select name="s247_use_type" data-use-type required>
+									<option value=""><?php esc_html_e( '— Vælg —', 'studie247' ); ?></option>
+									<option value="podcast"><?php esc_html_e( 'Podcast', 'studie247' ); ?></option>
+									<option value="kursusvideo"><?php esc_html_e( 'Kursusvideo', 'studie247' ); ?></option>
+									<option value="undervisningsvideo"><?php esc_html_e( 'Undervisningsvideo', 'studie247' ); ?></option>
+									<option value="some-content"><?php esc_html_e( 'SoMe Content', 'studie247' ); ?></option>
+									<option value="annonce-video"><?php esc_html_e( 'Annonce-video', 'studie247' ); ?></option>
+								</select>
+							</label>
+
+							<div class="book-options" data-use-options hidden>
+								<fieldset class="book-choice">
+									<legend><?php esc_html_e( 'Ønsker du', 'studie247' ); ?></legend>
+									<label class="book-choice__opt"><input type="radio" name="s247_edit_type" value="redigering" data-edit-type> <?php esc_html_e( 'Redigering', 'studie247' ); ?></label>
+									<label class="book-choice__opt"><input type="radio" name="s247_edit_type" value="kun-filer" data-edit-type> <?php esc_html_e( 'Kun filerne', 'studie247' ); ?></label>
+								</fieldset>
+
+								<fieldset class="book-choice" data-panel="podcast" hidden>
+									<legend><?php esc_html_e( 'Podcast-type', 'studie247' ); ?></legend>
+									<label class="book-choice__opt"><input type="radio" name="s247_podcast_type" value="lyd"> <?php esc_html_e( 'Lyd-podcast', 'studie247' ); ?></label>
+									<label class="book-choice__opt"><input type="radio" name="s247_podcast_type" value="video"> <?php esc_html_e( 'Video-podcast', 'studie247' ); ?></label>
+								</fieldset>
+
+								<fieldset class="book-choice" data-panel="podcast-editing" hidden>
+									<legend><?php esc_html_e( 'Tilkøb', 'studie247' ); ?></legend>
+									<label class="book-choice__opt"><input type="radio" name="s247_tilkoeb" value="" checked> <?php esc_html_e( 'Ingen', 'studie247' ); ?></label>
+									<label class="book-choice__opt"><input type="radio" name="s247_tilkoeb" value="jingle-standard"> <?php esc_html_e( 'Musikjingle — standard', 'studie247' ); ?></label>
+									<label class="book-choice__opt"><input type="radio" name="s247_tilkoeb" value="jingle-skraeddersyet"> <?php esc_html_e( 'Musikjingle — skræddersyet', 'studie247' ); ?></label>
+								</fieldset>
+
+								<fieldset class="book-choice book-choice--sliders" data-panel="video-editing" hidden>
+									<legend><?php esc_html_e( 'Produktions-detaljer', 'studie247' ); ?></legend>
+									<label class="book-slider">
+										<span class="book-slider__label">
+											<?php esc_html_e( 'Antal videoer', 'studie247' ); ?>
+											<output data-video-count-out>1</output>
+										</span>
+										<input type="range" name="s247_video_count" min="1" max="20" step="1" value="1" data-video-count>
+									</label>
+									<label class="book-slider">
+										<span class="book-slider__label">
+											<?php esc_html_e( 'Ca. varighed pr. video', 'studie247' ); ?>
+											<output data-video-duration-out>5 min</output>
+										</span>
+										<input type="range" name="s247_video_duration" min="1" max="30" step="1" value="5" data-video-duration>
+									</label>
+								</fieldset>
+
+								<fieldset class="book-choice" data-panel="some-format" hidden>
+									<legend><?php esc_html_e( 'Format', 'studie247' ); ?></legend>
+									<label class="book-choice__opt"><input type="radio" name="s247_format" value="16:9"> 16:9</label>
+									<label class="book-choice__opt"><input type="radio" name="s247_format" value="9:16"> 9:16</label>
+									<label class="book-choice__opt"><input type="radio" name="s247_format" value="4:5"> 4:5</label>
+									<label class="book-choice__opt"><input type="radio" name="s247_format" value="1:1"> 1:1</label>
+								</fieldset>
+							</div>
+						<?php endif; ?>
+
+						<h3 class="book2__section-title"><span class="book2__step-num"><?php echo $is_product ? '03' : '04'; ?></span> <?php esc_html_e( 'Dine oplysninger', 'studie247' ); ?></h3>
 
 						<?php if ( $errors ) : ?>
 							<div class="kontakt-errors" role="alert">

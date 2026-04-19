@@ -79,6 +79,33 @@ function studie247_render_booking_approval( $post ) {
 			<?php endif; ?>
 		<?php else : ?>
 			<?php esc_html_e( 'Studie-booking', 'studie247' ); ?>
+			<?php
+			$use_type_map = array(
+				'podcast' => 'Podcast', 'kursusvideo' => 'Kursusvideo',
+				'undervisningsvideo' => 'Undervisningsvideo',
+				'some-content' => 'SoMe Content', 'annonce-video' => 'Annonce-video',
+			);
+			$edit_map = array( 'redigering' => 'Redigering', 'kun-filer' => 'Kun filerne' );
+			$podcast_map = array( 'lyd' => 'Lyd-podcast', 'video' => 'Video-podcast' );
+			$tilkoeb_map = array(
+				'jingle-standard'      => 'Jingle — standard',
+				'jingle-skraeddersyet' => 'Jingle — skræddersyet',
+			);
+			$ut = get_post_meta( $post->ID, '_s247_use_type', true );
+			$et = get_post_meta( $post->ID, '_s247_edit_type', true );
+			$pt = get_post_meta( $post->ID, '_s247_podcast_type', true );
+			$tk = get_post_meta( $post->ID, '_s247_tilkoeb', true );
+			$vc = (int) get_post_meta( $post->ID, '_s247_video_count', true );
+			$vd = (int) get_post_meta( $post->ID, '_s247_video_duration', true );
+			$fm = get_post_meta( $post->ID, '_s247_format', true );
+			?>
+			<?php if ( $ut && isset( $use_type_map[ $ut ] ) ) : ?><br><strong>Formål:</strong> <?php echo esc_html( $use_type_map[ $ut ] ); ?><?php endif; ?>
+			<?php if ( $et && isset( $edit_map[ $et ] ) )    : ?><br><strong>Ønsker:</strong> <?php echo esc_html( $edit_map[ $et ] ); ?><?php endif; ?>
+			<?php if ( $pt && isset( $podcast_map[ $pt ] ) ) : ?><br><strong>Podcast-type:</strong> <?php echo esc_html( $podcast_map[ $pt ] ); ?><?php endif; ?>
+			<?php if ( $tk && isset( $tilkoeb_map[ $tk ] ) ) : ?><br><strong>Tilkøb:</strong> <?php echo esc_html( $tilkoeb_map[ $tk ] ); ?><?php endif; ?>
+			<?php if ( $vc ) : ?><br><strong>Antal videoer:</strong> <?php echo (int) $vc; ?><?php endif; ?>
+			<?php if ( $vd ) : ?><br><strong>Varighed pr. video:</strong> <?php echo (int) $vd; ?> min<?php endif; ?>
+			<?php if ( $fm ) : ?><br><strong>Format:</strong> <?php echo esc_html( $fm ); ?><?php endif; ?>
 		<?php endif; ?>
 	</p>
 	<hr style="margin:10px 0;">
