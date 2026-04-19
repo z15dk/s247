@@ -88,7 +88,70 @@ while ( have_posts() ) : the_post();
 		</div>
 	</div>
 </section>
-<?php endwhile; ?>
+
+<?php
+$current_id = get_the_ID();
+
+// Relaterede produkter — samme primær-kategori, ekskl. nuværende.
+$related_cat_ids = array();
+if ( $cats && ! is_wp_error( $cats ) ) {
+	foreach ( $cats as $c ) { $related_cat_ids[] = (int) $c->term_id; }
+}
+$related_ids_shown = array( $current_id );
+if ( ! empty( $related_cat_ids ) ) {
+	$related = new WP_Query( array(
+		'post_type'      => 'udlejning_item',
+		'posts_per_page' => 4,
+		'post__not_in'   => array( $current_id ),
+		'orderby'        => 'rand',
+		'tax_query'      => array(
+			array( 'taxonomy' => 'udlejning_kategori', 'field' => 'term_id', 'terms' => $related_cat_ids ),
+		),
+	) );
+	if ( $related->have_posts() ) : ?>
+		<section class="shop shop--related">
+			<div class="wrap wrap--wide">
+				<header class="shop__head shop__head--compact">
+					<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Relaterede', 'studie247' ); ?></span>
+					<h2 class="shop__title"><?php esc_html_e( 'Mere fra samme kategori', 'studie247' ); ?></h2>
+				</header>
+				<div class="shop__grid">
+					<?php while ( $related->have_posts() ) : $related->the_post();
+						$related_ids_shown[] = get_the_ID(); ?>
+						<?php get_template_part( 'template-parts/product-card' ); ?>
+					<?php endwhile; ?>
+				</div>
+			</div>
+		</section>
+	<?php endif;
+	wp_reset_postdata();
+}
+
+// "Det ser andre på lige nu" — tilfældige andre produkter (ikke nuværende
+// og ikke dem der allerede er vist i "relaterede").
+$others = new WP_Query( array(
+	'post_type'      => 'udlejning_item',
+	'posts_per_page' => 4,
+	'post__not_in'   => $related_ids_shown,
+	'orderby'        => 'rand',
+) );
+if ( $others->have_posts() ) : ?>
+	<section class="shop shop--others">
+		<div class="wrap wrap--wide">
+			<header class="shop__head shop__head--compact">
+				<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Populært', 'studie247' ); ?></span>
+				<h2 class="shop__title"><?php esc_html_e( 'Det ser andre på lige nu', 'studie247' ); ?></h2>
+			</header>
+			<div class="shop__grid">
+				<?php while ( $others->have_posts() ) : $others->the_post(); ?>
+					<?php get_template_part( 'template-parts/product-card' ); ?>
+				<?php endwhile; ?>
+			</div>
+		</div>
+	</section>
+<?php endif;
+wp_reset_postdata();
+endwhile; ?>
 
 <?php get_template_part( 'template-parts/section', 'cta' ); ?>
 
