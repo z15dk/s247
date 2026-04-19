@@ -276,6 +276,21 @@ curl -u dashboard-api:'APP_PASSWORD' \
   -X POST https://s247.dk/wp-json/s247/v1/booking/142/reject
 ```
 
+**Markér som intern brug** (nulstiller pris, beholder booking ellers):
+```bash
+# Toggle
+curl -u dashboard-api:'APP_PASSWORD' \
+  -X POST https://s247.dk/wp-json/s247/v1/booking/142/internal
+
+# Eller eksplicit
+curl -u dashboard-api:'APP_PASSWORD' \
+  -X POST https://s247.dk/wp-json/s247/v1/booking/142/internal \
+  -H 'Content-Type: application/json' \
+  -d '{ "internal": true }'
+```
+Response: `{ "id": 142, "internal": true, "estimated_price": 0, "original_price": 1500 }`.
+Oprindelig pris gemmes i `_s247_estimated_price_original` og gendannes automatisk når intern-state sættes af igen. Admin-knappen i wp-admin bruger samme helper — WP og dashboard er altid i sync. Hvis dashboardet i stedet PATCH-er `_s247_internal` direkte på booking-objektet, spejler en `updated_post_meta`-hook automatisk logikken.
+
 Samme skrive-pattern virker på `/kontakt_besked` og `/udlejning_item` — fx tilføj et tag/kategori, redigér pris, eller markér en besked som læst ved at opdatere et valgfrit meta-felt.
 
 ### 5.5 Eksempel — curl til test

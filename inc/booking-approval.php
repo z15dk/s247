@@ -159,6 +159,37 @@ function studie247_render_booking_approval( $post ) {
 /* ───────── admin-post handlers ───────── */
 
 /**
+ * Toggle intern-brug. Sættes til true → gemmer nuværende pris i backup
+ * og nulstiller den aktive pris. Sættes til false → gendanner backup.
+ * Bruges af både wp-admin-knappen og REST-endpointet, så begge sider
+ * altid ender med samme state.
+ */
+function studie247_apply_internal_state( $booking_id, $is_internal ) {
+	if ( 'booking' !== get_post_type( $booking_id ) ) { return false; }
+
+	if ( $is_internal ) {
+		// Gem oprindelig pris (kun hvis vi ikke allerede har en backup).
+		$existing_backup = get_post_meta( $booking_id, '_s247_estimated_price_original', true );
+		if ( '' === $existing_backup ) {
+			$current = (int) get_post_meta( $booking_id, '_s247_estimated_price', true );
+			if ( $current > 0 ) {
+				update_post_meta( $booking_id, '_s247_estimated_price_original', $current );
+			}
+		}
+		update_post_meta( $booking_id, '_s247_estimated_price', 0 );
+		update_post_meta( $booking_id, '_s247_internal', '1' );
+	} else {
+		delete_post_meta( $booking_id, '_s247_internal' );
+		$original = get_post_meta( $booking_id, '_s247_estimated_price_original', true );
+		if ( '' !== $original ) {
+			update_post_meta( $booking_id, '_s247_estimated_price', (int) $original );
+			delete_post_meta( $booking_id, '_s247_estimated_price_original' );
+		}
+	}
+	return true;
+}
+
+/**
  * Toggle intern-brug på en booking.
  * Intern = ingen pris (skjul/nulstil _s247_estimated_price), men alt
  * andet (kunde-info, kalender-blokering, godkendelse) virker som normalt.
@@ -171,28 +202,48 @@ add_action( 'admin_post_s247_toggle_internal', function () {
 	check_admin_referer( 's247_internal_' . $id );
 
 	$is_internal = '1' === get_post_meta( $id, '_s247_internal', true );
-	if ( $is_internal ) {
-		// Tag intern-markering af + gendan oprindelig pris hvis vi har en.
-		delete_post_meta( $id, '_s247_internal' );
-		$original = get_post_meta( $id, '_s247_estimated_price_original', true );
-		if ( '' !== $original ) {
-			update_post_meta( $id, '_s247_estimated_price', (int) $original );
-		}
-		delete_post_meta( $id, '_s247_estimated_price_original' );
-		$msg = 'internal_off';
-	} else {
-		// Markér som intern + gem oprindelig pris + nulstil den aktive.
-		$current = (int) get_post_meta( $id, '_s247_estimated_price', true );
-		if ( $current > 0 ) {
-			update_post_meta( $id, '_s247_estimated_price_original', $current );
-		}
-		update_post_meta( $id, '_s247_estimated_price', 0 );
-		update_post_meta( $id, '_s247_internal', '1' );
-		$msg = 'internal_on';
-	}
+	studie247_apply_internal_state( $id, ! $is_internal );
+	$msg = $is_internal ? 'internal_off' : 'internal_on';
+
 	wp_safe_redirect( add_query_arg( 's247_msg', $msg, get_edit_post_link( $id, 'raw' ) ) );
 	exit;
 } );
+
+/**
+ * Hvis nogen skriver direkte til _s247_internal (fx via REST PATCH fra
+ * dashboardet uden at bruge /internal-endpointet), spejl logikken
+ * automatisk så pris-state holder i sync.
+ */
+function studie247_on_internal_meta_change( $meta_id, $post_id, $meta_key, $meta_value ) {
+	if ( '_s247_internal' !== $meta_key ) { return; }
+	if ( 'booking' !== get_post_type( $post_id ) ) { return; }
+	// Guard: undgå rekursion når studie247_apply_internal_state selv
+	// opdaterer _s247_internal.
+	static $guard = false;
+	if ( $guard ) { return; }
+	$guard = true;
+
+	$target = ( '1' === (string) $meta_value );
+	$backup = get_post_meta( $post_id, '_s247_estimated_price_original', true );
+	$price  = (int) get_post_meta( $post_id, '_s247_estimated_price', true );
+
+	// Kun kør logikken hvis state ikke allerede er i sync
+	// (undgår ekstra arbejde når vi selv sætter den).
+	$already_nulled   = $target  && 0 === $price;
+	$already_restored = ! $target && '' === $backup;
+	if ( $already_nulled || $already_restored ) { $guard = false; return; }
+
+	studie247_apply_internal_state( $post_id, $target );
+	$guard = false;
+}
+add_action( 'updated_post_meta', 'studie247_on_internal_meta_change', 10, 4 );
+add_action( 'added_post_meta',   'studie247_on_internal_meta_change', 10, 4 );
+add_action( 'deleted_post_meta', function ( $meta_ids, $post_id, $meta_key ) {
+	if ( '_s247_internal' !== $meta_key ) { return; }
+	if ( 'booking' !== get_post_type( $post_id ) ) { return; }
+	// Slettet meta = intern slået fra → gendan evt. backup-pris.
+	studie247_apply_internal_state( $post_id, false );
+}, 10, 3 );
 
 add_action( 'admin_post_s247_approve_booking', function () {
 	$id = isset( $_GET['booking'] ) ? (int) $_GET['booking'] : 0;

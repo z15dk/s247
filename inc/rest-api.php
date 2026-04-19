@@ -64,6 +64,10 @@ function studie247_rest_booking_fields() {
 		'_s247_produkt_id'       => 'integer',
 		'_s247_type'             => 'string',
 		'_s247_estimated_price'  => 'integer',
+		'_s247_internal'         => 'string',
+		'_s247_estimated_price_original' => 'integer',
+		'_s247_newsletter_optin' => 'string',
+		'_s247_newsletter_optin_timestamp' => 'string',
 		'_s247_use_type'         => 'string',
 		'_s247_edit_type'        => 'string',
 		'_s247_podcast_type'     => 'string',
@@ -305,6 +309,36 @@ add_action( 'rest_api_init', function () {
 				studie247_send_booking_confirmation( $id, 'rejected' );
 			}
 			return array( 'id' => $id, 'status' => 'rejected' );
+		},
+	) );
+
+	/**
+	 * Toggle intern-brug fra dashboardet/CRM. Samme logik som wp-admin
+	 * knappen: gemmer oprindelig pris og nulstiller den aktive.
+	 * Body kan valgfrit være { "internal": true/false } for at sætte
+	 * eksplicit state; uden body toggles nuværende state.
+	 */
+	register_rest_route( 's247/v1', '/booking/(?P<id>\d+)/internal', array(
+		'methods'             => WP_REST_Server::CREATABLE,
+		'permission_callback' => $perm,
+		'callback'            => function ( WP_REST_Request $req ) {
+			$id = (int) $req['id'];
+			if ( 'booking' !== get_post_type( $id ) ) {
+				return new WP_Error( 's247_not_found', __( 'Booking ikke fundet.', 'studie247' ), array( 'status' => 404 ) );
+			}
+			$current  = '1' === get_post_meta( $id, '_s247_internal', true );
+			$param    = $req->get_param( 'internal' );
+			$target   = ( null === $param ) ? ! $current : (bool) $param;
+			if ( ! function_exists( 'studie247_apply_internal_state' ) ) {
+				return new WP_Error( 's247_helper_missing', 'Helper ikke tilgængelig.', array( 'status' => 500 ) );
+			}
+			studie247_apply_internal_state( $id, $target );
+			return array(
+				'id'             => $id,
+				'internal'       => $target,
+				'estimated_price'=> (int) get_post_meta( $id, '_s247_estimated_price', true ),
+				'original_price' => (int) get_post_meta( $id, '_s247_estimated_price_original', true ),
+			);
 		},
 	) );
 } );
