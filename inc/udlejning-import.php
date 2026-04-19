@@ -694,6 +694,33 @@ function studie247_rrmdir( $dir ) {
 }
 
 /**
+ * Omskriv Google Drive share-links til direkte image-hotlink.
+ *
+ * Understøtter:
+ *   https://drive.google.com/file/d/FILE_ID/view?usp=...
+ *   https://drive.google.com/open?id=FILE_ID
+ *   https://drive.google.com/uc?id=FILE_ID&...
+ *   https://docs.google.com/uc?id=FILE_ID
+ *
+ * Returnerer original URL hvis det ikke er et Drive-link.
+ */
+function studie247_rewrite_gdrive_url( $url ) {
+	if ( ! is_string( $url ) || strpos( $url, 'google.com' ) === false ) {
+		return $url;
+	}
+	$id = '';
+	if ( preg_match( '~/file/d/([A-Za-z0-9_-]{10,})~', $url, $m ) ) {
+		$id = $m[1];
+	} elseif ( preg_match( '~[?&]id=([A-Za-z0-9_-]{10,})~', $url, $m ) ) {
+		$id = $m[1];
+	}
+	if ( ! $id ) {
+		return $url;
+	}
+	return 'https://lh3.googleusercontent.com/d/' . $id;
+}
+
+/**
  * Robust URL-til-attachment sideloader.
  * Håndterer URLs uden fil-endelse, konverterer til WebP og sætter alt-tekst.
  */
@@ -701,6 +728,12 @@ function studie247_sideload_url( $url, $post_id, $alt_text = '' ) {
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 	require_once ABSPATH . 'wp-admin/includes/file.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
+
+	// Omskriv Google Drive share-links til direkte image-hotlink. Drives
+	// /file/d/ID/view-URL er en HTML-side, ikke et billede — den fejler med
+	// "Unauthorized". lh3.googleusercontent.com/d/ID er Drives direkte
+	// image-endpoint og virker for filer delt med "alle med link".
+	$url = studie247_rewrite_gdrive_url( $url );
 
 	$tmp = download_url( $url, 15 );
 	if ( is_wp_error( $tmp ) ) {
