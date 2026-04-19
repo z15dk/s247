@@ -31,6 +31,55 @@ $duration_options = $is_product
 	? array( '1 dag', '2 dage', '3 dage', '4 dage', '1 uge', '2 uger' )
 	: array( '2 timer', '4 timer', '6 timer', '8 timer', '1 dag' );
 
+// Pris-multiplikatorer for udlejning.
+$rental_price_table = array(
+	'1 dag'  => array( 'base' => 'dag', 'mult' => 1.0 ),
+	'2 dage' => array( 'base' => 'dag', 'mult' => 2.0 ),
+	'3 dage' => array( 'base' => 'dag', 'mult' => 3.0 ),
+	'4 dage' => array( 'base' => 'dag', 'mult' => 3.5 ),
+	'1 uge'  => array( 'base' => 'uge', 'mult' => 1.0 ),
+	'2 uger' => array( 'base' => 'uge', 'mult' => 1.5 ),
+);
+
+// Parser fx "1.499 kr" → 1499 (ignorerer alle ikke-tal-tegn).
+function studie247_price_to_int( $price_str ) {
+	return (int) preg_replace( '/[^\d]/', '', (string) $price_str );
+}
+
+function studie247_format_dkk( $amount ) {
+	return number_format( (float) $amount, 0, ',', '.' ) . ' kr';
+}
+
+$product_price_day  = 0;
+$product_price_week = 0;
+if ( $is_product ) {
+	$product_price_day  = studie247_price_to_int( get_post_meta( $product->ID, '_s247_pris_dag', true ) );
+	$product_price_week = studie247_price_to_int( get_post_meta( $product->ID, '_s247_pris_uge', true ) );
+	// Hvis der ikke er sat en uge-pris, brug 7× dag-prisen som fallback.
+	if ( ! $product_price_week && $product_price_day ) {
+		$product_price_week = $product_price_day * 7;
+	}
+}
+
+/**
+ * Bereg lejepris ud fra produkt + varighed.
+ * Returnerer heltal i DKK eller 0 hvis ikke beregnelig.
+ */
+function studie247_calc_rental_price( $price_day, $price_week, $duration ) {
+	$table = array(
+		'1 dag'  => array( 'base' => 'dag', 'mult' => 1.0 ),
+		'2 dage' => array( 'base' => 'dag', 'mult' => 2.0 ),
+		'3 dage' => array( 'base' => 'dag', 'mult' => 3.0 ),
+		'4 dage' => array( 'base' => 'dag', 'mult' => 3.5 ),
+		'1 uge'  => array( 'base' => 'uge', 'mult' => 1.0 ),
+		'2 uger' => array( 'base' => 'uge', 'mult' => 1.5 ),
+	);
+	if ( ! isset( $table[ $duration ] ) ) { return 0; }
+	$base_price = 'uge' === $table[ $duration ]['base'] ? (int) $price_week : (int) $price_day;
+	if ( ! $base_price ) { return 0; }
+	return (int) round( $base_price * $table[ $duration ]['mult'] );
+}
+
 // POST handler.
 if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_nonce'], 's247_book' ) ) {
 	$form_name  = sanitize_text_field( wp_unslash( $_POST['s247_name']  ?? '' ) );
@@ -65,6 +114,17 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			'post_status' => 'pending',
 			'post_title'  => sprintf( '%s — %s %s', $form_name, $form_date, $form_start ),
 		) );
+		// Beregn estimeret lejepris hvis det er et udstyrs-produkt.
+		$estimated_price     = 0;
+		$estimated_price_fmt = '';
+		if ( $prod_id ) {
+			$pd = studie247_price_to_int( get_post_meta( $prod_id, '_s247_pris_dag', true ) );
+			$pu = studie247_price_to_int( get_post_meta( $prod_id, '_s247_pris_uge', true ) );
+			if ( ! $pu && $pd ) { $pu = $pd * 7; }
+			$estimated_price = studie247_calc_rental_price( $pd, $pu, $form_dur );
+			if ( $estimated_price ) { $estimated_price_fmt = studie247_format_dkk( $estimated_price ); }
+		}
+
 		if ( $booking_id && ! is_wp_error( $booking_id ) ) {
 			update_post_meta( $booking_id, '_s247_date',     $form_date );
 			update_post_meta( $booking_id, '_s247_start',    $form_start );
@@ -76,6 +136,7 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			update_post_meta( $booking_id, '_s247_produkt',  $form_prod );
 			if ( $prod_id )  { update_post_meta( $booking_id, '_s247_produkt_id', $prod_id ); }
 			if ( $form_type ){ update_post_meta( $booking_id, '_s247_type',       $form_type ); }
+			if ( $estimated_price ) { update_post_meta( $booking_id, '_s247_estimated_price', $estimated_price ); }
 		}
 
 		$admin_to      = 'info@s247.dk';
@@ -84,6 +145,7 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		if ( $form_type )   { $admin_body .= "Type: {$form_type}\n"; }
 		if ( $prod_label )  { $admin_body .= "Produkt: {$prod_label}\n"; }
 		$admin_body   .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
+		if ( $estimated_price_fmt ) { $admin_body .= "Estimeret pris: {$estimated_price_fmt}\n"; }
 		if ( $form_notes ) { $admin_body .= "\nNoter:\n{$form_notes}\n"; }
 		@wp_mail( $admin_to, $admin_subject, $admin_body, array(
 			'Content-Type: text/plain; charset=UTF-8',
@@ -94,6 +156,7 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		$user_body     = "Hej {$form_name},\n\nVi har modtaget din booking-anmodning og reserveret tiden foreløbigt.\n\n";
 		if ( $prod_label ) { $user_body .= "Produkt: {$prod_label}\n"; }
 		$user_body    .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
+		if ( $estimated_price_fmt ) { $user_body .= "Estimeret pris: {$estimated_price_fmt}\n"; }
 		if ( $form_notes ) { $user_body .= "\nDine noter:\n{$form_notes}\n"; }
 		$user_body    .= "\nDin booking er markeret som 'afventer godkendelse'. Du hører fra os inden for 24 timer på hverdage med endelig bekræftelse.\n\n— Studie 247\ninfo@s247.dk";
 		@wp_mail( $form_email, $user_subject, $user_body, array(
@@ -252,7 +315,7 @@ get_header();
 		<?php else : ?>
 			<div class="book2__layout">
 				<!-- Venstre: kalender + valg -->
-				<div class="book2__picker" data-book-picker data-book-mode="<?php echo $is_product ? 'product' : 'studio'; ?>" data-booked="<?php echo esc_attr( wp_json_encode( $booked_map ) ); ?>">
+				<div class="book2__picker" data-book-picker data-book-mode="<?php echo $is_product ? 'product' : 'studio'; ?>" data-booked="<?php echo esc_attr( wp_json_encode( $booked_map ) ); ?>" data-price-day="<?php echo esc_attr( $product_price_day ); ?>" data-price-week="<?php echo esc_attr( $product_price_week ); ?>">
 					<div class="book2__calendar">
 						<div class="book2__cal-head">
 							<a class="book2__cal-nav" href="<?php echo esc_url( add_query_arg( 'ym', $prev_ym ) ); ?>" aria-label="<?php esc_attr_e( 'Forrige måned', 'studie247' ); ?>">‹</a>
@@ -360,6 +423,9 @@ get_header();
 								<div><dt><?php esc_html_e( 'Tid', 'studie247' ); ?></dt><dd data-sum-time>—</dd></div>
 							<?php endif; ?>
 							<div><dt><?php esc_html_e( 'Varighed', 'studie247' ); ?></dt><dd data-sum-duration>—</dd></div>
+							<?php if ( $is_product ) : ?>
+								<div class="book2__sum-total"><dt><?php esc_html_e( 'Estimeret pris', 'studie247' ); ?></dt><dd data-sum-price>—</dd></div>
+							<?php endif; ?>
 						</dl>
 					</div>
 

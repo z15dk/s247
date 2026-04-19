@@ -2775,6 +2775,25 @@ body.team-modal-open { overflow: hidden; }
 
 .book2__sum-list dd[data-filled] { color: var(--color-accent); }
 
+.book2__sum-list > .book2__sum-total {
+	margin-top: 4px;
+	padding-top: 12px;
+	border-bottom: 0;
+	border-top: 2px solid var(--color-ink);
+}
+
+.book2__sum-total dt {
+	color: var(--color-ink) !important;
+	font-weight: 700;
+}
+
+.book2__sum-total dd {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-size: 1.35rem !important;
+	color: var(--color-accent) !important;
+}
+
 /* Form */
 .book2__form {
 	padding: var(--sp-6);

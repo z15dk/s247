@@ -220,6 +220,32 @@
 		};
 
 		const isProductMode = bookPicker.dataset.bookMode === 'product';
+		const priceDay      = parseInt(bookPicker.dataset.priceDay  || '0', 10);
+		const priceWeek     = parseInt(bookPicker.dataset.priceWeek || '0', 10);
+		const sumPrice      = document.querySelector('[data-sum-price]');
+
+		// Multiplikator-tabel matcher PHP (page-booking-studie.php).
+		const rentalTable = {
+			'1 dag':  { base: 'dag', mult: 1   },
+			'2 dage': { base: 'dag', mult: 2   },
+			'3 dage': { base: 'dag', mult: 3   },
+			'4 dage': { base: 'dag', mult: 3.5 },
+			'1 uge':  { base: 'uge', mult: 1   },
+			'2 uger': { base: 'uge', mult: 1.5 },
+		};
+
+		const formatDKK = (n) => Math.round(n).toLocaleString('da-DK') + ' kr';
+
+		const updatePrice = () => {
+			if (!sumPrice) return;
+			const row = rentalTable[durIn.value];
+			if (!row) { sumPrice.textContent = '—'; delete sumPrice.dataset.filled; return; }
+			const basePrice = row.base === 'uge' ? priceWeek : priceDay;
+			if (!basePrice) { sumPrice.textContent = '—'; delete sumPrice.dataset.filled; return; }
+			sumPrice.textContent = formatDKK(basePrice * row.mult);
+			sumPrice.dataset.filled = '1';
+		};
+
 		const checkReady = () => {
 			const ready = dateIn.value && timeIn.value && durIn.value;
 			if (submit) submit.disabled = !ready;
@@ -260,6 +286,7 @@
 				d.classList.add('is-selected');
 				if (durIn) durIn.value = d.dataset.duration;
 				if (sumDur) { sumDur.textContent = d.dataset.duration; sumDur.dataset.filled = '1'; }
+				if (isProductMode) updatePrice();
 				checkReady();
 			});
 		});
