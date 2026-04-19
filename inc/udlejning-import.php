@@ -702,7 +702,7 @@ function studie247_sideload_url( $url, $post_id, $alt_text = '' ) {
 	require_once ABSPATH . 'wp-admin/includes/file.php';
 	require_once ABSPATH . 'wp-admin/includes/image.php';
 
-	$tmp = download_url( $url, 60 );
+	$tmp = download_url( $url, 15 );
 	if ( is_wp_error( $tmp ) ) {
 		return new WP_Error( 'download_failed', sprintf( 'Download fejl for %s: %s', esc_url( $url ), $tmp->get_error_message() ) );
 	}
@@ -950,7 +950,6 @@ add_action( 'wp_ajax_s247_import_batch', function () {
 
 	$id     = sanitize_text_field( wp_unslash( $_POST['id']     ?? '' ) );
 	$offset = (int) ( $_POST['offset'] ?? 0 );
-	$batch  = 3;
 
 	$state = get_transient( $id );
 	if ( ! $state || empty( $state['rows'] ) ) {
@@ -967,6 +966,11 @@ add_action( 'wp_ajax_s247_import_batch', function () {
 	if ( ! empty( $state['webp'] ) && ! defined( 'S247_IMPORT_WEBP' ) ) {
 		define( 'S247_IMPORT_WEBP', true );
 	}
+
+	// Mindre batch når vi henter billeder — hver række kan trigge op til 5
+	// downloads (hoved + 4 tilstands-billeder) à 15 sek timeout. 1 række pr.
+	// request holder os trygt under nginx/proxy-timeout (typisk 60 sek).
+	$batch = $download_images ? 1 : 5;
 
 	$total   = count( $rows );
 	$end     = min( $offset + $batch, $total );
