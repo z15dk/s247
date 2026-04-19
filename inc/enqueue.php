@@ -8,6 +8,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 add_action( 'wp_enqueue_scripts', function () {
+	// Brug filens ændringstid som cache-buster så browseren altid henter
+	// nyeste udgave efter et git pull (STUDIE247_VERSION bumpes sjældent).
+	$ver = function ( $rel_path ) {
+		$abs = STUDIE247_DIR . '/' . ltrim( $rel_path, '/' );
+		return file_exists( $abs ) ? (string) filemtime( $abs ) : STUDIE247_VERSION;
+	};
 	$version = STUDIE247_VERSION;
 
 	// Google Fonts — Inter (sans) + Fraunces (dramatic serif italics).
@@ -18,14 +24,14 @@ add_action( 'wp_enqueue_scripts', function () {
 		null
 	);
 
-	wp_enqueue_style( 'studie247-variables', STUDIE247_URI . '/assets/css/variables.css', array(), $version );
-	wp_enqueue_style( 'studie247-fonts-local', STUDIE247_URI . '/assets/css/fonts.css', array( 'studie247-variables' ), $version );
-	wp_enqueue_style( 'studie247-base',       STUDIE247_URI . '/assets/css/base.css', array( 'studie247-variables' ), $version );
-	wp_enqueue_style( 'studie247-components', STUDIE247_URI . '/assets/css/components.css', array( 'studie247-base' ), $version );
-	wp_enqueue_style( 'studie247-sections',   STUDIE247_URI . '/assets/css/sections.css', array( 'studie247-components' ), $version );
-	wp_enqueue_style( 'studie247-main',       STUDIE247_URI . '/style.css', array(), $version );
+	wp_enqueue_style( 'studie247-variables',   STUDIE247_URI . '/assets/css/variables.css',   array(),                              $ver( 'assets/css/variables.css' ) );
+	wp_enqueue_style( 'studie247-fonts-local', STUDIE247_URI . '/assets/css/fonts.css',       array( 'studie247-variables' ),       $ver( 'assets/css/fonts.css' ) );
+	wp_enqueue_style( 'studie247-base',        STUDIE247_URI . '/assets/css/base.css',        array( 'studie247-variables' ),       $ver( 'assets/css/base.css' ) );
+	wp_enqueue_style( 'studie247-components',  STUDIE247_URI . '/assets/css/components.css',  array( 'studie247-base' ),            $ver( 'assets/css/components.css' ) );
+	wp_enqueue_style( 'studie247-sections',    STUDIE247_URI . '/assets/css/sections.css',    array( 'studie247-components' ),      $ver( 'assets/css/sections.css' ) );
+	wp_enqueue_style( 'studie247-main',        STUDIE247_URI . '/style.css',                  array(),                              $ver( 'style.css' ) );
 
-	wp_enqueue_script( 'studie247-main', STUDIE247_URI . '/assets/js/main.js', array(), $version, true );
+	wp_enqueue_script( 'studie247-main', STUDIE247_URI . '/assets/js/main.js', array(), $ver( 'assets/js/main.js' ), true );
 } );
 
 // Preconnect <link>s for perf.
