@@ -2582,22 +2582,121 @@ body.team-modal-open { overflow: hidden; }
 	max-width: 68ch;
 }
 
-/* Final CTA under guide */
+/* Final CTA under guide — mørk "pop"-variant så den ikke visuelt dubblerer
+   CTA-banneret nedenunder. Adskilles via mørk baggrund + accent-glow +
+   60-sek-timer-badge + sekundær rundvisnings-link. */
 .studiet-guide__cta {
 	margin-top: var(--sp-12);
-	padding: var(--sp-10) var(--sp-6);
-	text-align: center;
-	background: var(--color-surface);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-lg);
+	padding: var(--sp-10) var(--sp-10);
+	background: linear-gradient(135deg, #201815 0%, #2c1f1b 100%);
+	color: var(--color-ink-on-dark);
+	border-radius: var(--radius-xl, 18px);
+	position: relative;
+	overflow: hidden;
+	display: grid;
+	gap: var(--sp-6);
+	grid-template-columns: 1fr;
+	align-items: center;
 }
-.studiet-guide__cta-title {
+.studiet-guide__cta::before {
+	content: "";
+	position: absolute;
+	right: -10%;
+	top: -30%;
+	width: 60%;
+	height: 160%;
+	background: radial-gradient(circle at center, rgba(158,43,37,0.35) 0%, transparent 60%);
+	pointer-events: none;
+}
+@media (min-width: 820px) {
+	.studiet-guide__cta {
+		grid-template-columns: 1.4fr 1fr;
+		gap: var(--sp-10);
+	}
+}
+
+.studiet-guide__cta-left,
+.studiet-guide__cta-actions {
+	position: relative;
+	z-index: 1;
+}
+
+.studiet-guide__timer {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 4px;
+	padding: 6px 14px;
+	background: rgba(158, 43, 37, 0.2);
+	border: 1px solid rgba(158, 43, 37, 0.55);
+	border-radius: 999px;
+	margin-bottom: var(--sp-4);
+}
+.studiet-guide__timer-num {
 	font-family: var(--font-serif);
 	font-style: italic;
-	font-size: 1.6rem;
-	color: var(--color-ink);
-	margin: 0 0 var(--sp-5);
-	line-height: 1.2;
+	font-weight: 800;
+	font-size: 1.1rem;
+	color: var(--color-accent);
+	line-height: 1;
+}
+.studiet-guide__timer-unit {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--color-accent);
+}
+
+.studiet-guide__cta-title {
+	font-family: var(--font-sans);
+	font-weight: 800;
+	font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.4rem);
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+	color: var(--color-ink-on-dark);
+	margin: 0 0 var(--sp-3);
+}
+.studiet-guide__cta-title em {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	color: var(--color-accent);
+}
+.studiet-guide__cta-lead {
+	font-size: 14px;
+	line-height: 1.55;
+	color: color-mix(in srgb, var(--color-ink-on-dark) 80%, transparent);
+	margin: 0;
+	max-width: 48ch;
+}
+
+.studiet-guide__cta-actions {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--sp-3);
+}
+@media (min-width: 820px) {
+	.studiet-guide__cta-actions { align-items: flex-end; }
+}
+
+.studiet-guide__cta-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: color-mix(in srgb, var(--color-ink-on-dark) 75%, transparent);
+	font-family: var(--font-sans);
+	font-weight: 500;
+	font-size: 13px;
+	text-decoration: none;
+	padding: 4px 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-ink-on-dark) 30%, transparent);
+	transition: color 160ms ease, border-color 160ms ease, gap 160ms ease;
+}
+.studiet-guide__cta-link:hover {
+	color: var(--color-ink-on-dark);
+	border-color: var(--color-ink-on-dark);
+	gap: 10px;
 }
 
 /* ─── Stats-strip (efter hero) ─── */

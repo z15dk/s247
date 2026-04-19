@@ -388,11 +388,29 @@ for ( $i = 1; $i <= 5; $i++ ) {
 		</ol>
 
 		<div class="studiet-guide__cta">
-			<h3 class="studiet-guide__cta-title"><?php esc_html_e( 'Klar? Det tager under 60 sekunder.', 'studie247' ); ?></h3>
-			<a class="btn btn--primary btn--xl" href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>">
-				<?php esc_html_e( 'Book studiet', 'studie247' ); ?>
-				<?php echo studie247_icon( 'arrow-right', 18 ); ?>
-			</a>
+			<div class="studiet-guide__cta-left">
+				<span class="studiet-guide__timer" aria-hidden="true">
+					<span class="studiet-guide__timer-num">60</span>
+					<span class="studiet-guide__timer-unit"><?php esc_html_e( 'sek', 'studie247' ); ?></span>
+				</span>
+				<h3 class="studiet-guide__cta-title">
+					<?php esc_html_e( 'Så kort tager det.', 'studie247' ); ?>
+					<em><?php esc_html_e( 'Gå i gang.', 'studie247' ); ?></em>
+				</h3>
+				<p class="studiet-guide__cta-lead">
+					<?php esc_html_e( 'Vil du se rummet først? Kig forbi til en gratis rundvisning — 15 min, ingen forpligtelser.', 'studie247' ); ?>
+				</p>
+			</div>
+			<div class="studiet-guide__cta-actions">
+				<a class="btn btn--primary btn--xl" href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>">
+					<?php esc_html_e( 'Book studiet', 'studie247' ); ?>
+					<?php echo studie247_icon( 'arrow-right', 18 ); ?>
+				</a>
+				<a class="studiet-guide__cta-link" href="<?php echo esc_url( add_query_arg( 'emne', 'rundvisning', home_url( '/kontakt-os/' ) ) ); ?>">
+					<?php esc_html_e( 'eller tag en rundvisning først', 'studie247' ); ?>
+					<?php echo studie247_icon( 'arrow-right', 14 ); ?>
+				</a>
+			</div>
 		</div>
 	</div>
 </section>
