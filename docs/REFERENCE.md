@@ -227,7 +227,58 @@ GET /udlejning_item/{id}
 
 `rental_stats` vises kun for auth'ede requests. Uautentificerede kald får `rental_stats: null`.
 
-### 5.4 Eksempel — curl til test
+### 5.4 Skrive/opdatere data fra dashboardet
+
+Alle endpoints understøtter også `POST`/`PATCH`/`DELETE` når brugeren er auth'et med `edit_posts`-cap.
+
+**Opret ny booking manuelt** (fx fra CRM):
+```bash
+curl -u dashboard-api:'APP_PASSWORD' \
+  -X POST https://s247.dk/wp-json/wp/v2/booking \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "title":"Manuel booking — Lars",
+    "status":"pending",
+    "meta":{
+      "_s247_date":"2026-06-01",
+      "_s247_start":"10:00",
+      "_s247_duration":"6 timer",
+      "_s247_name":"Lars Hansen",
+      "_s247_email":"lars@example.dk",
+      "_s247_phone":"+4512345678"
+    }
+  }'
+```
+
+**Opdater felter på eksisterende booking**:
+```bash
+curl -u dashboard-api:'APP_PASSWORD' \
+  -X PATCH https://s247.dk/wp-json/wp/v2/booking/142 \
+  -H 'Content-Type: application/json' \
+  -d '{ "meta": { "_s247_notes": "Ny note tilføjet fra CRM" } }'
+```
+
+**Slet en booking** (`force=true` = permanent, ellers flyttes til papirkurv):
+```bash
+curl -u dashboard-api:'APP_PASSWORD' \
+  -X DELETE 'https://s247.dk/wp-json/wp/v2/booking/142?force=true'
+```
+
+**Godkend en booking** (genvej — sender også bekræftelses-mail automatisk):
+```bash
+curl -u dashboard-api:'APP_PASSWORD' \
+  -X POST https://s247.dk/wp-json/s247/v1/booking/142/approve
+```
+
+**Afvis en booking** (genvej — sender afvisnings-mail):
+```bash
+curl -u dashboard-api:'APP_PASSWORD' \
+  -X POST https://s247.dk/wp-json/s247/v1/booking/142/reject
+```
+
+Samme skrive-pattern virker på `/kontakt_besked` og `/udlejning_item` — fx tilføj et tag/kategori, redigér pris, eller markér en besked som læst ved at opdatere et valgfrit meta-felt.
+
+### 5.5 Eksempel — curl til test
 
 ```bash
 # Auth-test (kontakt-beskeder)

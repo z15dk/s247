@@ -225,6 +225,49 @@ function studie247_product_rental_stats( $product_id ) {
 	return $stats;
 }
 
+/* ─────────────────────────────────────────────────────────────
+ * Write-endpoints: godkend/afvis booking fra dashboardet så CRM'et
+ * ikke skal kende WP's post-status ("publish"/"trash") eller trigge
+ * bekræftelses-mailen manuelt.
+ * ───────────────────────────────────────────────────────────── */
+add_action( 'rest_api_init', function () {
+	$perm = function () {
+		return current_user_can( 'edit_posts' );
+	};
+
+	register_rest_route( 's247/v1', '/booking/(?P<id>\d+)/approve', array(
+		'methods'             => WP_REST_Server::CREATABLE, // POST
+		'permission_callback' => $perm,
+		'callback'            => function ( WP_REST_Request $req ) {
+			$id = (int) $req['id'];
+			if ( 'booking' !== get_post_type( $id ) ) {
+				return new WP_Error( 's247_not_found', __( 'Booking ikke fundet.', 'studie247' ), array( 'status' => 404 ) );
+			}
+			wp_update_post( array( 'ID' => $id, 'post_status' => 'publish' ) );
+			if ( function_exists( 'studie247_send_booking_confirmation' ) ) {
+				studie247_send_booking_confirmation( $id, 'approved' );
+			}
+			return array( 'id' => $id, 'status' => 'approved' );
+		},
+	) );
+
+	register_rest_route( 's247/v1', '/booking/(?P<id>\d+)/reject', array(
+		'methods'             => WP_REST_Server::CREATABLE,
+		'permission_callback' => $perm,
+		'callback'            => function ( WP_REST_Request $req ) {
+			$id = (int) $req['id'];
+			if ( 'booking' !== get_post_type( $id ) ) {
+				return new WP_Error( 's247_not_found', __( 'Booking ikke fundet.', 'studie247' ), array( 'status' => 404 ) );
+			}
+			wp_update_post( array( 'ID' => $id, 'post_status' => 'trash' ) );
+			if ( function_exists( 'studie247_send_booking_confirmation' ) ) {
+				studie247_send_booking_confirmation( $id, 'rejected' );
+			}
+			return array( 'id' => $id, 'status' => 'rejected' );
+		},
+	) );
+} );
+
 add_action( 'rest_api_init', function () {
 	register_rest_field( 'udlejning_item', 'rental_stats', array(
 		'get_callback' => function ( $object ) {
