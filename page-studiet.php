@@ -233,8 +233,9 @@ for ( $i = 1; $i <= 5; $i++ ) {
 					<?php esc_html_e( 'Book studiet nu', 'studie247' ); ?>
 					<?php echo studie247_icon( 'arrow-right', 18 ); ?>
 				</a>
-				<a class="btn btn--ghost btn--on-dark" href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>">
-					<?php esc_html_e( 'Stil et spørgsmål', 'studie247' ); ?>
+				<a class="studiet-banner__link" href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>">
+					<?php esc_html_e( 'eller stil et spørgsmål', 'studie247' ); ?>
+					<?php echo studie247_icon( 'arrow-right', 14 ); ?>
 				</a>
 			</div>
 		</div>
