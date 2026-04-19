@@ -76,6 +76,21 @@ function studie247_udlejning_import_page() {
 				var nonce   = '<?php echo esc_js( wp_create_nonce( 's247_import_batch' ) ); ?>';
 				var offset = 0;
 				var totals = { created: 0, updated: 0, skipped: 0 };
+				var retries = 0;
+				var MAX_RETRIES = 3;
+
+				function logLine(text){
+					var li = document.createElement('li');
+					li.textContent = text;
+					log.appendChild(li);
+				}
+
+				function fail(message, bodySnippet){
+					stat.innerHTML = '<strong style="color:#b32d2e;">✗ ' + message + '</strong>';
+					if (bodySnippet) {
+						logLine('Server-svar: ' + bodySnippet);
+					}
+				}
 
 				function step(){
 					var data = new FormData();
@@ -85,12 +100,25 @@ function studie247_udlejning_import_page() {
 					data.append('offset', offset);
 
 					fetch(ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
-						.then(function(r){ return r.json(); })
-						.then(function(res){
-							if (!res.success) {
-								stat.textContent = 'Fejl: ' + (res.data && res.data.message || 'ukendt');
+						.then(function(r){
+							return r.text().then(function(body){ return { status: r.status, ok: r.ok, body: body }; });
+						})
+						.then(function(r){
+							var res;
+							try {
+								res = JSON.parse(r.body);
+							} catch (e) {
+								// Serveren svarede ikke med JSON — vis den rå body så man kan se hvad der gik galt
+								// (typisk: PHP fatal, HTML fejlside fra nginx/cloudflare, eller en PHP-notice der lækker).
+								var snippet = (r.body || '').replace(/\s+/g, ' ').slice(0, 400);
+								fail('Serveren svarede ikke med JSON (HTTP ' + r.status + ')', snippet);
 								return;
 							}
+							if (!r.ok || !res.success) {
+								fail('Fejl: ' + ((res && res.data && res.data.message) || ('HTTP ' + r.status)));
+								return;
+							}
+							retries = 0;
 							var d = res.data;
 							offset = d.next_offset;
 							totals.created += d.created;
@@ -100,11 +128,7 @@ function studie247_udlejning_import_page() {
 							bar.style.width = pct + '%';
 							cnt.textContent = offset + ' / ' + d.total + ' — ' +
 								totals.created + ' oprettet · ' + totals.updated + ' opdateret · ' + totals.skipped + ' sprunget over';
-							(d.messages || []).forEach(function(m){
-								var li = document.createElement('li');
-								li.textContent = m;
-								log.appendChild(li);
-							});
+							(d.messages || []).forEach(logLine);
 							if (d.done) {
 								stat.innerHTML = '<strong style="color:#0a7c2f;">✓ Import færdig</strong>';
 							} else {
@@ -113,8 +137,15 @@ function studie247_udlejning_import_page() {
 							}
 						})
 						.catch(function(err){
-							stat.textContent = 'Netværksfejl — prøver igen om 3 sek …';
-							setTimeout(step, 3000);
+							// Ægte netværksfejl (request aldrig nået frem eller forbindelsen blev lukket).
+							retries++;
+							if (retries > MAX_RETRIES) {
+								fail('Netværksfejl efter ' + MAX_RETRIES + ' forsøg — ' + (err && err.message ? err.message : 'ukendt'));
+								return;
+							}
+							var wait = Math.pow(2, retries) * 1000; // 2s, 4s, 8s
+							stat.textContent = 'Netværksfejl — prøver igen om ' + (wait / 1000) + ' sek (' + retries + '/' + MAX_RETRIES + ') …';
+							setTimeout(step, wait);
 						});
 				}
 				step();
@@ -374,8 +405,14 @@ function studie247_udlejning_import_csv( $path, $download_images = true, $image_
 			if ( ! empty( $q ) ) { $existing_id = (int) $q[0]; }
 		}
 		if ( ! $existing_id ) {
-			$existing = get_page_by_title( $title, OBJECT, 'udlejning_item' );
-			if ( $existing ) { $existing_id = $existing->ID; }
+			$q = get_posts( array(
+				'post_type'      => 'udlejning_item',
+				'post_status'    => array( 'publish', 'draft', 'pending' ),
+				'title'          => $title,
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+			) );
+			if ( ! empty( $q ) ) { $existing_id = (int) $q[0]; }
 		}
 
 		$postarr = array(
@@ -900,8 +937,14 @@ function studie247_parse_csv_to_rows( $path ) {
  * AJAX: behandl en batch af rækker.
  */
 add_action( 'wp_ajax_s247_import_batch', function () {
+	// Sluk for at PHP-notices/warnings/deprecations lækker ud i JSON-body og
+	// korrumperer response'en (fetch -> r.json() kaster så, og frontend tror
+	// det er en netværksfejl). Vi fanger alt output og smider det væk før send.
+	ob_start();
+
 	check_ajax_referer( 's247_import_batch', 'nonce' );
 	if ( ! current_user_can( 'edit_posts' ) ) {
+		if ( ob_get_length() ) { ob_end_clean(); }
 		wp_send_json_error( array( 'message' => 'Manglende rettigheder.' ) );
 	}
 
@@ -911,6 +954,7 @@ add_action( 'wp_ajax_s247_import_batch', function () {
 
 	$state = get_transient( $id );
 	if ( ! $state || empty( $state['rows'] ) ) {
+		if ( ob_get_length() ) { ob_end_clean(); }
 		wp_send_json_error( array( 'message' => 'Import-data udløb. Upload CSV igen.' ) );
 	}
 
@@ -952,6 +996,9 @@ add_action( 'wp_ajax_s247_import_batch', function () {
 		delete_transient( $id );
 	}
 
+	// Smid stille-output (notices, whitespace, BOM) væk før vi skriver JSON.
+	if ( ob_get_length() ) { ob_end_clean(); }
+
 	wp_send_json_success( array(
 		'next_offset' => $next_offset,
 		'total'       => $total,
@@ -989,8 +1036,14 @@ function studie247_import_single_row( $data, $download_images, $image_dir ) {
 		if ( ! empty( $q ) ) { $existing_id = (int) $q[0]; }
 	}
 	if ( ! $existing_id ) {
-		$existing = get_page_by_title( $title, OBJECT, 'udlejning_item' );
-		if ( $existing ) { $existing_id = $existing->ID; }
+		$q = get_posts( array(
+			'post_type'      => 'udlejning_item',
+			'post_status'    => array( 'publish', 'draft', 'pending' ),
+			'title'          => $title,
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+		) );
+		if ( ! empty( $q ) ) { $existing_id = (int) $q[0]; }
 	}
 
 	$postarr = array(
