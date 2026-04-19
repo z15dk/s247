@@ -88,6 +88,70 @@ get_header();
 				<p class="ko-lead">Besvar tre korte spørgsmål. Vi læser hver eneste besked selv.</p>
 			</header>
 
+			<div class="ko-layout">
+				<aside class="ko-side">
+					<?php
+					// Hent op til 3 team-medlemmer med billede til "vi svarer"-strip.
+					$ko_team = array();
+					for ( $i = 1; $i <= 8 && count( $ko_team ) < 3; $i++ ) {
+						$nm = get_theme_mod( "s247_team{$i}_name" );
+						$im = get_theme_mod( "s247_team{$i}_image" );
+						if ( $nm && $im ) { $ko_team[] = array( 'name' => $nm, 'image' => $im ); }
+					}
+					?>
+
+					<div class="ko-promise">
+						<span class="ko-promise__pulse" aria-hidden="true"></span>
+						<span class="ko-promise__label"><?php esc_html_e( 'Vi svarer hurtigt', 'studie247' ); ?></span>
+					</div>
+
+					<dl class="ko-stats">
+						<div>
+							<dt><?php esc_html_e( 'Svartid', 'studie247' ); ?></dt>
+							<dd><span class="ko-stats__big">&lt; 24t</span> <span class="ko-stats__hint"><?php esc_html_e( 'på hverdage', 'studie247' ); ?></span></dd>
+						</div>
+						<div>
+							<dt><?php esc_html_e( 'Læst af', 'studie247' ); ?></dt>
+							<dd><span class="ko-stats__big">5</span> <span class="ko-stats__hint"><?php esc_html_e( 'mennesker (ikke en bot)', 'studie247' ); ?></span></dd>
+						</div>
+						<div>
+							<dt><?php esc_html_e( 'Bedste tid', 'studie247' ); ?></dt>
+							<dd><span class="ko-stats__big">9–17</span> <span class="ko-stats__hint"><?php esc_html_e( 'man–fre', 'studie247' ); ?></span></dd>
+						</div>
+					</dl>
+
+					<?php if ( ! empty( $ko_team ) ) : ?>
+						<div class="ko-team">
+							<div class="ko-team__avatars" aria-hidden="true">
+								<?php foreach ( $ko_team as $m ) : ?>
+									<span class="ko-team__avatar"><img src="<?php echo esc_url( $m['image'] ); ?>" alt=""></span>
+								<?php endforeach; ?>
+							</div>
+							<p class="ko-team__caption">
+								<?php
+								$names = array_map( function ( $m ) { return explode( ' ', trim( $m['name'] ) )[0]; }, $ko_team );
+								printf(
+									esc_html__( '%s og resten af holdet svarer dig.', 'studie247' ),
+									esc_html( implode( ', ', $names ) )
+								);
+								?>
+							</p>
+						</div>
+					<?php endif; ?>
+
+					<div class="ko-direct">
+						<p class="ko-direct__label"><?php esc_html_e( 'Eller direkte:', 'studie247' ); ?></p>
+						<a class="ko-direct__link" href="mailto:hej@studie247.dk">
+							<?php echo studie247_icon( 'mail', 16 ); ?> hej@studie247.dk
+						</a>
+						<a class="ko-direct__link" href="tel:+4500000000">
+							<?php echo studie247_icon( 'phone', 16 ); ?> +45 00 00 00 00
+						</a>
+					</div>
+				</aside>
+
+				<div class="ko-main">
+
 			<form method="post" action="" class="ko-flow" data-ko-flow novalidate>
 				<?php wp_nonce_field( 's247_kontakt_os', 's247_ko_nonce' ); ?>
 
@@ -166,6 +230,8 @@ get_header();
 					<span class="ko-dot" data-ko-dot="3"></span>
 				</div>
 			</form>
+				</div><!-- .ko-main -->
+			</div><!-- .ko-layout -->
 		<?php endif; ?>
 
 	</div>
