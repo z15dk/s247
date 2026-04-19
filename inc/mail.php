@@ -60,6 +60,22 @@ add_filter( 'wp_mail_from_name', function ( $name ) {
 	return $name;
 } );
 
+/* ─────────────────────────────────────────────────────────────
+ * Tillad Application Passwords uden HTTPS i udviklings-fasen.
+ * Sæt i wp-config.php:
+ *     define( 'S247_ALLOW_APP_PASSWORDS_HTTP', true );
+ *
+ * FJERN denne konstant når sitet har HTTPS live — det svækker
+ * sikkerheden at tillade REST-auth i klartekst.
+ * ───────────────────────────────────────────────────────────── */
+add_filter( 'wp_is_application_passwords_available', function ( $available ) {
+	if ( $available ) { return true; }
+	if ( defined( 'S247_ALLOW_APP_PASSWORDS_HTTP' ) && S247_ALLOW_APP_PASSWORDS_HTTP ) {
+		return true;
+	}
+	return $available;
+} );
+
 /* ───────── Admin: test-mail side under Værktøjer ───────── */
 add_action( 'admin_menu', function () {
 	add_submenu_page(
