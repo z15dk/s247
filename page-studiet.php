@@ -316,20 +316,34 @@ for ( $i = 1; $i <= 5; $i++ ) {
 				'orderby'        => 'rand',
 				'meta_query'     => array( array( 'key' => '_thumbnail_id', 'compare' => 'EXISTS' ) ),
 			) );
+			// Total antal varer til tælleren (viser samme uanset hvor mange der har billede)
+			$rent_total = (int) wp_count_posts( 'udlejning_item' )->publish;
 			?>
 			<aside class="studiet-book__aside">
-				<span class="studiet-book__aside-eyebrow"><?php esc_html_e( 'Psst — du kan også leje udstyr', 'studie247' ); ?></span>
+				<span class="studiet-book__aside-eyebrow">
+					<span class="studiet-book__pulse" aria-hidden="true"></span>
+					<?php esc_html_e( 'Psst — du kan også leje udstyr', 'studie247' ); ?>
+				</span>
 
 				<?php if ( ! empty( $rent_preview ) ) : ?>
 					<div class="studiet-book__thumbs">
-						<?php foreach ( $rent_preview as $item ) : ?>
+						<?php foreach ( $rent_preview as $item ) :
+							$pris_dag = get_post_meta( $item->ID, '_s247_pris_dag', true );
+						?>
 							<a class="studiet-book__thumb" href="<?php echo esc_url( get_permalink( $item ) ); ?>" title="<?php echo esc_attr( $item->post_title ); ?>">
 								<?php echo get_the_post_thumbnail( $item, 's247-square', array( 'loading' => 'lazy', 'alt' => $item->post_title ) ); ?>
+								<?php if ( $pris_dag ) : ?>
+									<span class="studiet-book__price"><?php echo esc_html( $pris_dag ); ?></span>
+								<?php endif; ?>
 							</a>
 						<?php endforeach; ?>
 					</div>
 					<p class="studiet-book__thumbs-lead">
-						<?php esc_html_e( 'Kameraer, lys, lyd og grip — klar fra dag til dag.', 'studie247' ); ?>
+						<?php if ( $rent_total > 0 ) : ?>
+							<strong class="studiet-book__count">+<?php echo (int) $rent_total; ?></strong>
+							<?php esc_html_e( 'varer klar', 'studie247' ); ?> —
+						<?php endif; ?>
+						<?php esc_html_e( 'kameraer, lys, lyd og grip fra dag til dag.', 'studie247' ); ?>
 					</p>
 				<?php elseif ( $book_psst ) : ?>
 					<p class="studiet-book__psst"><?php echo wp_kses_post( $book_psst ); ?></p>
