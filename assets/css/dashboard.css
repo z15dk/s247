@@ -1524,3 +1524,46 @@ a.sd-barlist__name:hover { color: var(--sd-accent); }
 	font-style: italic;
 	white-space: pre-line;
 }
+
+/* Form helpers brugt i bruger-modulet */
+.sd-form__row {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 12px;
+}
+@media (min-width: 720px) {
+	.sd-form__row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1100px) {
+	.sd-form__row { grid-template-columns: repeat(4, 1fr); }
+}
+.sd-form__actions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+	padding-top: 4px;
+}
+
+/* Brugere-modul */
+.sd-users-table th,
+.sd-users-table td { vertical-align: middle; }
+.sd-users-row td { border-bottom: 1px solid var(--sd-border-soft); }
+.sd-users-row.is-open td { border-bottom: 0; background: var(--sd-border-soft); }
+.sd-users-edit > td {
+	background: var(--sd-border-soft);
+	padding: 0 0 20px;
+}
+.sd-users-edit .sd-form {
+	padding: 16px 20px 4px;
+}
+.sd-users-delete {
+	padding: 0 20px;
+	margin-top: 12px;
+	border-top: 1px dashed var(--sd-border);
+	padding-top: 14px;
+}
+.sd-users-delete .sd-btn--danger {
+	padding: 8px 14px;
+	font-size: 13px;
+}

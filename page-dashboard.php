@@ -12,6 +12,110 @@
 nocache_headers();
 
 /**
+ * POST-handler: opret, opdatér eller slet brugere (admin-only).
+ */
+if ( isset( $_POST['s247_dash_user_action'] ) && is_user_logged_in() && current_user_can( 'manage_options' ) ) {
+	check_admin_referer( 's247_dash_users' );
+	$action = sanitize_key( $_POST['s247_dash_user_action'] );
+	$sections = array_keys( studie247_dash_sections() );
+
+	if ( 'create' === $action ) {
+		$email = sanitize_email( wp_unslash( $_POST['new_email'] ?? '' ) );
+		$first = sanitize_text_field( wp_unslash( $_POST['new_first_name'] ?? '' ) );
+		$last  = sanitize_text_field( wp_unslash( $_POST['new_last_name'] ?? '' ) );
+		$role  = sanitize_key( $_POST['new_role'] ?? 'editor' );
+		$send  = ! empty( $_POST['new_send_mail'] );
+		$perms = (array) ( $_POST['perms'] ?? array() );
+
+		if ( ! is_email( $email ) || email_exists( $email ) || username_exists( $email ) ) {
+			wp_safe_redirect( add_query_arg( array( 'view' => 'users', 'err' => 'exists' ), home_url( '/dashboard/' ) ) );
+			exit;
+		}
+		$pwd    = wp_generate_password( 14, true );
+		$new_id = wp_insert_user( array(
+			'user_login'   => $email,
+			'user_email'   => $email,
+			'user_pass'    => $pwd,
+			'first_name'   => $first,
+			'last_name'    => $last,
+			'display_name' => trim( $first . ' ' . $last ) ?: $email,
+			'role'         => in_array( $role, array( 'administrator', 'editor' ), true ) ? $role : 'editor',
+		) );
+		if ( is_wp_error( $new_id ) ) {
+			wp_safe_redirect( add_query_arg( array( 'view' => 'users', 'err' => 'create' ), home_url( '/dashboard/' ) ) );
+			exit;
+		}
+		// Sæt tilladelser
+		foreach ( $sections as $sec ) {
+			if ( in_array( $sec, $perms, true ) ) {
+				update_user_meta( $new_id, '_s247_dash_view_' . $sec, '1' );
+			}
+		}
+		// Send velkomst-mail
+		if ( $send ) {
+			$subject = __( 'Velkommen til Studie 247 dashboard', 'studie247' );
+			$body    = sprintf(
+				__( "Hej %s,\n\nDu har nu adgang til dashboardet på:\n%s\n\nBrugernavn: %s\nAdgangskode: %s\n\nLog ind og skift adgangskoden ved første besøg.\n\n— Studie 247", 'studie247' ),
+				$first ?: $email,
+				home_url( '/dashboard/' ),
+				$email,
+				$pwd
+			);
+			wp_mail( $email, $subject, $body );
+		}
+		if ( function_exists( 'studie247_audit_log' ) ) {
+			studie247_audit_log( sprintf( __( 'oprettede ny bruger %s (%s)', 'studie247' ), trim( $first . ' ' . $last ) ?: $email, $role ), $new_id, 'user' );
+		}
+		wp_safe_redirect( add_query_arg( array( 'view' => 'users', 'created' => $new_id ), home_url( '/dashboard/' ) ) );
+		exit;
+	}
+
+	if ( 'update' === $action ) {
+		$uid = (int) ( $_POST['user_id'] ?? 0 );
+		if ( ! $uid || $uid === get_current_user_id() && ! current_user_can( 'manage_options' ) ) {
+			wp_safe_redirect( add_query_arg( array( 'view' => 'users' ), home_url( '/dashboard/' ) ) );
+			exit;
+		}
+		$perms = (array) ( $_POST['perms'] ?? array() );
+		foreach ( $sections as $sec ) {
+			if ( in_array( $sec, $perms, true ) ) {
+				update_user_meta( $uid, '_s247_dash_view_' . $sec, '1' );
+			} else {
+				delete_user_meta( $uid, '_s247_dash_view_' . $sec );
+			}
+		}
+		// Opdatér rolle hvis angivet
+		if ( isset( $_POST['role'] ) ) {
+			$new_role = sanitize_key( $_POST['role'] );
+			if ( in_array( $new_role, array( 'administrator', 'editor' ), true ) ) {
+				$u = new WP_User( $uid );
+				$u->set_role( $new_role );
+			}
+		}
+		if ( function_exists( 'studie247_audit_log' ) ) {
+			$u = get_userdata( $uid );
+			studie247_audit_log( sprintf( __( 'opdaterede tilladelser for %s', 'studie247' ), $u ? $u->display_name : '#' . $uid ), $uid, 'user' );
+		}
+		wp_safe_redirect( add_query_arg( array( 'view' => 'users', 'saved' => '1' ), home_url( '/dashboard/' ) ) );
+		exit;
+	}
+
+	if ( 'delete' === $action ) {
+		$uid = (int) ( $_POST['user_id'] ?? 0 );
+		if ( $uid && $uid !== get_current_user_id() ) {
+			$u = get_userdata( $uid );
+			require_once ABSPATH . 'wp-admin/includes/user.php';
+			wp_delete_user( $uid );
+			if ( function_exists( 'studie247_audit_log' ) ) {
+				studie247_audit_log( sprintf( __( 'slettede bruger %s', 'studie247' ), $u ? $u->display_name : '#' . $uid ), $uid, 'user' );
+			}
+		}
+		wp_safe_redirect( add_query_arg( array( 'view' => 'users', 'deleted' => '1' ), home_url( '/dashboard/' ) ) );
+		exit;
+	}
+}
+
+/**
  * POST-handler: gem kunde-noter + kontakt-info i CRM.
  */
 if ( isset( $_POST['s247_dash_save_customer'] ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
@@ -418,9 +522,19 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 					<?php if ( $cust_count ) : ?><span class="sd-nav__badge sd-nav__badge--muted"><?php echo (int) $cust_count; ?></span><?php endif; ?>
 				</a>
 			<?php endif; ?>
-			<a class="sd-nav__item" href="<?php echo esc_url( admin_url() ); ?>">
-				<span class="sd-nav__dot"></span> <?php esc_html_e( 'WP-admin', 'studie247' ); ?>
-			</a>
+			<?php if ( current_user_can( 'manage_options' ) ) :
+				$user_total = count_users();
+			?>
+				<a class="sd-nav__item <?php echo 'users' === $current_view ? 'is-active' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/?view=users' ) ); ?>">
+					<span class="sd-nav__dot"></span> <?php esc_html_e( 'Brugere', 'studie247' ); ?>
+					<?php if ( ! empty( $user_total['total_users'] ) ) : ?><span class="sd-nav__badge sd-nav__badge--muted"><?php echo (int) $user_total['total_users']; ?></span><?php endif; ?>
+				</a>
+			<?php endif; ?>
+			<?php if ( current_user_can( 'manage_options' ) ) : ?>
+				<a class="sd-nav__item" href="<?php echo esc_url( admin_url() ); ?>">
+					<span class="sd-nav__dot"></span> <?php esc_html_e( 'WP-admin', 'studie247' ); ?>
+				</a>
+			<?php endif; ?>
 		</nav>
 
 		<div class="sd-side__footer">
@@ -446,6 +560,7 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 					'messages' => __( 'Dashboard / Beskeder', 'studie247' ),
 					'rental'   => __( 'Dashboard / Udlejning', 'studie247' ),
 					'crm'      => __( 'Dashboard / Kunder', 'studie247' ),
+					'users'    => __( 'Dashboard / Brugere', 'studie247' ),
 				);
 				$title_map = array(
 					'overview' => sprintf( __( 'Hej %s', 'studie247' ), $first_name ),
@@ -453,6 +568,7 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 					'messages' => __( 'Beskeder', 'studie247' ),
 					'rental'   => __( 'Udlejning', 'studie247' ),
 					'crm'      => __( 'Kunder / CRM', 'studie247' ),
+					'users'    => __( 'Brugere', 'studie247' ),
 				);
 				?>
 				<span class="sd-breadcrumb"><?php echo esc_html( $crumb_map[ $current_view ] ?? $crumb_map['overview'] ); ?></span>
@@ -463,7 +579,9 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 			</div>
 			<div class="sd-topbar__actions">
 				<a class="sd-btn sd-btn--ghost" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Se sitet', 'studie247' ); ?></a>
-				<a class="sd-btn sd-btn--ghost" href="<?php echo esc_url( admin_url() ); ?>"><?php esc_html_e( 'wp-admin', 'studie247' ); ?></a>
+				<?php if ( current_user_can( 'manage_options' ) ) : ?>
+					<a class="sd-btn sd-btn--ghost" href="<?php echo esc_url( admin_url() ); ?>"><?php esc_html_e( 'wp-admin', 'studie247' ); ?></a>
+				<?php endif; ?>
 			</div>
 		</header>
 
@@ -476,6 +594,8 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 			include STUDIE247_DIR . '/template-parts/dashboard-rental.php';
 		} elseif ( 'crm' === $current_view ) {
 			include STUDIE247_DIR . '/template-parts/dashboard-crm.php';
+		} elseif ( 'users' === $current_view && current_user_can( 'manage_options' ) ) {
+			include STUDIE247_DIR . '/template-parts/dashboard-users.php';
 		} else {
 			include STUDIE247_DIR . '/template-parts/dashboard-overview.php';
 		}

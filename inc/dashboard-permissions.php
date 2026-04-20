@@ -99,3 +99,25 @@ function studie247_save_dash_perms( $user_id ) {
 		}
 	}
 }
+
+/* ───────── Bloker wp-admin for ikke-admins ─────────
+ * Almindelige brugere skal bruge /dashboard/ — ikke wp-admin.
+ * Admin-ajax (fx frontend-kald) går stadig igennem.
+ */
+add_action( 'admin_init', 'studie247_block_non_admin_wp_admin' );
+function studie247_block_non_admin_wp_admin() {
+	if ( wp_doing_ajax() ) { return; }
+	if ( ! is_user_logged_in() ) { return; }
+	if ( current_user_can( 'manage_options' ) ) { return; }
+	wp_safe_redirect( home_url( '/dashboard/' ) );
+	exit;
+}
+
+/* Skjul admin-bar på frontend for ikke-admins. */
+add_filter( 'show_admin_bar', 'studie247_hide_admin_bar_for_non_admins' );
+function studie247_hide_admin_bar_for_non_admins( $show ) {
+	if ( is_user_logged_in() && ! current_user_can( 'manage_options' ) ) {
+		return false;
+	}
+	return $show;
+}
