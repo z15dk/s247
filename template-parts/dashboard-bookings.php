@@ -168,11 +168,22 @@ if ( $detail ) :
 					<header class="sd-panel__head"><h2><?php esc_html_e( 'Økonomi', 'studie247' ); ?></h2></header>
 					<div class="sd-form">
 						<label class="sd-field"><span><?php esc_html_e( 'Estimeret pris (kr)', 'studie247' ); ?></span>
-							<input type="number" name="_s247_estimated_price" value="<?php echo (int) $d_price; ?>" min="0" step="1"></label>
+							<input type="number" name="_s247_estimated_price" value="<?php echo (int) $d_price; ?>" min="0" step="1" <?php echo $d_internal ? 'disabled' : ''; ?>></label>
+						<label class="sd-toggle">
+							<input type="checkbox" name="_s247_internal" value="1" <?php checked( $d_internal ); ?>>
+							<span class="sd-toggle__track"><span class="sd-toggle__thumb"></span></span>
+							<span class="sd-toggle__label">
+								<strong><?php esc_html_e( 'Intern brug', 'studie247' ); ?></strong>
+								<em><?php esc_html_e( 'Nulstiller pris til 0 kr. Oprindelig pris gendannes når fluebenet fjernes.', 'studie247' ); ?></em>
+							</span>
+						</label>
+						<?php
+						$backup_price = (int) get_post_meta( $detail->ID, '_s247_estimated_price_original', true );
+						if ( $d_internal && $backup_price ) :
+						?>
+							<p class="sd-hint">💾 <?php printf( esc_html__( 'Oprindelig pris gemt: %s', 'studie247' ), esc_html( $fmt_dkk( $backup_price ) ) ); ?></p>
+						<?php endif; ?>
 					</div>
-					<?php if ( $d_internal ) : ?>
-						<p class="sd-hint">⚙ <?php esc_html_e( 'Markeret som intern brug. Brug wp-admin for at toggle flaget.', 'studie247' ); ?></p>
-					<?php endif; ?>
 				</div>
 			<?php endif; ?>
 

@@ -41,6 +41,14 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 		if ( isset( $_POST['_s247_estimated_price'] ) && ( studie247_can_view_dash( 'revenue' ) || current_user_can( 'manage_options' ) ) ) {
 			update_post_meta( $save_id, '_s247_estimated_price', max( 0, (int) $_POST['_s247_estimated_price'] ) );
 		}
+		// Intern brug: brug fælles helper så pris-backup/gendan matcher wp-admin-knappen.
+		if ( function_exists( 'studie247_apply_internal_state' ) ) {
+			$want_internal = ! empty( $_POST['_s247_internal'] );
+			$is_internal   = '1' === get_post_meta( $save_id, '_s247_internal', true );
+			if ( $want_internal !== $is_internal ) {
+				studie247_apply_internal_state( $save_id, $want_internal );
+			}
+		}
 		if ( isset( $_POST['_s247_post_status'] ) ) {
 			$new_status = sanitize_key( $_POST['_s247_post_status'] );
 			if ( in_array( $new_status, array( 'pending', 'publish', 'trash' ), true ) ) {
