@@ -34,10 +34,6 @@ $total_cats  = is_array( $categories ) ? count( $categories ) : 0;
 	<div class="shop-hero__bg" aria-hidden="true"></div>
 	<div class="wrap wrap--wide">
 		<div class="shop-hero__inner">
-			<span class="shop-hero__eyebrow">
-				<span class="shop-hero__pulse" aria-hidden="true"></span>
-				<?php esc_html_e( 'Udstyrs-udlejning', 'studie247' ); ?>
-			</span>
 			<h1 class="shop-hero__title">
 				<?php if ( $is_term_archive ) : ?>
 					<?php single_term_title(); ?>
