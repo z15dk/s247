@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 add_action( 'after_setup_theme', 'studie247_seed_team_bios', 20 );
 add_action( 'after_setup_theme', 'studie247_seed_demo_service', 25 );
+add_action( 'after_setup_theme', 'studie247_seed_dashboard_page', 30 );
 
 function studie247_seed_team_bios() {
 	$flag = 's247_team_bios_seeded_v1';
@@ -43,6 +44,36 @@ function studie247_seed_team_bios() {
 		set_theme_mod( "s247_team{$i}_modal_text", $bios[ $name ] );
 	}
 
+	update_option( $flag, time() );
+}
+
+/**
+ * Opret en 'Dashboard'-side med slug 'dashboard' og Dashboard-template
+ * hvis den ikke allerede findes.
+ */
+function studie247_seed_dashboard_page() {
+	$flag = 's247_dashboard_page_seeded_v1';
+	if ( get_option( $flag ) ) { return; }
+
+	$existing = get_page_by_path( 'dashboard' );
+	if ( ! $existing ) {
+		$page_id = wp_insert_post( array(
+			'post_type'    => 'page',
+			'post_status'  => 'publish',
+			'post_title'   => 'Dashboard',
+			'post_name'    => 'dashboard',
+			'post_content' => '',
+		) );
+		if ( $page_id && ! is_wp_error( $page_id ) ) {
+			update_post_meta( $page_id, '_wp_page_template', 'page-dashboard.php' );
+		}
+	} else {
+		// Sikr at template er sat hvis siden blev oprettet manuelt.
+		$current_template = get_post_meta( $existing->ID, '_wp_page_template', true );
+		if ( 'page-dashboard.php' !== $current_template ) {
+			update_post_meta( $existing->ID, '_wp_page_template', 'page-dashboard.php' );
+		}
+	}
 	update_option( $flag, time() );
 }
 
