@@ -247,7 +247,7 @@ if ( $detail ) :
 endif;
 
 /* ───── Månedskalender øverst ───── */
-$cal_ym = isset( $_GET['m'] ) ? sanitize_text_field( wp_unslash( $_GET['m'] ) ) : date( 'Y-m' );
+$cal_ym = isset( $_GET['cal_m'] ) ? sanitize_text_field( wp_unslash( $_GET['cal_m'] ) ) : date( 'Y-m' );
 if ( ! preg_match( '/^\d{4}-\d{2}$/', $cal_ym ) ) { $cal_ym = date( 'Y-m' ); }
 $cal_first_ts = strtotime( $cal_ym . '-01' );
 $cal_days     = (int) date( 't', $cal_first_ts );
@@ -291,11 +291,11 @@ foreach ( $cal_posts as $p ) {
 	<header class="sd-cal__head">
 		<div class="sd-cal__title"><?php echo esc_html( $cal_label ); ?></div>
 		<div class="sd-cal__nav">
-			<a class="sd-cal__arrow" href="<?php echo esc_url( add_query_arg( array( 'view' => 'bookings', 'm' => $cal_prev_ym ), home_url( '/dashboard/' ) ) ); ?>" aria-label="<?php esc_attr_e( 'Forrige måned', 'studie247' ); ?>">‹</a>
+			<a class="sd-cal__arrow" href="<?php echo esc_url( add_query_arg( array( 'view' => 'bookings', 'cal_m' => $cal_prev_ym ), home_url( '/dashboard/' ) ) ); ?>" aria-label="<?php esc_attr_e( 'Forrige måned', 'studie247' ); ?>">‹</a>
 			<?php if ( $cal_ym !== date( 'Y-m' ) ) : ?>
 				<a class="sd-cal__today" href="<?php echo esc_url( add_query_arg( array( 'view' => 'bookings' ), home_url( '/dashboard/' ) ) ); ?>"><?php esc_html_e( 'I dag', 'studie247' ); ?></a>
 			<?php endif; ?>
-			<a class="sd-cal__arrow" href="<?php echo esc_url( add_query_arg( array( 'view' => 'bookings', 'm' => $cal_next_ym ), home_url( '/dashboard/' ) ) ); ?>" aria-label="<?php esc_attr_e( 'Næste måned', 'studie247' ); ?>">›</a>
+			<a class="sd-cal__arrow" href="<?php echo esc_url( add_query_arg( array( 'view' => 'bookings', 'cal_m' => $cal_next_ym ), home_url( '/dashboard/' ) ) ); ?>" aria-label="<?php esc_attr_e( 'Næste måned', 'studie247' ); ?>">›</a>
 		</div>
 	</header>
 	<div class="sd-cal__weeknames" aria-hidden="true">
