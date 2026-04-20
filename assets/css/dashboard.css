@@ -1151,6 +1151,156 @@ a.sd-stat:hover {
 }
 
 /* Read-only besked (kundens oprindelige ord) */
+/* ─── Stats-block (oversigten) ─── */
+.sd-statsblock { margin-bottom: 16px; }
+
+.sd-ministats {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 1px;
+	background: var(--sd-border-soft);
+	border-bottom: 1px solid var(--sd-border-soft);
+}
+@media (min-width: 720px) {
+	.sd-ministats { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 1200px) {
+	.sd-ministats { grid-template-columns: repeat(6, 1fr); }
+}
+.sd-ministats > div {
+	padding: 14px 18px;
+	background: #FFF;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.sd-ministat__label {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--sd-ink-mute);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+.sd-ministat__num {
+	font-size: 22px;
+	font-weight: 700;
+	color: var(--sd-ink);
+	letter-spacing: -0.02em;
+	line-height: 1.1;
+}
+.sd-ministat__num--money { font-size: 17px; color: var(--sd-accent); }
+
+.sd-stats-row {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 8px;
+	padding: 18px 20px;
+}
+@media (min-width: 820px) {
+	.sd-stats-row { grid-template-columns: repeat(2, 1fr); gap: 28px; }
+}
+@media (min-width: 1200px) {
+	.sd-stats-row { grid-template-columns: repeat(3, 1fr); }
+}
+.sd-stats-h3 {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--sd-ink);
+	margin: 0 0 10px;
+	letter-spacing: -0.01em;
+}
+
+.sd-barlist {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.sd-barlist li {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 90px auto;
+	align-items: center;
+	gap: 10px;
+	font-size: 13px;
+}
+.sd-barlist__name {
+	color: var(--sd-ink);
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-decoration: none;
+}
+a.sd-barlist__name:hover { color: var(--sd-accent); }
+.sd-barlist__bar {
+	height: 6px;
+	background: var(--sd-border-soft);
+	border-radius: 999px;
+	overflow: hidden;
+	display: block;
+}
+.sd-barlist__bar > span {
+	display: block;
+	height: 100%;
+	background: var(--sd-accent);
+	border-radius: 999px;
+	transition: width 400ms ease-out;
+}
+.sd-barlist__val {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--sd-ink);
+	white-space: nowrap;
+}
+
+/* Ugedags-bars (lodret) */
+.sd-weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 6px;
+	align-items: end;
+	height: 140px;
+}
+.sd-weekday {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	height: 100%;
+	justify-content: flex-end;
+}
+.sd-weekday__bar {
+	width: 100%;
+	flex: 1;
+	display: flex;
+	align-items: flex-end;
+	background: var(--sd-border-soft);
+	border-radius: 4px;
+	overflow: hidden;
+	min-height: 6px;
+}
+.sd-weekday__bar > span {
+	display: block;
+	width: 100%;
+	background: var(--sd-accent);
+	border-radius: 4px;
+	transition: height 400ms ease-out;
+}
+.sd-weekday__num {
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--sd-ink);
+}
+.sd-weekday__name {
+	font-size: 10px;
+	color: var(--sd-ink-mute);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
 /* ─── Audit-log (seneste aktivitet) ─── */
 .sd-audit {
 	margin-top: 36px;

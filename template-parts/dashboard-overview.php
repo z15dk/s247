@@ -127,28 +127,231 @@ if ( ! isset( $has_any ) ) { return; }
 			</div>
 		<?php endif; ?>
 
-		<?php if ( $can_rental && ! empty( $top_products ) ) : ?>
-			<div class="sd-panel sd-panel--wide">
-				<header class="sd-panel__head">
-					<h2><?php esc_html_e( 'Mest udlejede varer', 'studie247' ); ?></h2>
-					<span class="sd-panel__hint"><?php esc_html_e( 'Top 5 alle tider', 'studie247' ); ?></span>
-				</header>
-				<table class="sd-table">
-					<thead>
-						<tr><th>#</th><th><?php esc_html_e( 'Vare', 'studie247' ); ?></th><th class="sd-table__right"><?php esc_html_e( 'Udlejninger', 'studie247' ); ?></th></tr>
-					</thead>
-					<tbody>
-						<?php $rank = 0; foreach ( $top_products as $pid => $cnt ) : $rank++; ?>
-							<tr onclick="window.location='<?php echo esc_url( get_edit_post_link( $pid ) ); ?>'">
-								<td class="sd-rank"><?php printf( '%02d', $rank ); ?></td>
-								<td><?php echo esc_html( get_the_title( $pid ) ); ?></td>
-								<td class="sd-table__right sd-mono"><?php echo (int) $cnt; ?></td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-			</div>
-		<?php endif; ?>
 	</section>
+
+	<?php
+	/* ───── Udlejnings-statistik ───── */
+	if ( $can_rental ) :
+		$duration_days_map = array( '1 dag'=>1,'2 dage'=>2,'3 dage'=>3,'4 dage'=>4,'1 uge'=>7,'2 uger'=>14 );
+		$today_ts = strtotime( date('Y-m-d') );
+		$month_st = date('Y-m-01');
+		$year_st  = date('Y-01-01');
+		$next_7   = strtotime( '+7 days' );
+
+		$rental_bookings = get_posts( array(
+			'post_type' => 'booking', 'posts_per_page' => -1,
+			'post_status' => array( 'pending', 'publish', 'trash' ),
+			'meta_query' => array( array( 'key' => '_s247_produkt_id', 'compare' => 'EXISTS' ) ),
+		) );
+		$r_total_count = count( $rental_bookings );
+		$r_approved = 0; $r_active = 0; $r_upcoming = 0; $r_completed = 0;
+		$r_rev_month = 0; $r_rev_year = 0;
+		$r_cat_revenue = array(); $r_cat_count = array(); $r_prod_count = array(); $r_mtd_count = 0;
+		foreach ( $rental_bookings as $b ) {
+			if ( 'publish' !== $b->post_status ) { continue; }
+			$r_approved++;
+			$pid   = (int) get_post_meta( $b->ID, '_s247_produkt_id', true );
+			$d     = get_post_meta( $b->ID, '_s247_date', true );
+			$dur   = get_post_meta( $b->ID, '_s247_duration', true );
+			$days  = $duration_days_map[ $dur ] ?? 1;
+			$price = (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
+			$start = $d ? strtotime( $d ) : 0;
+			$end   = $start ? strtotime( '+' . ( $days - 1 ) . ' days', $start ) : 0;
+			if ( $d && $d >= $month_st ) { $r_rev_month += $price; $r_mtd_count++; }
+			if ( $d && $d >= $year_st )  { $r_rev_year  += $price; }
+			if ( $start && $end ) {
+				if ( $end < $today_ts )                              { $r_completed++; }
+				elseif ( $start > $today_ts && $start <= $next_7 )    { $r_upcoming++; }
+				elseif ( $start <= $today_ts && $today_ts <= $end )   { $r_active++; }
+			}
+			if ( $pid ) {
+				$r_prod_count[ $pid ] = ( $r_prod_count[ $pid ] ?? 0 ) + 1;
+				$cats = get_the_terms( $pid, 'udlejning_kategori' );
+				if ( $cats && ! is_wp_error( $cats ) ) {
+					foreach ( $cats as $c ) {
+						$r_cat_revenue[ $c->name ] = ( $r_cat_revenue[ $c->name ] ?? 0 ) + $price;
+						$r_cat_count[ $c->name ]   = ( $r_cat_count[ $c->name ] ?? 0 ) + 1;
+					}
+				}
+			}
+		}
+		arsort( $r_prod_count ); arsort( $r_cat_count );
+		$r_top_items = array_slice( $r_prod_count, 0, 5, true );
+		$r_max_item  = $r_top_items ? max( $r_top_items ) : 1;
+		$r_max_cat   = $r_cat_count ? max( $r_cat_count ) : 1;
+	?>
+		<section class="sd-panel sd-panel--wide sd-statsblock">
+			<header class="sd-panel__head">
+				<h2><?php esc_html_e( 'Udlejnings-statistik', 'studie247' ); ?></h2>
+				<span class="sd-panel__hint"><?php printf( esc_html__( '%1$d forespørgsler · %2$d godkendte', 'studie247' ), (int) $r_total_count, (int) $r_approved ); ?></span>
+			</header>
+
+			<div class="sd-ministats">
+				<div><span class="sd-ministat__label"><?php esc_html_e( 'Aktive lige nu', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) $r_active; ?></span></div>
+				<div><span class="sd-ministat__label"><?php esc_html_e( 'Næste 7 dage', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) $r_upcoming; ?></span></div>
+				<div><span class="sd-ministat__label"><?php esc_html_e( 'Udlejet MTD', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) $r_mtd_count; ?></span></div>
+				<div><span class="sd-ministat__label"><?php esc_html_e( 'Gennemførte', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) $r_completed; ?></span></div>
+				<?php if ( $can_revenue ) : ?>
+					<div><span class="sd-ministat__label"><?php esc_html_e( 'Oms. MTD', 'studie247' ); ?></span><span class="sd-ministat__num sd-ministat__num--money"><?php echo esc_html( $fmt_dkk( $r_rev_month ) ); ?></span></div>
+					<div><span class="sd-ministat__label"><?php esc_html_e( 'Oms. YTD', 'studie247' ); ?></span><span class="sd-ministat__num sd-ministat__num--money"><?php echo esc_html( $fmt_dkk( $r_rev_year ) ); ?></span></div>
+				<?php endif; ?>
+			</div>
+
+			<div class="sd-stats-row">
+				<div class="sd-stats-col">
+					<h3 class="sd-stats-h3"><?php esc_html_e( 'Mest udlejede varer', 'studie247' ); ?></h3>
+					<?php if ( empty( $r_top_items ) ) : ?>
+						<p class="sd-muted"><?php esc_html_e( 'Ingen udlejninger endnu.', 'studie247' ); ?></p>
+					<?php else : ?>
+						<ol class="sd-barlist">
+							<?php foreach ( $r_top_items as $pid => $cnt ) : $pct = round( $cnt / $r_max_item * 100 ); ?>
+								<li>
+									<a class="sd-barlist__name" href="<?php echo esc_url( home_url( '/dashboard/?view=rental&item=' . $pid ) ); ?>"><?php echo esc_html( get_the_title( $pid ) ); ?></a>
+									<span class="sd-barlist__bar"><span style="width:<?php echo (int) $pct; ?>%;"></span></span>
+									<span class="sd-barlist__val"><?php echo (int) $cnt; ?></span>
+								</li>
+							<?php endforeach; ?>
+						</ol>
+					<?php endif; ?>
+				</div>
+
+				<div class="sd-stats-col">
+					<h3 class="sd-stats-h3"><?php esc_html_e( 'Kategorier', 'studie247' ); ?></h3>
+					<?php if ( empty( $r_cat_count ) ) : ?>
+						<p class="sd-muted">—</p>
+					<?php else : ?>
+						<ol class="sd-barlist">
+							<?php foreach ( $r_cat_count as $cname => $ccnt ) : $pct = round( $ccnt / $r_max_cat * 100 ); ?>
+								<li>
+									<span class="sd-barlist__name"><?php echo esc_html( $cname ); ?></span>
+									<span class="sd-barlist__bar"><span style="width:<?php echo (int) $pct; ?>%;"></span></span>
+									<span class="sd-barlist__val">
+										<?php echo (int) $ccnt; ?>
+										<?php if ( $can_revenue && isset( $r_cat_revenue[ $cname ] ) ) : ?>
+											<span class="sd-muted"> · <?php echo esc_html( $fmt_dkk( $r_cat_revenue[ $cname ] ) ); ?></span>
+										<?php endif; ?>
+									</span>
+								</li>
+							<?php endforeach; ?>
+						</ol>
+					<?php endif; ?>
+				</div>
+			</div>
+		</section>
+	<?php endif; ?>
+
+	<?php
+	/* ───── Studie-statistik ───── */
+	if ( $can_studio ) :
+		$studio_bookings = get_posts( array(
+			'post_type' => 'booking', 'posts_per_page' => -1,
+			'post_status' => array( 'pending', 'publish', 'trash' ),
+			'meta_query' => array(
+				'relation' => 'OR',
+				array( 'key' => '_s247_produkt', 'compare' => 'NOT EXISTS' ),
+				array( 'key' => '_s247_produkt', 'value' => '', 'compare' => '=' ),
+			),
+		) );
+		$s_total = count( $studio_bookings ); $s_approved = 0; $s_mtd = 0; $s_ytd = 0;
+		$s_rev_month = 0; $s_rev_year = 0;
+		$s_use_counts = array(); $s_edit_counts = array(); $s_dur_counts = array();
+		$s_weekday = array_fill( 1, 7, 0 );
+		$month_st = date('Y-m-01'); $year_st = date('Y-01-01');
+		$use_labels = array(
+			'podcast' => 'Podcast', 'kursusvideo' => 'Kursusvideo',
+			'undervisningsvideo' => 'Undervisningsvideo',
+			'some-content' => 'SoMe Content', 'annonce-video' => 'Annonce-video',
+		);
+		$wd_names = array( 1 => 'Man', 2 => 'Tir', 3 => 'Ons', 4 => 'Tor', 5 => 'Fre', 6 => 'Lør', 7 => 'Søn' );
+		foreach ( $studio_bookings as $b ) {
+			if ( 'publish' !== $b->post_status ) { continue; }
+			$s_approved++;
+			$d = get_post_meta( $b->ID, '_s247_date', true );
+			$p = (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
+			$use = get_post_meta( $b->ID, '_s247_use_type', true );
+			$edt = get_post_meta( $b->ID, '_s247_edit_type', true );
+			$dur = get_post_meta( $b->ID, '_s247_duration', true );
+			if ( $d && $d >= $month_st ) { $s_rev_month += $p; $s_mtd++; }
+			if ( $d && $d >= $year_st )  { $s_rev_year  += $p; $s_ytd++; }
+			if ( $use ) { $s_use_counts[ $use ] = ( $s_use_counts[ $use ] ?? 0 ) + 1; }
+			if ( $edt ) { $s_edit_counts[ $edt ] = ( $s_edit_counts[ $edt ] ?? 0 ) + 1; }
+			if ( $dur ) { $s_dur_counts[ $dur ] = ( $s_dur_counts[ $dur ] ?? 0 ) + 1; }
+			if ( $d ) { $s_weekday[ (int) date( 'N', strtotime( $d ) ) ]++; }
+		}
+		$s_max_use = $s_use_counts ? max( $s_use_counts ) : 1;
+		$s_max_wd  = max( max( $s_weekday ), 1 );
+		$s_red   = $s_edit_counts['redigering'] ?? 0;
+		$s_files = $s_edit_counts['kun-filer'] ?? 0;
+		$s_sum   = $s_red + $s_files;
+	?>
+		<section class="sd-panel sd-panel--wide sd-statsblock">
+			<header class="sd-panel__head">
+				<h2><?php esc_html_e( 'Studie-statistik', 'studie247' ); ?></h2>
+				<span class="sd-panel__hint"><?php printf( esc_html__( '%1$d bookinger · %2$d godkendte', 'studie247' ), (int) $s_total, (int) $s_approved ); ?></span>
+			</header>
+
+			<div class="sd-ministats">
+				<div><span class="sd-ministat__label"><?php esc_html_e( 'MTD', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) $s_mtd; ?></span></div>
+				<div><span class="sd-ministat__label"><?php esc_html_e( 'YTD', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) $s_ytd; ?></span></div>
+				<?php if ( $s_sum ) : ?>
+					<div><span class="sd-ministat__label"><?php esc_html_e( 'Vælger redigering', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) round( $s_red / $s_sum * 100 ); ?>%</span></div>
+				<?php endif; ?>
+				<?php if ( $can_revenue ) : ?>
+					<div><span class="sd-ministat__label"><?php esc_html_e( 'Oms. MTD', 'studie247' ); ?></span><span class="sd-ministat__num sd-ministat__num--money"><?php echo esc_html( $fmt_dkk( $s_rev_month ) ); ?></span></div>
+					<div><span class="sd-ministat__label"><?php esc_html_e( 'Oms. YTD', 'studie247' ); ?></span><span class="sd-ministat__num sd-ministat__num--money"><?php echo esc_html( $fmt_dkk( $s_rev_year ) ); ?></span></div>
+				<?php endif; ?>
+			</div>
+
+			<div class="sd-stats-row">
+				<div class="sd-stats-col">
+					<h3 class="sd-stats-h3"><?php esc_html_e( 'Booking-formål', 'studie247' ); ?></h3>
+					<?php if ( empty( $s_use_counts ) ) : ?>
+						<p class="sd-muted">—</p>
+					<?php else : ?>
+						<ol class="sd-barlist">
+							<?php foreach ( $s_use_counts as $k => $cnt ) : $pct = round( $cnt / $s_max_use * 100 ); ?>
+								<li>
+									<span class="sd-barlist__name"><?php echo esc_html( $use_labels[ $k ] ?? $k ); ?></span>
+									<span class="sd-barlist__bar"><span style="width:<?php echo (int) $pct; ?>%;"></span></span>
+									<span class="sd-barlist__val"><?php echo (int) $cnt; ?></span>
+								</li>
+							<?php endforeach; ?>
+						</ol>
+					<?php endif; ?>
+				</div>
+
+				<div class="sd-stats-col">
+					<h3 class="sd-stats-h3"><?php esc_html_e( 'Travleste ugedage', 'studie247' ); ?></h3>
+					<div class="sd-weekdays">
+						<?php foreach ( $wd_names as $wd_num => $wd_name ) :
+							$c = $s_weekday[ $wd_num ];
+							$h = max( 6, round( $c / $s_max_wd * 100 ) );
+						?>
+							<div class="sd-weekday">
+								<div class="sd-weekday__bar"><span style="height:<?php echo (int) $h; ?>%;"></span></div>
+								<span class="sd-weekday__num"><?php echo (int) $c; ?></span>
+								<span class="sd-weekday__name"><?php echo esc_html( $wd_name ); ?></span>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+
+				<?php if ( ! empty( $s_dur_counts ) ) : ?>
+					<div class="sd-stats-col">
+						<h3 class="sd-stats-h3"><?php esc_html_e( 'Varighed', 'studie247' ); ?></h3>
+						<ol class="sd-barlist">
+							<?php $s_max_dur = max( $s_dur_counts ); foreach ( $s_dur_counts as $k => $cnt ) : $pct = round( $cnt / $s_max_dur * 100 ); ?>
+								<li>
+									<span class="sd-barlist__name"><?php echo esc_html( $k ); ?></span>
+									<span class="sd-barlist__bar"><span style="width:<?php echo (int) $pct; ?>%;"></span></span>
+									<span class="sd-barlist__val"><?php echo (int) $cnt; ?></span>
+								</li>
+							<?php endforeach; ?>
+						</ol>
+					</div>
+				<?php endif; ?>
+			</div>
+		</section>
+	<?php endif; ?>
 
 <?php endif;
