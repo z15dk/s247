@@ -12,6 +12,71 @@
 nocache_headers();
 
 /**
+ * POST-handler: gem kunde-noter + kontakt-info i CRM.
+ */
+if ( isset( $_POST['s247_dash_save_customer'] ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+	$cid = (int) $_POST['s247_dash_save_customer'];
+	if ( $cid && check_admin_referer( 's247_dash_cust_' . $cid ) && 's247_customer' === get_post_type( $cid ) ) {
+		$text_fields = array( '_s247_cust_name', '_s247_cust_email', '_s247_cust_phone', '_s247_cust_company', '_s247_cust_cvr' );
+		foreach ( $text_fields as $k ) {
+			if ( isset( $_POST[ $k ] ) ) {
+				update_post_meta( $cid, $k, sanitize_text_field( wp_unslash( $_POST[ $k ] ) ) );
+			}
+		}
+		if ( isset( $_POST['_s247_cust_notes'] ) ) {
+			update_post_meta( $cid, '_s247_cust_notes', sanitize_textarea_field( wp_unslash( $_POST['_s247_cust_notes'] ) ) );
+		}
+		// Opdater title til nyeste navn
+		$new_name = get_post_meta( $cid, '_s247_cust_name', true );
+		if ( $new_name ) { wp_update_post( array( 'ID' => $cid, 'post_title' => $new_name ) ); }
+
+		if ( function_exists( 'studie247_audit_log' ) ) {
+			studie247_audit_log( sprintf( __( 'opdaterede kunde %s', 'studie247' ), $new_name ?: get_the_title( $cid ) ), $cid, 's247_customer' );
+		}
+
+		wp_safe_redirect( add_query_arg(
+			array( 'view' => 'crm', 'customer' => $cid, 'saved' => '1' ),
+			home_url( '/dashboard/' )
+		) );
+		exit;
+	}
+}
+
+/**
+ * POST-handler: tilføj en logpost (intern besked) på en kunde.
+ */
+if ( isset( $_POST['s247_dash_cust_log'] ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+	$cid = (int) $_POST['s247_dash_cust_log'];
+	if ( $cid && check_admin_referer( 's247_dash_cust_log_' . $cid ) && 's247_customer' === get_post_type( $cid ) ) {
+		$log_text = sanitize_textarea_field( wp_unslash( $_POST['log_text'] ?? '' ) );
+		if ( $log_text ) {
+			$entries = get_post_meta( $cid, '_s247_cust_log', true );
+			if ( ! is_array( $entries ) ) { $entries = array(); }
+			$uid = get_current_user_id();
+			$u   = $uid ? get_userdata( $uid ) : null;
+			array_unshift( $entries, array(
+				'time'      => current_time( 'mysql' ),
+				'user_id'   => $uid,
+				'user_name' => $u ? $u->display_name : '',
+				'text'      => $log_text,
+			) );
+			// Keep last 200 entries
+			$entries = array_slice( $entries, 0, 200 );
+			update_post_meta( $cid, '_s247_cust_log', $entries );
+
+			if ( function_exists( 'studie247_audit_log' ) ) {
+				studie247_audit_log( sprintf( __( 'tilføjede note på kunde %s', 'studie247' ), get_the_title( $cid ) ), $cid, 's247_customer' );
+			}
+		}
+		wp_safe_redirect( add_query_arg(
+			array( 'view' => 'crm', 'customer' => $cid ),
+			home_url( '/dashboard/' )
+		) );
+		exit;
+	}
+}
+
+/**
  * POST-handler: gem redigerede felter på en udlejnings-vare (udlejning_item).
  * Varer er vores egne data, så alle felter er editerbare.
  */
@@ -345,6 +410,14 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 					<?php if ( $unhandled ) : ?><span class="sd-nav__badge"><?php echo (int) $unhandled; ?></span><?php endif; ?>
 				</a>
 			<?php endif; ?>
+			<?php if ( studie247_can_view_dash( 'customers' ) || current_user_can( 'manage_options' ) ) :
+				$cust_count = (int) wp_count_posts( 's247_customer' )->publish;
+			?>
+				<a class="sd-nav__item <?php echo 'crm' === $current_view ? 'is-active' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/?view=crm' ) ); ?>">
+					<span class="sd-nav__dot"></span> <?php esc_html_e( 'Kunder (CRM)', 'studie247' ); ?>
+					<?php if ( $cust_count ) : ?><span class="sd-nav__badge sd-nav__badge--muted"><?php echo (int) $cust_count; ?></span><?php endif; ?>
+				</a>
+			<?php endif; ?>
 			<a class="sd-nav__item" href="<?php echo esc_url( admin_url() ); ?>">
 				<span class="sd-nav__dot"></span> <?php esc_html_e( 'WP-admin', 'studie247' ); ?>
 			</a>
@@ -372,12 +445,14 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 					'bookings' => __( 'Dashboard / Studie-bookinger', 'studie247' ),
 					'messages' => __( 'Dashboard / Beskeder', 'studie247' ),
 					'rental'   => __( 'Dashboard / Udlejning', 'studie247' ),
+					'crm'      => __( 'Dashboard / Kunder', 'studie247' ),
 				);
 				$title_map = array(
 					'overview' => sprintf( __( 'Hej %s', 'studie247' ), $first_name ),
 					'bookings' => __( 'Studie-bookinger', 'studie247' ),
 					'messages' => __( 'Beskeder', 'studie247' ),
 					'rental'   => __( 'Udlejning', 'studie247' ),
+					'crm'      => __( 'Kunder / CRM', 'studie247' ),
 				);
 				?>
 				<span class="sd-breadcrumb"><?php echo esc_html( $crumb_map[ $current_view ] ?? $crumb_map['overview'] ); ?></span>
@@ -399,6 +474,8 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 			include STUDIE247_DIR . '/template-parts/dashboard-messages.php';
 		} elseif ( 'rental' === $current_view ) {
 			include STUDIE247_DIR . '/template-parts/dashboard-rental.php';
+		} elseif ( 'crm' === $current_view ) {
+			include STUDIE247_DIR . '/template-parts/dashboard-crm.php';
 		} else {
 			include STUDIE247_DIR . '/template-parts/dashboard-overview.php';
 		}

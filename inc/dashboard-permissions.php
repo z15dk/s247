@@ -24,11 +24,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function studie247_dash_sections() {
 	return array(
-		'rental'   => __( 'Udlejning (stats + top-varer)', 'studie247' ),
-		'studio'   => __( 'Studie-bookinger', 'studie247' ),
-		'messages' => __( 'Kontakt-beskeder', 'studie247' ),
-		'revenue'  => __( 'Omsætning (måned/år)', 'studie247' ),
-		'pending'  => __( 'Afventende forespørgsler', 'studie247' ),
+		'rental'    => __( 'Udlejning (stats + top-varer)', 'studie247' ),
+		'studio'    => __( 'Studie-bookinger', 'studie247' ),
+		'messages'  => __( 'Kontakt-beskeder', 'studie247' ),
+		'revenue'   => __( 'Omsætning (måned/år)', 'studie247' ),
+		'pending'   => __( 'Afventende forespørgsler', 'studie247' ),
+		'customers' => __( 'Kunder (CRM)', 'studie247' ),
 	);
 }
 

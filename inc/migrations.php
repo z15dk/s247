@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_action( 'after_setup_theme', 'studie247_seed_team_bios', 20 );
 add_action( 'after_setup_theme', 'studie247_seed_demo_service', 25 );
 add_action( 'after_setup_theme', 'studie247_seed_dashboard_page', 30 );
+add_action( 'after_setup_theme', 'studie247_backfill_customers', 35 );
 
 function studie247_seed_team_bios() {
 	$flag = 's247_team_bios_seeded_v1';
@@ -42,6 +43,52 @@ function studie247_seed_team_bios() {
 			continue; // Respektér eksisterende bio.
 		}
 		set_theme_mod( "s247_team{$i}_modal_text", $bios[ $name ] );
+	}
+
+	update_option( $flag, time() );
+}
+
+/**
+ * Engangs-backfill: kør alle eksisterende bookinger + beskeder
+ * gennem customer_upsert() så CRM-arkivet starter med fuld historik.
+ */
+function studie247_backfill_customers() {
+	$flag = 's247_customers_backfilled_v1';
+	if ( get_option( $flag ) ) { return; }
+	if ( ! function_exists( 'studie247_customer_upsert' ) ) { return; }
+
+	$bookings = get_posts( array(
+		'post_type'      => 'booking',
+		'post_status'    => array( 'pending', 'publish', 'trash' ),
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+	) );
+	foreach ( $bookings as $bid ) {
+		if ( get_post_meta( $bid, '_s247_cust_id', true ) ) { continue; }
+		$cid = studie247_customer_upsert( array(
+			'name'    => get_post_meta( $bid, '_s247_name', true ),
+			'email'   => get_post_meta( $bid, '_s247_email', true ),
+			'phone'   => get_post_meta( $bid, '_s247_phone', true ),
+			'company' => get_post_meta( $bid, '_s247_company', true ),
+			'cvr'     => get_post_meta( $bid, '_s247_cvr', true ),
+		) );
+		if ( $cid ) { update_post_meta( $bid, '_s247_cust_id', $cid ); }
+	}
+
+	$msgs = get_posts( array(
+		'post_type'      => 'kontakt_besked',
+		'post_status'    => array( 'publish', 'trash' ),
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+	) );
+	foreach ( $msgs as $mid ) {
+		if ( get_post_meta( $mid, '_s247_cust_id', true ) ) { continue; }
+		$cid = studie247_customer_upsert( array(
+			'name'  => get_post_meta( $mid, '_s247_name', true ),
+			'email' => get_post_meta( $mid, '_s247_email', true ),
+			'phone' => get_post_meta( $mid, '_s247_phone', true ),
+		) );
+		if ( $cid ) { update_post_meta( $mid, '_s247_cust_id', $cid ); }
 	}
 
 	update_option( $flag, time() );
