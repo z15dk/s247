@@ -8,15 +8,48 @@
 get_header();
 
 $intro = get_theme_mod( 's247_om_intro' );
+
+$hero_video   = get_theme_mod( 's247_om_hero_video', '' );
+$hero_poster  = get_theme_mod( 's247_om_hero_poster', '' );
+$hero_eyebrow = get_theme_mod( 's247_om_hero_eyebrow', 'Om Studie 247' );
+$hero_title_a = get_theme_mod( 's247_om_hero_title_a', 'Bag kameraet er' );
+$hero_title_b = get_theme_mod( 's247_om_hero_title_b', 'rigtige mennesker' );
+$hero_lead    = get_theme_mod( 's247_om_hero_lead',    'Vi er et lille hold med store ambitioner — og en fælles drøm om at gøre dit indhold bedre.' );
 ?>
+
+<section class="studiet-hero om-hero">
+	<div class="studiet-hero__media" aria-hidden="true">
+		<?php if ( $hero_video ) : ?>
+			<video autoplay muted loop playsinline poster="<?php echo esc_url( $hero_poster ); ?>">
+				<source src="<?php echo esc_url( $hero_video ); ?>" type="video/mp4">
+			</video>
+		<?php elseif ( $hero_poster ) : ?>
+			<img src="<?php echo esc_url( $hero_poster ); ?>" alt="" loading="eager" fetchpriority="high">
+		<?php else : ?>
+			<div class="studiet-hero__placeholder"></div>
+		<?php endif; ?>
+		<div class="studiet-hero__overlay"></div>
+	</div>
+	<div class="wrap wrap--wide studiet-hero__content">
+		<?php if ( $hero_eyebrow ) : ?>
+			<span class="eyebrow eyebrow--on-dark"><?php echo esc_html( $hero_eyebrow ); ?></span>
+		<?php endif; ?>
+		<h1 class="studiet-hero__title">
+			<?php echo esc_html( $hero_title_a ); ?> <em><?php echo esc_html( $hero_title_b ); ?></em>
+		</h1>
+		<?php if ( $hero_lead ) : ?>
+			<p class="studiet-hero__lead"><?php echo wp_kses_post( $hero_lead ); ?></p>
+		<?php endif; ?>
+	</div>
+</section>
 
 <section class="section">
 	<div class="wrap wrap--tight">
 		<header class="section-head">
 			<span class="eyebrow"><?php esc_html_e( 'Om Studie 247', 'studie247' ); ?></span>
-			<h1 class="section-head__title">
+			<h2 class="section-head__title">
 				<?php esc_html_e( 'Simpelt.', 'studie247' ); ?> <em><?php esc_html_e( 'Professionelt.', 'studie247' ); ?></em> <?php esc_html_e( 'Menneskeligt.', 'studie247' ); ?>
-			</h1>
+			</h2>
 			<?php if ( $intro ) : ?>
 				<p class="section-head__lead"><?php echo wp_kses_post( $intro ); ?></p>
 			<?php else : ?>

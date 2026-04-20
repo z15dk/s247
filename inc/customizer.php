@@ -355,6 +355,39 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		'type'        => 'textarea',
 	) );
 
+	/* Hero-video + tekst øverst på Om-siden */
+	$om_hero_fields = array(
+		's247_om_hero_video'     => array( 'label' => 'Hero — video (MP4 URL)',        'type' => 'url',      'default' => '' ),
+		's247_om_hero_poster'    => array( 'label' => 'Hero — poster/fallback-billede', 'type' => 'image',    'default' => '' ),
+		's247_om_hero_eyebrow'   => array( 'label' => 'Hero — eyebrow',                 'type' => 'text',     'default' => 'Om Studie 247' ),
+		's247_om_hero_title_a'   => array( 'label' => 'Hero — overskrift del 1 (sans)', 'type' => 'text',     'default' => 'Bag kameraet er' ),
+		's247_om_hero_title_b'   => array( 'label' => 'Hero — overskrift del 2 (kursiv)','type' => 'text',     'default' => 'rigtige mennesker' ),
+		's247_om_hero_lead'      => array( 'label' => 'Hero — under-tekst',             'type' => 'textarea', 'default' => 'Vi er et lille hold med store ambitioner — og en fælles drøm om at gøre dit indhold bedre.' ),
+	);
+	foreach ( $om_hero_fields as $key => $cfg ) {
+		$sanitize = 'sanitize_text_field';
+		if ( 'textarea' === $cfg['type'] ) { $sanitize = 'wp_kses_post'; }
+		elseif ( 'url' === $cfg['type'] )  { $sanitize = 'esc_url_raw'; }
+		elseif ( 'image' === $cfg['type'] ){ $sanitize = 'esc_url_raw'; }
+		$wp_customize->add_setting( $key, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => $sanitize,
+			'transport'         => 'refresh',
+		) );
+		if ( 'image' === $cfg['type'] ) {
+			$wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $key, array(
+				'label'   => $cfg['label'],
+				'section' => 's247_om',
+			) ) );
+		} else {
+			$wp_customize->add_control( $key, array(
+				'label'   => $cfg['label'],
+				'section' => 's247_om',
+				'type'    => 'textarea' === $cfg['type'] ? 'textarea' : ( 'url' === $cfg['type'] ? 'url' : 'text' ),
+			) );
+		}
+	}
+
 	/* Manifest-block (3 principper) + stats-strip */
 	$om_extra_fields = array(
 		's247_om_manifest_eyebrow'  => array( 'label' => 'Manifest — eyebrow',     'type' => 'text',     'default' => 'Vores principper' ),
