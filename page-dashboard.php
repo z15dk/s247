@@ -12,6 +12,77 @@
 nocache_headers();
 
 /**
+ * CSV-eksport af alle kunder (admin + edit_posts med CRM-adgang).
+ * Streames direkte og exit — kører før enhver anden output.
+ */
+if ( isset( $_GET['export'] ) && 'customers_csv' === $_GET['export']
+	&& is_user_logged_in() && current_user_can( 'edit_posts' )
+	&& ( studie247_can_view_dash( 'customers' ) || current_user_can( 'manage_options' ) )
+) {
+	check_admin_referer( 's247_export_customers' );
+
+	$customers = get_posts( array(
+		'post_type'      => 's247_customer',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'orderby'        => 'title',
+		'order'          => 'ASC',
+	) );
+
+	$filename = 'studie247-kunder-' . date( 'Y-m-d' ) . '.csv';
+	nocache_headers();
+	header( 'Content-Type: text/csv; charset=UTF-8' );
+	header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+
+	$out = fopen( 'php://output', 'w' );
+	// BOM for at Excel åbner æøå korrekt.
+	fwrite( $out, "\xEF\xBB\xBF" );
+
+	fputcsv( $out, array(
+		'Navn', 'E-mail', 'Telefon', 'Virksomhed', 'CVR',
+		'Nyhedsbrev', 'Nyhedsbrev_tilmeldt',
+		'Antal_bookinger', 'Antal_beskeder', 'Forbrug_DKK',
+		'Første_gang', 'Sidst_set', 'Interne_noter',
+	), ';' );
+
+	foreach ( $customers as $c ) {
+		$spend = 0;
+		if ( function_exists( 'studie247_customer_activity' ) ) {
+			$act = studie247_customer_activity( $c->ID );
+			foreach ( $act['bookings'] as $b ) {
+				if ( 'publish' === $b->post_status ) {
+					$spend += (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
+				}
+			}
+			$bk = count( $act['bookings'] );
+			$ms = count( $act['messages'] );
+		} else {
+			$bk = $ms = 0;
+		}
+
+		fputcsv( $out, array(
+			get_post_meta( $c->ID, '_s247_cust_name', true ),
+			get_post_meta( $c->ID, '_s247_cust_email', true ),
+			get_post_meta( $c->ID, '_s247_cust_phone', true ),
+			get_post_meta( $c->ID, '_s247_cust_company', true ),
+			get_post_meta( $c->ID, '_s247_cust_cvr', true ),
+			'1' === get_post_meta( $c->ID, '_s247_cust_newsletter', true ) ? 'Ja' : 'Nej',
+			get_post_meta( $c->ID, '_s247_cust_newsletter_ts', true ),
+			$bk, $ms, $spend,
+			get_post_meta( $c->ID, '_s247_cust_first_seen', true ),
+			get_post_meta( $c->ID, '_s247_cust_last_seen', true ),
+			str_replace( array( "\r", "\n" ), ' / ', (string) get_post_meta( $c->ID, '_s247_cust_notes', true ) ),
+		), ';' );
+	}
+	fclose( $out );
+
+	if ( function_exists( 'studie247_audit_log' ) ) {
+		studie247_audit_log( __( 'eksporterede kunde-CSV', 'studie247' ), 0, 's247_customer' );
+	}
+	exit;
+}
+
+/**
  * POST-handler: opret, opdatér eller slet brugere (admin-only).
  */
 if ( isset( $_POST['s247_dash_user_action'] ) && is_user_logged_in() && current_user_can( 'manage_options' ) ) {

@@ -28,6 +28,8 @@ if ( $cust ) :
 	$c_last    = get_post_meta( $cust->ID, '_s247_cust_last_seen', true );
 	$c_log     = get_post_meta( $cust->ID, '_s247_cust_log', true );
 	if ( ! is_array( $c_log ) ) { $c_log = array(); }
+	$c_news    = '1' === get_post_meta( $cust->ID, '_s247_cust_newsletter', true );
+	$c_news_ts = get_post_meta( $cust->ID, '_s247_cust_newsletter_ts', true );
 
 	$activity = studie247_customer_activity( $cust->ID );
 	$total_spend = 0;
@@ -110,6 +112,19 @@ if ( $cust ) :
 						<?php if ( $can_revenue ) : ?>
 							<div class="sd-crm-stat"><span><?php esc_html_e( 'Forbrugt hos os', 'studie247' ); ?></span><strong><?php echo esc_html( $fmt_dkk( $total_spend ) ); ?></strong></div>
 						<?php endif; ?>
+						<div class="sd-crm-stat">
+							<span><?php esc_html_e( 'Nyhedsbrev', 'studie247' ); ?></span>
+							<strong>
+								<?php if ( $c_news ) : ?>
+									<span class="sd-badge sd-badge--accent">✓ <?php esc_html_e( 'Tilmeldt', 'studie247' ); ?></span>
+									<?php if ( $c_news_ts ) : ?>
+										<div class="sd-muted" style="font-size:11px;font-weight:400;margin-top:2px;"><?php echo esc_html( mysql2date( 'j. M Y', $c_news_ts ) ); ?></div>
+									<?php endif; ?>
+								<?php else : ?>
+									<span class="sd-muted"><?php esc_html_e( 'Ikke tilmeldt', 'studie247' ); ?></span>
+								<?php endif; ?>
+							</strong>
+						</div>
 					</div>
 				</div>
 			</aside>
@@ -244,6 +259,15 @@ $total = (int) wp_count_posts( 's247_customer' )->publish;
 		<input type="search" name="q" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Søg navn, email, virksomhed …', 'studie247' ); ?>">
 		<button type="submit" class="sd-search__btn" aria-label="<?php esc_attr_e( 'Søg', 'studie247' ); ?>">⌕</button>
 	</form>
+	<?php
+	$export_url = wp_nonce_url(
+		add_query_arg( array( 'export' => 'customers_csv' ), home_url( '/dashboard/' ) ),
+		's247_export_customers'
+	);
+	?>
+	<a class="sd-btn sd-btn--ghost" href="<?php echo esc_url( $export_url ); ?>" title="<?php esc_attr_e( 'Download CSV med alle kunder', 'studie247' ); ?>">
+		⬇ <?php esc_html_e( 'Eksportér CSV', 'studie247' ); ?>
+	</a>
 </div>
 
 <div class="sd-panel">
@@ -256,6 +280,7 @@ $total = (int) wp_count_posts( 's247_customer' )->publish;
 					<th><?php esc_html_e( 'Kunde', 'studie247' ); ?></th>
 					<th><?php esc_html_e( 'Kontakt', 'studie247' ); ?></th>
 					<th><?php esc_html_e( 'Aktivitet', 'studie247' ); ?></th>
+					<th><?php esc_html_e( 'Nyhedsbrev', 'studie247' ); ?></th>
 					<?php if ( $can_revenue ) : ?><th class="sd-table__right"><?php esc_html_e( 'Forbrug', 'studie247' ); ?></th><?php endif; ?>
 					<th><?php esc_html_e( 'Sidst set', 'studie247' ); ?></th>
 				</tr>
@@ -267,6 +292,7 @@ $total = (int) wp_count_posts( 's247_customer' )->publish;
 					$c_phone   = get_post_meta( $c->ID, '_s247_cust_phone', true );
 					$c_company = get_post_meta( $c->ID, '_s247_cust_company', true );
 					$c_last    = get_post_meta( $c->ID, '_s247_cust_last_seen', true );
+					$c_news    = '1' === get_post_meta( $c->ID, '_s247_cust_newsletter', true );
 
 					$activity = studie247_customer_activity( $c->ID );
 					$bk_count = count( $activity['bookings'] );
@@ -294,6 +320,13 @@ $total = (int) wp_count_posts( 's247_customer' )->publish;
 						</td>
 						<td class="sd-muted">
 							<?php printf( esc_html__( '%1$d bookinger · %2$d beskeder', 'studie247' ), (int) $bk_count, (int) $ms_count ); ?>
+						</td>
+						<td>
+							<?php if ( $c_news ) : ?>
+								<span class="sd-badge sd-badge--accent">✓ <?php esc_html_e( 'Ja tak', 'studie247' ); ?></span>
+							<?php else : ?>
+								<span class="sd-muted">—</span>
+							<?php endif; ?>
 						</td>
 						<?php if ( $can_revenue ) : ?>
 							<td class="sd-table__right sd-mono"><?php echo $spend ? esc_html( $fmt_dkk( $spend ) ) : '—'; ?></td>

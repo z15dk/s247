@@ -37,11 +37,13 @@ add_action( 'init', function () {
  * @return int kunde-post-ID eller 0 hvis intet kunne identificere personen.
  */
 function studie247_customer_upsert( $data ) {
-	$name    = sanitize_text_field( $data['name']    ?? '' );
-	$email   = sanitize_email(      $data['email']   ?? '' );
-	$phone   = sanitize_text_field( $data['phone']   ?? '' );
-	$company = sanitize_text_field( $data['company'] ?? '' );
-	$cvr     = preg_replace( '/\D/', '', (string) ( $data['cvr'] ?? '' ) );
+	$name       = sanitize_text_field( $data['name']    ?? '' );
+	$email      = sanitize_email(      $data['email']   ?? '' );
+	$phone      = sanitize_text_field( $data['phone']   ?? '' );
+	$company    = sanitize_text_field( $data['company'] ?? '' );
+	$cvr        = preg_replace( '/\D/', '', (string) ( $data['cvr'] ?? '' ) );
+	$newsletter = '1' === (string) ( $data['newsletter'] ?? '' );
+	$news_ts    = sanitize_text_field( $data['newsletter_ts'] ?? '' );
 
 	// Email er primær nøgle. Uden email forsøger vi phone.
 	if ( ! $email && ! $phone ) { return 0; }
@@ -85,6 +87,15 @@ function studie247_customer_upsert( $data ) {
 	if ( $company && $company !== get_post_meta( $existing, '_s247_cust_company', true ) ) { update_post_meta( $existing, '_s247_cust_company', $company ); }
 	if ( $cvr     && $cvr     !== get_post_meta( $existing, '_s247_cust_cvr',     true ) ) { update_post_meta( $existing, '_s247_cust_cvr',     $cvr ); }
 
+	// Nyhedsbrev: opgradér kun — aldrig overskriv '1' tilbage til '0' automatisk.
+	// Kunden afmelder manuelt via admin eller via dedikeret flow.
+	if ( $newsletter ) {
+		if ( '1' !== get_post_meta( $existing, '_s247_cust_newsletter', true ) ) {
+			update_post_meta( $existing, '_s247_cust_newsletter', '1' );
+			update_post_meta( $existing, '_s247_cust_newsletter_ts', $news_ts ?: current_time( 'mysql' ) );
+		}
+	}
+
 	// Hvis kundens titel stadig er email/phone, og vi nu har et navn, opgrader title.
 	if ( $name ) {
 		$title = get_the_title( $existing );
@@ -105,11 +116,13 @@ function studie247_customer_upsert( $data ) {
 add_action( 'save_post_booking', function ( $post_id, $post, $update ) {
 	if ( wp_is_post_revision( $post_id ) || 'auto-draft' === $post->post_status ) { return; }
 	$cid = studie247_customer_upsert( array(
-		'name'    => get_post_meta( $post_id, '_s247_name', true ),
-		'email'   => get_post_meta( $post_id, '_s247_email', true ),
-		'phone'   => get_post_meta( $post_id, '_s247_phone', true ),
-		'company' => get_post_meta( $post_id, '_s247_company', true ),
-		'cvr'     => get_post_meta( $post_id, '_s247_cvr', true ),
+		'name'          => get_post_meta( $post_id, '_s247_name', true ),
+		'email'         => get_post_meta( $post_id, '_s247_email', true ),
+		'phone'         => get_post_meta( $post_id, '_s247_phone', true ),
+		'company'       => get_post_meta( $post_id, '_s247_company', true ),
+		'cvr'           => get_post_meta( $post_id, '_s247_cvr', true ),
+		'newsletter'    => get_post_meta( $post_id, '_s247_newsletter_optin', true ),
+		'newsletter_ts' => get_post_meta( $post_id, '_s247_newsletter_optin_timestamp', true ),
 	) );
 	if ( $cid ) {
 		update_post_meta( $post_id, '_s247_cust_id', $cid );
@@ -119,9 +132,11 @@ add_action( 'save_post_booking', function ( $post_id, $post, $update ) {
 add_action( 'save_post_kontakt_besked', function ( $post_id, $post, $update ) {
 	if ( wp_is_post_revision( $post_id ) || 'auto-draft' === $post->post_status ) { return; }
 	$cid = studie247_customer_upsert( array(
-		'name'  => get_post_meta( $post_id, '_s247_name', true ),
-		'email' => get_post_meta( $post_id, '_s247_email', true ),
-		'phone' => get_post_meta( $post_id, '_s247_phone', true ),
+		'name'          => get_post_meta( $post_id, '_s247_name', true ),
+		'email'         => get_post_meta( $post_id, '_s247_email', true ),
+		'phone'         => get_post_meta( $post_id, '_s247_phone', true ),
+		'newsletter'    => get_post_meta( $post_id, '_s247_newsletter_optin', true ),
+		'newsletter_ts' => get_post_meta( $post_id, '_s247_newsletter_optin_timestamp', true ),
 	) );
 	if ( $cid ) {
 		update_post_meta( $post_id, '_s247_cust_id', $cid );

@@ -17,6 +17,7 @@ add_action( 'after_setup_theme', 'studie247_seed_team_bios', 20 );
 add_action( 'after_setup_theme', 'studie247_seed_demo_service', 25 );
 add_action( 'after_setup_theme', 'studie247_seed_dashboard_page', 30 );
 add_action( 'after_setup_theme', 'studie247_backfill_customers', 35 );
+add_action( 'after_setup_theme', 'studie247_backfill_customer_newsletter', 40 );
 
 function studie247_seed_team_bios() {
 	$flag = 's247_team_bios_seeded_v1';
@@ -89,6 +90,50 @@ function studie247_backfill_customers() {
 			'phone' => get_post_meta( $mid, '_s247_phone', true ),
 		) );
 		if ( $cid ) { update_post_meta( $mid, '_s247_cust_id', $cid ); }
+	}
+
+	update_option( $flag, time() );
+}
+
+/**
+ * Engangs-backfill: gå alle kunde-poster igennem og find den tidligste
+ * booking/besked hvor nyhedsbrev var sat til '1' — og sæt det på kunden.
+ * Så eksisterende opt-ins vises i CRM efter opdatering.
+ */
+function studie247_backfill_customer_newsletter() {
+	$flag = 's247_customer_newsletter_backfilled_v1';
+	if ( get_option( $flag ) ) { return; }
+
+	$customers = get_posts( array(
+		'post_type'      => 's247_customer',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+	) );
+
+	foreach ( $customers as $cid ) {
+		if ( '1' === get_post_meta( $cid, '_s247_cust_newsletter', true ) ) { continue; }
+
+		$linked = get_posts( array(
+			'post_type'      => array( 'booking', 'kontakt_besked' ),
+			'post_status'    => array( 'pending', 'publish', 'trash' ),
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'meta_query'     => array(
+				array( 'key' => '_s247_cust_id',           'value' => $cid, 'compare' => '=' ),
+				array( 'key' => '_s247_newsletter_optin',  'value' => '1',  'compare' => '=' ),
+			),
+			'orderby'        => 'date',
+			'order'          => 'ASC',
+		) );
+
+		if ( ! empty( $linked ) ) {
+			$first = $linked[0];
+			$ts    = get_post_meta( $first, '_s247_newsletter_optin_timestamp', true );
+			if ( ! $ts ) { $ts = get_the_date( 'Y-m-d H:i:s', $first ); }
+			update_post_meta( $cid, '_s247_cust_newsletter', '1' );
+			update_post_meta( $cid, '_s247_cust_newsletter_ts', $ts );
+		}
 	}
 
 	update_option( $flag, time() );
