@@ -1962,15 +1962,20 @@ body.team-modal-open { overflow: hidden; }
 }
 
 @media (min-width: 900px) {
-	.single-udlejning { grid-template-columns: 1fr 1fr; }
+	.single-udlejning { grid-template-columns: minmax(280px, 460px) 1fr; }
 }
 
 .single-udlejning__media {
 	aspect-ratio: 4 / 3;
-	max-height: 520px;
 	background: var(--color-surface-deep);
 	border-radius: var(--radius-lg);
 	overflow: hidden;
+}
+
+@media (min-width: 900px) {
+	.single-udlejning__media {
+		aspect-ratio: 1 / 1;
+	}
 }
 
 .single-udlejning__media img {
@@ -1989,6 +1994,7 @@ body.team-modal-open { overflow: hidden; }
 	font-size: var(--fs-base);
 	color: var(--color-ink-soft);
 	line-height: 1.65;
+	max-width: 62ch;
 }
 .single-udlejning__content > * { margin: 0; }
 .single-udlejning__content > * + * { margin-top: var(--sp-4); }
@@ -2034,6 +2040,7 @@ body.team-modal-open { overflow: hidden; }
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-lg);
+	max-width: 480px;
 }
 
 .single-udlejning__price-row {
