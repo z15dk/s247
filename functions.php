@@ -39,6 +39,7 @@ require_once STUDIE247_DIR . '/inc/mail-templates.php';
 require_once STUDIE247_DIR . '/inc/cpt-kontakt-besked.php';
 require_once STUDIE247_DIR . '/inc/rest-api.php';
 require_once STUDIE247_DIR . '/inc/dashboard-permissions.php';
+require_once STUDIE247_DIR . '/inc/audit-log.php';
 require_once STUDIE247_DIR . '/inc/migrations.php';
 
 /**

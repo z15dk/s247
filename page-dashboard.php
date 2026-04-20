@@ -64,7 +64,21 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 		// pris, intern-toggle, post-status.
 
 		if ( isset( $_POST['_s247_estimated_price'] ) && ( studie247_can_view_dash( 'revenue' ) || current_user_can( 'manage_options' ) ) ) {
-			update_post_meta( $save_id, '_s247_estimated_price', max( 0, (int) $_POST['_s247_estimated_price'] ) );
+			$new_price = max( 0, (int) $_POST['_s247_estimated_price'] );
+			$old_price = (int) get_post_meta( $save_id, '_s247_estimated_price', true );
+			update_post_meta( $save_id, '_s247_estimated_price', $new_price );
+			if ( $new_price !== $old_price && function_exists( 'studie247_audit_log' ) ) {
+				$label = function_exists( 'studie247_audit_label_for' ) ? studie247_audit_label_for( get_post( $save_id ) ) : '';
+				studie247_audit_log(
+					sprintf( __( 'ændrede pris på %1$s: %2$s kr → %3$s kr', 'studie247' ),
+						$label,
+						number_format( $old_price, 0, ',', '.' ),
+						number_format( $new_price, 0, ',', '.' )
+					),
+					$save_id,
+					'booking'
+				);
+			}
 		}
 		if ( function_exists( 'studie247_apply_internal_state' ) ) {
 			$want_internal = ! empty( $_POST['_s247_internal'] );
@@ -284,6 +298,46 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 		}
 		?>
 
+		<?php
+		$audit_entries = function_exists( 'studie247_audit_log_get' ) ? studie247_audit_log_get( 20 ) : array();
+		if ( ! empty( $audit_entries ) ) : ?>
+			<section class="sd-audit">
+				<header class="sd-audit__head">
+					<h2><?php esc_html_e( 'Seneste aktivitet', 'studie247' ); ?></h2>
+					<span class="sd-audit__hint"><?php esc_html_e( 'Alt der ændres logges her.', 'studie247' ); ?></span>
+				</header>
+				<ul class="sd-audit__list">
+					<?php foreach ( $audit_entries as $e ) :
+						$initial = strtoupper( substr( (string) $e['user_name'], 0, 1 ) );
+						$ago     = studie247_audit_time_ago( $e['ts'] );
+						$link    = '';
+						if ( ! empty( $e['target_id'] ) && ! empty( $e['target_type'] ) ) {
+							if ( 'booking' === $e['target_type'] ) {
+								$link = home_url( '/dashboard/?view=bookings&booking=' . (int) $e['target_id'] );
+							} elseif ( 'kontakt_besked' === $e['target_type'] ) {
+								$link = home_url( '/dashboard/?view=messages&message=' . (int) $e['target_id'] );
+							}
+						}
+					?>
+						<li class="sd-audit__item">
+							<span class="sd-audit__avatar"><?php echo esc_html( $initial ); ?></span>
+							<span class="sd-audit__body">
+								<span class="sd-audit__text">
+									<strong><?php echo esc_html( $e['user_name'] ); ?></strong>
+									<?php echo esc_html( $e['message'] ); ?>
+								</span>
+								<span class="sd-audit__meta">
+									<?php echo esc_html( $ago ); ?>
+									<?php if ( $link ) : ?>
+										· <a href="<?php echo esc_url( $link ); ?>"><?php esc_html_e( 'Se', 'studie247' ); ?></a>
+									<?php endif; ?>
+								</span>
+							</span>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</section>
+		<?php endif; ?>
 
 	</main>
 
