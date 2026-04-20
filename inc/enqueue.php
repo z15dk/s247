@@ -34,6 +34,32 @@ add_action( 'wp_enqueue_scripts', function () {
 	wp_enqueue_script( 'studie247-main', STUDIE247_URI . '/assets/js/main.js', array(), $ver( 'assets/js/main.js' ), true );
 } );
 
+/**
+ * Dashboard-siden bruger egen skin — fjern tema-CSS og enqueue kun
+ * dashboard.css + skrifttype-link (Inter).
+ */
+add_action( 'wp_enqueue_scripts', function () {
+	if ( ! is_page_template( 'page-dashboard.php' ) ) { return; }
+
+	// Dequeue tema-stylesheets der ellers ville farve login-formen etc.
+	foreach ( array( 'studie247-variables', 'studie247-fonts-local', 'studie247-base', 'studie247-components', 'studie247-sections', 'studie247-main' ) as $h ) {
+		wp_dequeue_style( $h );
+		wp_deregister_style( $h );
+	}
+
+	// Inter font
+	wp_enqueue_style(
+		's247-dash-font',
+		'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+		array(),
+		null
+	);
+
+	$dash_path = STUDIE247_DIR . '/assets/css/dashboard.css';
+	$dash_ver  = file_exists( $dash_path ) ? (string) filemtime( $dash_path ) : STUDIE247_VERSION;
+	wp_enqueue_style( 's247-dashboard', STUDIE247_URI . '/assets/css/dashboard.css', array( 's247-dash-font' ), $dash_ver );
+}, 20 );
+
 // Preconnect <link>s for perf.
 add_action( 'wp_head', function () {
 	echo '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n";
