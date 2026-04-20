@@ -12,6 +12,98 @@
 nocache_headers();
 
 /**
+ * POST-handler: gem redigerede felter på en udlejnings-vare (udlejning_item).
+ * Varer er vores egne data, så alle felter er editerbare.
+ */
+if ( isset( $_POST['s247_dash_save_item'] ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+	$iid = (int) $_POST['s247_dash_save_item'];
+	if ( $iid && check_admin_referer( 's247_dash_item_' . $iid ) && 'udlejning_item' === get_post_type( $iid ) ) {
+		// Title + content
+		if ( isset( $_POST['post_title'] ) ) {
+			wp_update_post( array(
+				'ID'           => $iid,
+				'post_title'   => sanitize_text_field( wp_unslash( $_POST['post_title'] ) ),
+				'post_excerpt' => isset( $_POST['post_excerpt'] ) ? sanitize_textarea_field( wp_unslash( $_POST['post_excerpt'] ) ) : '',
+				'post_content' => isset( $_POST['post_content'] ) ? wp_kses_post( wp_unslash( $_POST['post_content'] ) ) : '',
+			) );
+		}
+		$text_fields = array(
+			'_s247_pris_dag', '_s247_pris_uge', '_s247_deposit',
+			'_s247_sku', '_s247_ejer', '_s247_serienummer',
+		);
+		foreach ( $text_fields as $k ) {
+			if ( isset( $_POST[ $k ] ) ) {
+				update_post_meta( $iid, $k, sanitize_text_field( wp_unslash( $_POST[ $k ] ) ) );
+			}
+		}
+		if ( isset( $_POST['_s247_antal'] ) ) {
+			update_post_meta( $iid, '_s247_antal', max( 0, (int) $_POST['_s247_antal'] ) );
+		}
+		// In-stock styres af antal > 0
+		$antal = (int) get_post_meta( $iid, '_s247_antal', true );
+		update_post_meta( $iid, '_s247_in_stock', $antal > 0 ? '1' : '0' );
+
+		// Kategori
+		if ( isset( $_POST['s247_category'] ) ) {
+			$cat_ids = array_map( 'intval', (array) $_POST['s247_category'] );
+			wp_set_object_terms( $iid, $cat_ids, 'udlejning_kategori', false );
+		}
+
+		if ( function_exists( 'studie247_audit_log' ) ) {
+			studie247_audit_log( sprintf( __( 'opdaterede varen "%s"', 'studie247' ), get_the_title( $iid ) ), $iid, 'udlejning_item' );
+		}
+
+		wp_safe_redirect( add_query_arg(
+			array( 'view' => 'rental', 'tab' => 'items', 'item' => $iid, 'saved' => '1' ),
+			home_url( '/dashboard/' )
+		) );
+		exit;
+	}
+}
+
+/**
+ * POST-handler: gem en udlejnings-forespørgsel (booking med produkt).
+ * Samme interne felter som studie-booking: pris, intern, status.
+ */
+if ( isset( $_POST['s247_dash_save_rental_req'] ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+	$rid = (int) $_POST['s247_dash_save_rental_req'];
+	if ( $rid && check_admin_referer( 's247_dash_rental_' . $rid ) && 'booking' === get_post_type( $rid ) ) {
+		if ( isset( $_POST['_s247_estimated_price'] ) && ( studie247_can_view_dash( 'revenue' ) || current_user_can( 'manage_options' ) ) ) {
+			$new_price = max( 0, (int) $_POST['_s247_estimated_price'] );
+			$old_price = (int) get_post_meta( $rid, '_s247_estimated_price', true );
+			update_post_meta( $rid, '_s247_estimated_price', $new_price );
+			if ( $new_price !== $old_price && function_exists( 'studie247_audit_log' ) ) {
+				$label = studie247_audit_label_for( get_post( $rid ) );
+				studie247_audit_log(
+					sprintf( __( 'ændrede pris på udlejning %1$s: %2$s kr → %3$s kr', 'studie247' ),
+						$label,
+						number_format( $old_price, 0, ',', '.' ),
+						number_format( $new_price, 0, ',', '.' )
+					),
+					$rid, 'booking'
+				);
+			}
+		}
+		if ( function_exists( 'studie247_apply_internal_state' ) ) {
+			$want = ! empty( $_POST['_s247_internal'] );
+			$is   = '1' === get_post_meta( $rid, '_s247_internal', true );
+			if ( $want !== $is ) { studie247_apply_internal_state( $rid, $want ); }
+		}
+		if ( isset( $_POST['_s247_post_status'] ) ) {
+			$ns = sanitize_key( $_POST['_s247_post_status'] );
+			if ( in_array( $ns, array( 'pending', 'publish', 'trash' ), true ) && $ns !== get_post_status( $rid ) ) {
+				wp_update_post( array( 'ID' => $rid, 'post_status' => $ns ) );
+			}
+		}
+		wp_safe_redirect( add_query_arg(
+			array( 'view' => 'rental', 'booking' => $rid, 'saved' => '1' ),
+			home_url( '/dashboard/' )
+		) );
+		exit;
+	}
+}
+
+/**
  * POST-handler: gem redigerede felter i kontakt-beskeder.
  */
 if ( isset( $_POST['s247_dash_save_message'] ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
@@ -219,9 +311,19 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 					<?php if ( $pending_count ) : ?><span class="sd-nav__badge"><?php echo (int) $pending_count; ?></span><?php endif; ?>
 				</a>
 			<?php endif; ?>
-			<?php if ( $can_rental ) : ?>
-				<a class="sd-nav__item" href="<?php echo esc_url( admin_url( 'edit.php?post_type=udlejning_item' ) ); ?>">
+			<?php if ( $can_rental ) :
+				// Antal afventende udlejnings-forespørgsler
+				$rental_pending = count( get_posts( array(
+					'post_type'      => 'booking',
+					'post_status'    => 'pending',
+					'posts_per_page' => -1,
+					'fields'         => 'ids',
+					'meta_query'     => array( array( 'key' => '_s247_produkt_id', 'compare' => 'EXISTS' ) ),
+				) ) );
+			?>
+				<a class="sd-nav__item <?php echo 'rental' === $current_view ? 'is-active' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/?view=rental' ) ); ?>">
 					<span class="sd-nav__dot"></span> <?php esc_html_e( 'Udlejning', 'studie247' ); ?>
+					<?php if ( $rental_pending ) : ?><span class="sd-nav__badge"><?php echo (int) $rental_pending; ?></span><?php endif; ?>
 				</a>
 			<?php endif; ?>
 			<?php if ( $can_messages ) :
@@ -269,11 +371,13 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 					'overview' => __( 'Dashboard / Oversigt', 'studie247' ),
 					'bookings' => __( 'Dashboard / Studie-bookinger', 'studie247' ),
 					'messages' => __( 'Dashboard / Beskeder', 'studie247' ),
+					'rental'   => __( 'Dashboard / Udlejning', 'studie247' ),
 				);
 				$title_map = array(
 					'overview' => sprintf( __( 'Hej %s', 'studie247' ), $first_name ),
 					'bookings' => __( 'Studie-bookinger', 'studie247' ),
 					'messages' => __( 'Beskeder', 'studie247' ),
+					'rental'   => __( 'Udlejning', 'studie247' ),
 				);
 				?>
 				<span class="sd-breadcrumb"><?php echo esc_html( $crumb_map[ $current_view ] ?? $crumb_map['overview'] ); ?></span>
@@ -293,6 +397,8 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 			include STUDIE247_DIR . '/template-parts/dashboard-bookings.php';
 		} elseif ( 'messages' === $current_view ) {
 			include STUDIE247_DIR . '/template-parts/dashboard-messages.php';
+		} elseif ( 'rental' === $current_view ) {
+			include STUDIE247_DIR . '/template-parts/dashboard-rental.php';
 		} else {
 			include STUDIE247_DIR . '/template-parts/dashboard-overview.php';
 		}
