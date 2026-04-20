@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 add_action( 'after_setup_theme', 'studie247_seed_team_bios', 20 );
+add_action( 'after_setup_theme', 'studie247_seed_demo_service', 25 );
 
 function studie247_seed_team_bios() {
 	$flag = 's247_team_bios_seeded_v1';
@@ -40,6 +41,58 @@ function studie247_seed_team_bios() {
 			continue; // Respektér eksisterende bio.
 		}
 		set_theme_mod( "s247_team{$i}_modal_text", $bios[ $name ] );
+	}
+
+	update_option( $flag, time() );
+}
+
+/**
+ * Seed en demo-service ("Podcast-produktion") så det dynamiske single-
+ * service-layout kan ses uden at brugeren først skal udfylde alt selv.
+ * Kører kun én gang; springer over hvis demo-posten allerede findes.
+ */
+function studie247_seed_demo_service() {
+	$flag = 's247_demo_service_seeded_v1';
+	if ( get_option( $flag ) ) { return; }
+
+	$existing = get_page_by_path( 'podcast-produktion', OBJECT, 'service' );
+	if ( $existing ) {
+		update_option( $flag, time() );
+		return;
+	}
+
+	$content  = "<h2>Fra idé til færdig episode</h2>\n\n";
+	$content .= "<p>Vi bygger din podcast op omkring dit brand og dine lyttere. Fra den første sparring over optagelse i studiet til redigering, mastering og publicering på alle større platforme — du får en færdig pakke uden bekymringer undervejs.</p>\n\n";
+	$content .= "<h3>Sådan forløber en produktion</h3>\n\n";
+	$content .= "<p>Vi starter med et kort sparringsmøde hvor vi aftaler tone, længde, målgruppe og interviewstil. Dagen før optagelse får du et manuskript-skelet du kan læse igennem. I studiet tager vi os af alt det tekniske — du skal bare tale.</p>\n\n";
+	$content .= "<p>Efter optagelse redigerer vi klippet til en strammere version uden fyldord, og leverer den som færdig MP3 samt en video-version til sociale medier. Du får 2 revisioner inkluderet.</p>\n\n";
+	$content .= "<h3>Hvad kunder typisk spørger om</h3>\n\n";
+	$content .= "<p><strong>Kan jeg bruge vores egen vært?</strong> Ja, vi leverer gerne bare teknik og redigering hvis I selv har en intern vært. Vi kan også stille en erfaren vært til rådighed mod tillæg.</p>\n\n";
+	$content .= "<p><strong>Hvor lang tid tager en typisk episode?</strong> Fra optagelse til færdig episode regner vi med 5-7 hverdage. Har du deadline? Sig til — vi kan ofte forcere hvis du ringer i god tid.</p>";
+
+	$post_id = wp_insert_post( array(
+		'post_type'    => 'service',
+		'post_status'  => 'publish',
+		'post_title'   => 'Podcast-produktion',
+		'post_name'    => 'podcast-produktion',
+		'post_content' => $content,
+	) );
+
+	if ( $post_id && ! is_wp_error( $post_id ) ) {
+		update_post_meta( $post_id, '_s247_tagline',   'Lyd der fanger — og holder ører åbne helt til sidst.' );
+		update_post_meta( $post_id, '_s247_icon',      'mic' );
+		update_post_meta( $post_id, '_s247_startpris', 'fra 4.995 kr' );
+		update_post_meta( $post_id, '_s247_cta_text',  'Book podcast' );
+		update_post_meta( $post_id, '_s247_included', implode( "\n", array(
+			'Sparringsmøde (30 min)',
+			'Studie-tid op til 3 timer',
+			'Op til 4 mikrofoner + kamera-rig',
+			'Fuld redigering + mastering',
+			'Upload til Spotify, Apple Podcasts m.fl.',
+			'2 revisionsrunder',
+			'Video-version til SoMe',
+		) ) );
+		update_post_meta( $post_id, '_s247_statement', "Vi optager ikke bare din podcast.\n*Vi gør den værd at lytte til.*" );
 	}
 
 	update_option( $flag, time() );

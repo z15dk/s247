@@ -1193,7 +1193,7 @@
 	color: var(--color-accent);
 	flex-shrink: 0;
 }
-@media (min-width: 820px) {
+@media (min-width: 1024px) {
 	/* Desktop: slideren har et samlet chip-overlay i stedet, så per-slide
 	   caption er overflødig og ville konkurrere. */
 	.moods__slide-caption { display: none; }
@@ -1217,8 +1217,8 @@
 	z-index: 3;
 	max-width: calc(100% - var(--sp-10));
 }
-@media (max-width: 819px) {
-	/* Mobil: gem chip-overlay — per-slide caption tager over. */
+@media (max-width: 1023px) {
+	/* Mobil + tablet: gem chip-overlay — per-slide caption tager over. */
 	.moods__tabs-overlay { display: none; }
 }
 .moods__chip {
@@ -1361,8 +1361,8 @@
 .moods__nav--prev .icon { transform: rotate(180deg); }
 .moods__nav--next { right: var(--sp-4); }
 
-@media (max-width: 819px) {
-	/* Mobil: nav-pile skal være synlige men ikke dominere */
+@media (max-width: 1023px) {
+	/* Mobil + tablet: nav-pile skal være synlige men ikke dominere */
 	.moods__nav {
 		width: 36px;
 		height: 36px;
