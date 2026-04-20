@@ -53,6 +53,10 @@ if ( empty( $moods ) ) {
 							<?php else : ?>
 								<div class="moods__image-placeholder"><?php esc_html_e( 'Upload billede i Customizer', 'studie247' ); ?></div>
 							<?php endif; ?>
+							<span class="moods__slide-caption" aria-hidden="true">
+								<?php echo studie247_icon( $mood['icon'], 14 ); ?>
+								<span><?php echo esc_html( $mood['label'] ); ?></span>
+							</span>
 						</div>
 					<?php endforeach; ?>
 				</div>
