@@ -856,3 +856,46 @@ a.sd-stat:hover {
 	color: var(--sd-ink-mute);
 	font-size: 12px;
 }
+
+/* Besked-specifikke */
+.sd-row-dot {
+	width: 40px;
+	text-align: center;
+	padding-left: 12px !important;
+	padding-right: 0 !important;
+}
+.sd-dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+.sd-dot--new   { background: var(--sd-accent); box-shadow: 0 0 0 4px var(--sd-accent-soft); }
+.sd-dot--ok    { background: #0a7c2f; }
+.sd-dot--trash { background: var(--sd-ink-mute); }
+
+.sd-row--muted {
+	opacity: 0.65;
+}
+.sd-row--muted:hover { opacity: 1; }
+
+.sd-row-sub {
+	display: block;
+	font-size: 11px;
+	color: var(--sd-ink-mute);
+	font-weight: 400;
+	margin-top: 2px;
+}
+.sd-row-excerpt {
+	max-width: 340px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-style: italic;
+}
+
+.sd-textarea--message {
+	min-height: 180px;
+	font-size: 14px;
+	line-height: 1.55;
+}

@@ -12,6 +12,58 @@
 nocache_headers();
 
 /**
+ * POST-handler: gem redigerede felter i kontakt-beskeder.
+ */
+if ( isset( $_POST['s247_dash_save_message'] ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
+	$mid = (int) $_POST['s247_dash_save_message'];
+	if ( $mid && check_admin_referer( 's247_dash_msg_' . $mid ) && 'kontakt_besked' === get_post_type( $mid ) ) {
+		$text_fields = array( '_s247_name', '_s247_email', '_s247_phone', '_s247_topic' );
+		foreach ( $text_fields as $key ) {
+			if ( isset( $_POST[ $key ] ) ) {
+				update_post_meta( $mid, $key, sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) );
+			}
+		}
+		if ( isset( $_POST['_s247_message'] ) ) {
+			$msg = sanitize_textarea_field( wp_unslash( $_POST['_s247_message'] ) );
+			update_post_meta( $mid, '_s247_message', $msg );
+			wp_update_post( array( 'ID' => $mid, 'post_content' => $msg ) );
+		}
+		if ( isset( $_POST['_s247_internal_notes'] ) ) {
+			update_post_meta( $mid, '_s247_internal_notes', sanitize_textarea_field( wp_unslash( $_POST['_s247_internal_notes'] ) ) );
+		}
+		// Håndteret-toggle
+		if ( isset( $_POST['_s247_msg_handled'] ) ) {
+			update_post_meta( $mid, '_s247_msg_handled', '1' );
+			if ( ! get_post_meta( $mid, '_s247_msg_handled_at', true ) ) {
+				update_post_meta( $mid, '_s247_msg_handled_at', current_time( 'mysql' ) );
+				update_post_meta( $mid, '_s247_msg_handled_by', get_current_user_id() );
+			}
+		} else {
+			delete_post_meta( $mid, '_s247_msg_handled' );
+			delete_post_meta( $mid, '_s247_msg_handled_at' );
+			delete_post_meta( $mid, '_s247_msg_handled_by' );
+		}
+		// Status (publish/trash)
+		if ( isset( $_POST['_s247_post_status'] ) ) {
+			$new_status = sanitize_key( $_POST['_s247_post_status'] );
+			if ( in_array( $new_status, array( 'publish', 'trash' ), true ) && $new_status !== get_post_status( $mid ) ) {
+				wp_update_post( array( 'ID' => $mid, 'post_status' => $new_status ) );
+			}
+		}
+		// Opdater title så admin-listen følger med.
+		$new_title = ( get_post_meta( $mid, '_s247_name', true ) ?: '(uden navn)' )
+			. ( get_post_meta( $mid, '_s247_topic', true ) ? ' — ' . get_post_meta( $mid, '_s247_topic', true ) : '' );
+		wp_update_post( array( 'ID' => $mid, 'post_title' => $new_title ) );
+
+		wp_safe_redirect( add_query_arg(
+			array( 'view' => 'messages', 'message' => $mid, 'saved' => '1' ),
+			home_url( '/dashboard/' )
+		) );
+		exit;
+	}
+}
+
+/**
  * POST-handler: gem redigerede booking-felter fra dashboard.
  * Kører før output så vi kan redirecte rent bagefter.
  */
@@ -194,10 +246,23 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 					<span class="sd-nav__dot"></span> <?php esc_html_e( 'Udlejning', 'studie247' ); ?>
 				</a>
 			<?php endif; ?>
-			<?php if ( $can_messages ) : ?>
-				<a class="sd-nav__item" href="<?php echo esc_url( admin_url( 'edit.php?post_type=kontakt_besked' ) ); ?>">
+			<?php if ( $can_messages ) :
+				// Antal ubehandlede til badge
+				$unhandled = (int) count( get_posts( array(
+					'post_type'      => 'kontakt_besked',
+					'post_status'    => 'publish',
+					'posts_per_page' => -1,
+					'fields'         => 'ids',
+					'meta_query'     => array(
+						'relation' => 'OR',
+						array( 'key' => '_s247_msg_handled', 'compare' => 'NOT EXISTS' ),
+						array( 'key' => '_s247_msg_handled', 'value' => '', 'compare' => '=' ),
+					),
+				) ) );
+			?>
+				<a class="sd-nav__item <?php echo 'messages' === $current_view ? 'is-active' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/?view=messages' ) ); ?>">
 					<span class="sd-nav__dot"></span> <?php esc_html_e( 'Beskeder', 'studie247' ); ?>
-					<?php if ( $msg_count ) : ?><span class="sd-nav__badge sd-nav__badge--muted"><?php echo (int) $msg_count; ?></span><?php endif; ?>
+					<?php if ( $unhandled ) : ?><span class="sd-nav__badge"><?php echo (int) $unhandled; ?></span><?php endif; ?>
 				</a>
 			<?php endif; ?>
 			<a class="sd-nav__item" href="<?php echo esc_url( admin_url() ); ?>">
@@ -225,10 +290,12 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 				$crumb_map = array(
 					'overview' => __( 'Dashboard / Oversigt', 'studie247' ),
 					'bookings' => __( 'Dashboard / Studie-bookinger', 'studie247' ),
+					'messages' => __( 'Dashboard / Beskeder', 'studie247' ),
 				);
 				$title_map = array(
 					'overview' => sprintf( __( 'Hej %s', 'studie247' ), $first_name ),
 					'bookings' => __( 'Studie-bookinger', 'studie247' ),
+					'messages' => __( 'Beskeder', 'studie247' ),
 				);
 				?>
 				<span class="sd-breadcrumb"><?php echo esc_html( $crumb_map[ $current_view ] ?? $crumb_map['overview'] ); ?></span>
@@ -246,6 +313,8 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 		<?php
 		if ( 'bookings' === $current_view ) {
 			include STUDIE247_DIR . '/template-parts/dashboard-bookings.php';
+		} elseif ( 'messages' === $current_view ) {
+			include STUDIE247_DIR . '/template-parts/dashboard-messages.php';
 		} else {
 			include STUDIE247_DIR . '/template-parts/dashboard-overview.php';
 		}
