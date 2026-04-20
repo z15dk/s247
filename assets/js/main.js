@@ -6,17 +6,17 @@
 	'use strict';
 
 	// ──────────────────────────────────────────────
-	// Floating pill header — hidden at top, slides in on scroll
+	// Sticky header — altid synlig, får subtil skygge når man scroller
 	// ──────────────────────────────────────────────
 	const header = document.querySelector('[data-site-header]');
 	if (header) {
-		const showThreshold = 320;   // px scrolled before pill slides in
-		let lastShown = false;
+		header.classList.add('site-header--visible');
+		let lastScrolled = false;
 		const update = () => {
-			const shouldShow = window.scrollY > showThreshold;
-			if (shouldShow !== lastShown) {
-				header.classList.toggle('site-header--visible', shouldShow);
-				lastShown = shouldShow;
+			const scrolled = window.scrollY > 40;
+			if (scrolled !== lastScrolled) {
+				header.classList.toggle('site-header--scrolled', scrolled);
+				lastScrolled = scrolled;
 			}
 		};
 		update();

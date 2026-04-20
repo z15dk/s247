@@ -3,7 +3,7 @@
    testimonials, FAQ, CTA, footer
    ================================================================= */
 
-/* ─── Site header — floating pill, slides in on scroll ─── */
+/* ─── Site header — sticky floating pill, altid synlig ─── */
 .site-header {
 	position: fixed;
 	top: var(--sp-4);
@@ -17,11 +17,14 @@
 	border-radius: var(--radius-pill);
 	padding: 8px 10px 8px 26px;
 	color: var(--color-ink-on-dark);
-	transform: translateY(calc(-100% - var(--sp-8)));
-	opacity: 0;
-	transition: transform var(--dur-slow) var(--ease-smooth),
-	            opacity var(--dur-slow) var(--ease-smooth);
+	transform: translateY(0);
+	opacity: 1;
+	transition: box-shadow var(--dur) var(--ease);
 	will-change: transform;
+}
+
+.site-header--scrolled {
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .site-header--visible {
