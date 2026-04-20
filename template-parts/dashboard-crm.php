@@ -32,12 +32,15 @@ if ( $cust ) :
 	$c_news_ts = get_post_meta( $cust->ID, '_s247_cust_newsletter_ts', true );
 
 	$activity = studie247_customer_activity( $cust->ID );
-	$total_spend = 0;
+	$studio_spend = 0;
+	$rental_spend = 0;
 	foreach ( $activity['bookings'] as $b ) {
-		if ( 'publish' === $b->post_status ) {
-			$total_spend += (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
-		}
+		if ( 'publish' !== $b->post_status ) { continue; }
+		$p   = (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
+		$pid = (int) get_post_meta( $b->ID, '_s247_produkt_id', true );
+		if ( $pid ) { $rental_spend += $p; } else { $studio_spend += $p; }
 	}
+	$total_spend = $studio_spend + $rental_spend;
 
 	// Byg samlet tidslinje (bookings + beskeder + log-noter sorteret DESC)
 	$timeline = array();
@@ -110,7 +113,8 @@ if ( $cust ) :
 						<div class="sd-crm-stat"><span><?php esc_html_e( 'Bookinger', 'studie247' ); ?></span><strong><?php echo count( $activity['bookings'] ); ?></strong></div>
 						<div class="sd-crm-stat"><span><?php esc_html_e( 'Beskeder', 'studie247' ); ?></span><strong><?php echo count( $activity['messages'] ); ?></strong></div>
 						<?php if ( $can_revenue ) : ?>
-							<div class="sd-crm-stat"><span><?php esc_html_e( 'Forbrugt hos os', 'studie247' ); ?></span><strong><?php echo esc_html( $fmt_dkk( $total_spend ) ); ?></strong></div>
+							<div class="sd-crm-stat"><span><?php esc_html_e( 'Studie — forbrug', 'studie247' ); ?></span><strong><?php echo esc_html( $fmt_dkk( $studio_spend ) ); ?></strong></div>
+							<div class="sd-crm-stat"><span><?php esc_html_e( 'Udlejning — forbrug', 'studie247' ); ?></span><strong><?php echo esc_html( $fmt_dkk( $rental_spend ) ); ?></strong></div>
 						<?php endif; ?>
 						<div class="sd-crm-stat">
 							<span><?php esc_html_e( 'Nyhedsbrev', 'studie247' ); ?></span>
@@ -281,7 +285,10 @@ $total = (int) wp_count_posts( 's247_customer' )->publish;
 					<th><?php esc_html_e( 'Kontakt', 'studie247' ); ?></th>
 					<th><?php esc_html_e( 'Aktivitet', 'studie247' ); ?></th>
 					<th><?php esc_html_e( 'Nyhedsbrev', 'studie247' ); ?></th>
-					<?php if ( $can_revenue ) : ?><th class="sd-table__right"><?php esc_html_e( 'Forbrug', 'studie247' ); ?></th><?php endif; ?>
+					<?php if ( $can_revenue ) : ?>
+						<th class="sd-table__right"><?php esc_html_e( 'Studie', 'studie247' ); ?></th>
+						<th class="sd-table__right"><?php esc_html_e( 'Udlejning', 'studie247' ); ?></th>
+					<?php endif; ?>
 					<th><?php esc_html_e( 'Sidst set', 'studie247' ); ?></th>
 				</tr>
 			</thead>
@@ -297,11 +304,13 @@ $total = (int) wp_count_posts( 's247_customer' )->publish;
 					$activity = studie247_customer_activity( $c->ID );
 					$bk_count = count( $activity['bookings'] );
 					$ms_count = count( $activity['messages'] );
-					$spend    = 0;
+					$spend_studio = 0;
+					$spend_rental = 0;
 					foreach ( $activity['bookings'] as $b ) {
-						if ( 'publish' === $b->post_status ) {
-							$spend += (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
-						}
+						if ( 'publish' !== $b->post_status ) { continue; }
+						$p   = (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
+						$pid = (int) get_post_meta( $b->ID, '_s247_produkt_id', true );
+						if ( $pid ) { $spend_rental += $p; } else { $spend_studio += $p; }
 					}
 					$href = esc_url( home_url( '/dashboard/?view=crm&customer=' . $c->ID ) );
 					$initials = strtoupper( mb_substr( $c_name ?: $c_email ?: '?', 0, 1 ) );
@@ -329,7 +338,8 @@ $total = (int) wp_count_posts( 's247_customer' )->publish;
 							<?php endif; ?>
 						</td>
 						<?php if ( $can_revenue ) : ?>
-							<td class="sd-table__right sd-mono"><?php echo $spend ? esc_html( $fmt_dkk( $spend ) ) : '—'; ?></td>
+							<td class="sd-table__right sd-mono"><?php echo $spend_studio ? esc_html( $fmt_dkk( $spend_studio ) ) : '—'; ?></td>
+							<td class="sd-table__right sd-mono"><?php echo $spend_rental ? esc_html( $fmt_dkk( $spend_rental ) ) : '—'; ?></td>
 						<?php endif; ?>
 						<td class="sd-muted"><?php echo esc_html( $c_last ? mysql2date( 'j. M Y', $c_last ) : '—' ); ?></td>
 					</tr>

@@ -41,18 +41,21 @@ if ( isset( $_GET['export'] ) && 'customers_csv' === $_GET['export']
 	fputcsv( $out, array(
 		'Navn', 'E-mail', 'Telefon', 'Virksomhed', 'CVR',
 		'Nyhedsbrev', 'Nyhedsbrev_tilmeldt',
-		'Antal_bookinger', 'Antal_beskeder', 'Forbrug_DKK',
+		'Antal_bookinger', 'Antal_beskeder',
+		'Studie_forbrug_DKK', 'Udlejning_forbrug_DKK', 'Samlet_forbrug_DKK',
 		'Første_gang', 'Sidst_set', 'Interne_noter',
 	), ';' );
 
 	foreach ( $customers as $c ) {
-		$spend = 0;
+		$spend_studio = 0;
+		$spend_rental = 0;
 		if ( function_exists( 'studie247_customer_activity' ) ) {
 			$act = studie247_customer_activity( $c->ID );
 			foreach ( $act['bookings'] as $b ) {
-				if ( 'publish' === $b->post_status ) {
-					$spend += (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
-				}
+				if ( 'publish' !== $b->post_status ) { continue; }
+				$p   = (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
+				$pid = (int) get_post_meta( $b->ID, '_s247_produkt_id', true );
+				if ( $pid ) { $spend_rental += $p; } else { $spend_studio += $p; }
 			}
 			$bk = count( $act['bookings'] );
 			$ms = count( $act['messages'] );
@@ -68,7 +71,8 @@ if ( isset( $_GET['export'] ) && 'customers_csv' === $_GET['export']
 			get_post_meta( $c->ID, '_s247_cust_cvr', true ),
 			'1' === get_post_meta( $c->ID, '_s247_cust_newsletter', true ) ? 'Ja' : 'Nej',
 			get_post_meta( $c->ID, '_s247_cust_newsletter_ts', true ),
-			$bk, $ms, $spend,
+			$bk, $ms,
+			$spend_studio, $spend_rental, $spend_studio + $spend_rental,
 			get_post_meta( $c->ID, '_s247_cust_first_seen', true ),
 			get_post_meta( $c->ID, '_s247_cust_last_seen', true ),
 			str_replace( array( "\r", "\n" ), ' / ', (string) get_post_meta( $c->ID, '_s247_cust_notes', true ) ),
@@ -493,18 +497,23 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 		'post_status'    => 'publish',
 		'posts_per_page' => -1,
 	) );
-	$rev_month = 0;
-	$rev_year  = 0;
+	$rev_month_studio = 0;
+	$rev_year_studio  = 0;
+	$rev_month_rental = 0;
+	$rev_year_rental  = 0;
 	$prod_counts = array();
 	foreach ( $approved as $b ) {
 		$d     = get_post_meta( $b->ID, '_s247_date', true );
 		$price = (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
 		$pid   = (int) get_post_meta( $b->ID, '_s247_produkt_id', true );
-		if ( $d && $d >= $year_start )  { $rev_year  += $price; }
-		if ( $d && $d >= $month_start ) { $rev_month += $price; }
 		if ( $pid ) {
+			if ( $d && $d >= $year_start )  { $rev_year_rental  += $price; }
+			if ( $d && $d >= $month_start ) { $rev_month_rental += $price; }
 			if ( ! isset( $prod_counts[ $pid ] ) ) { $prod_counts[ $pid ] = 0; }
 			$prod_counts[ $pid ]++;
+		} else {
+			if ( $d && $d >= $year_start )  { $rev_year_studio  += $price; }
+			if ( $d && $d >= $month_start ) { $rev_month_studio += $price; }
 		}
 	}
 	arsort( $prod_counts );

@@ -3,7 +3,8 @@
  * Dashboard-overview — stats-grid + lister (den oprindelige forside).
  * Forventer følgende variable fra caller:
  *   $pending_count, $publish_count, $trash_count, $total_bookings,
- *   $msg_count, $item_count, $rev_month, $rev_year, $top_products,
+ *   $msg_count, $item_count, $top_products,
+ *   $rev_month_studio, $rev_year_studio, $rev_month_rental, $rev_year_rental,
  *   $recent_pending, $recent_msgs, $fmt_dkk,
  *   $can_rental, $can_studio, $can_messages, $can_revenue, $can_pending,
  *   $has_any
@@ -36,9 +37,14 @@ if ( ! isset( $has_any ) ) { return; }
 		<?php endif; ?>
 		<?php if ( $can_revenue ) : ?>
 			<div class="sd-stat sd-stat--accent">
-				<span class="sd-stat__label"><?php esc_html_e( 'Omsætning', 'studie247' ); ?></span>
-				<span class="sd-stat__num sd-stat__num--money"><?php echo esc_html( $fmt_dkk( $rev_month ) ); ?></span>
-				<span class="sd-stat__delta"><?php printf( esc_html__( 'YTD: %s', 'studie247' ), esc_html( $fmt_dkk( $rev_year ) ) ); ?></span>
+				<span class="sd-stat__label"><?php esc_html_e( 'Studie — omsætning', 'studie247' ); ?></span>
+				<span class="sd-stat__num sd-stat__num--money"><?php echo esc_html( $fmt_dkk( $rev_month_studio ) ); ?></span>
+				<span class="sd-stat__delta"><?php printf( esc_html__( 'YTD: %s', 'studie247' ), esc_html( $fmt_dkk( $rev_year_studio ) ) ); ?></span>
+			</div>
+			<div class="sd-stat sd-stat--accent">
+				<span class="sd-stat__label"><?php esc_html_e( 'Udlejning — omsætning', 'studie247' ); ?></span>
+				<span class="sd-stat__num sd-stat__num--money"><?php echo esc_html( $fmt_dkk( $rev_month_rental ) ); ?></span>
+				<span class="sd-stat__delta"><?php printf( esc_html__( 'YTD: %s', 'studie247' ), esc_html( $fmt_dkk( $rev_year_rental ) ) ); ?></span>
 			</div>
 		<?php endif; ?>
 		<?php if ( $can_messages ) : ?>
