@@ -899,3 +899,18 @@ a.sd-stat:hover {
 	font-size: 14px;
 	line-height: 1.55;
 }
+
+/* Read-only besked (kundens oprindelige ord) */
+.sd-readonly-message {
+	padding: 20px 24px;
+	font-size: 15px;
+	line-height: 1.6;
+	color: var(--sd-ink);
+	background: linear-gradient(180deg, var(--sd-border-soft), transparent 30%);
+	border-left: 3px solid var(--sd-accent);
+	margin: 16px 20px;
+	border-radius: 0 8px 8px 0;
+	font-family: Georgia, 'Iowan Old Style', serif;
+	font-style: italic;
+	white-space: pre-line;
+}

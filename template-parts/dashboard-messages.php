@@ -69,7 +69,7 @@ if ( $detail ) :
 				<?php if ( $m_email ) : ?>
 					<a class="sd-btn" href="<?php echo esc_url( $mailto ); ?>">✉ <?php esc_html_e( 'Svar', 'studie247' ); ?></a>
 				<?php endif; ?>
-				<button type="submit" class="sd-btn"><?php esc_html_e( 'Gem', 'studie247' ); ?></button>
+				<button type="submit" class="sd-btn"><?php esc_html_e( 'Gem interne ændringer', 'studie247' ); ?></button>
 			</div>
 		</header>
 
@@ -81,25 +81,23 @@ if ( $detail ) :
 			<div class="sd-panel sd-panel--wide">
 				<header class="sd-panel__head">
 					<h2><?php esc_html_e( 'Beskeden', 'studie247' ); ?></h2>
-					<span class="sd-panel__hint"><?php esc_html_e( 'Redigér for at rette typos.', 'studie247' ); ?></span>
+					<span class="sd-panel__hint">🔒 <?php esc_html_e( 'Kundens oprindelige ord — kan ikke ændres.', 'studie247' ); ?></span>
 				</header>
-				<div class="sd-form">
-					<textarea name="_s247_message" rows="8" class="sd-textarea sd-textarea--message"><?php echo esc_textarea( $m_message ); ?></textarea>
-				</div>
+				<div class="sd-readonly-message"><?php echo nl2br( esc_html( $m_message ?: '—' ) ); ?></div>
 			</div>
 
 			<div class="sd-panel">
-				<header class="sd-panel__head"><h2><?php esc_html_e( 'Afsender', 'studie247' ); ?></h2></header>
-				<div class="sd-form">
-					<label class="sd-field"><span><?php esc_html_e( 'Navn', 'studie247' ); ?></span>
-						<input type="text" name="_s247_name" value="<?php echo esc_attr( $m_name ); ?>"></label>
-					<label class="sd-field"><span>E-mail</span>
-						<input type="email" name="_s247_email" value="<?php echo esc_attr( $m_email ); ?>"></label>
-					<label class="sd-field"><span><?php esc_html_e( 'Telefon', 'studie247' ); ?></span>
-						<input type="tel" name="_s247_phone" value="<?php echo esc_attr( $m_phone ); ?>"></label>
-					<label class="sd-field"><span><?php esc_html_e( 'Emne', 'studie247' ); ?></span>
-						<input type="text" name="_s247_topic" value="<?php echo esc_attr( $m_topic ); ?>"></label>
-				</div>
+				<header class="sd-panel__head">
+					<h2><?php esc_html_e( 'Afsender', 'studie247' ); ?></h2>
+					<span class="sd-panel__hint">🔒 <?php esc_html_e( 'Fra kontakt-form', 'studie247' ); ?></span>
+				</header>
+				<dl class="sd-dl">
+					<div><dt><?php esc_html_e( 'Navn', 'studie247' ); ?></dt><dd><?php echo esc_html( $m_name ?: '—' ); ?></dd></div>
+					<div><dt>E-mail</dt><dd><?php echo $m_email ? '<a href="mailto:' . esc_attr( $m_email ) . '">' . esc_html( $m_email ) . '</a>' : '—'; ?></dd></div>
+					<div><dt><?php esc_html_e( 'Telefon', 'studie247' ); ?></dt><dd><?php echo $m_phone ? '<a href="tel:' . esc_attr( $m_phone ) . '">' . esc_html( $m_phone ) . '</a>' : '—'; ?></dd></div>
+					<div><dt><?php esc_html_e( 'Emne', 'studie247' ); ?></dt><dd><?php echo esc_html( $m_topic ?: '—' ); ?></dd></div>
+					<?php if ( $m_side ) : ?><div><dt><?php esc_html_e( 'Valgte', 'studie247' ); ?></dt><dd><?php echo esc_html( 'Side ' . $m_side ); ?></dd></div><?php endif; ?>
+				</dl>
 			</div>
 
 			<div class="sd-panel">
@@ -151,7 +149,7 @@ if ( $detail ) :
 		</div>
 
 		<div class="sd-detail__footer">
-			<button type="submit" class="sd-btn sd-btn--lg"><?php esc_html_e( 'Gem ændringer', 'studie247' ); ?></button>
+			<button type="submit" class="sd-btn sd-btn--lg"><?php esc_html_e( 'Gem interne ændringer', 'studie247' ); ?></button>
 		</div>
 	</form>
 <?php

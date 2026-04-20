@@ -17,17 +17,8 @@ nocache_headers();
 if ( isset( $_POST['s247_dash_save_message'] ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
 	$mid = (int) $_POST['s247_dash_save_message'];
 	if ( $mid && check_admin_referer( 's247_dash_msg_' . $mid ) && 'kontakt_besked' === get_post_type( $mid ) ) {
-		$text_fields = array( '_s247_name', '_s247_email', '_s247_phone', '_s247_topic' );
-		foreach ( $text_fields as $key ) {
-			if ( isset( $_POST[ $key ] ) ) {
-				update_post_meta( $mid, $key, sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) );
-			}
-		}
-		if ( isset( $_POST['_s247_message'] ) ) {
-			$msg = sanitize_textarea_field( wp_unslash( $_POST['_s247_message'] ) );
-			update_post_meta( $mid, '_s247_message', $msg );
-			wp_update_post( array( 'ID' => $mid, 'post_content' => $msg ) );
-		}
+		// Kunde-felter (navn, email, tlf, emne, besked) er read-only i
+		// dashboardet — vi rører ikke ved hvad kunden har sendt.
 		if ( isset( $_POST['_s247_internal_notes'] ) ) {
 			update_post_meta( $mid, '_s247_internal_notes', sanitize_textarea_field( wp_unslash( $_POST['_s247_internal_notes'] ) ) );
 		}
@@ -50,10 +41,7 @@ if ( isset( $_POST['s247_dash_save_message'] ) && is_user_logged_in() && current
 				wp_update_post( array( 'ID' => $mid, 'post_status' => $new_status ) );
 			}
 		}
-		// Opdater title så admin-listen følger med.
-		$new_title = ( get_post_meta( $mid, '_s247_name', true ) ?: '(uden navn)' )
-			. ( get_post_meta( $mid, '_s247_topic', true ) ? ' — ' . get_post_meta( $mid, '_s247_topic', true ) : '' );
-		wp_update_post( array( 'ID' => $mid, 'post_title' => $new_title ) );
+		// (Ingen title-opdatering — kunde-felter ændres ikke længere.)
 
 		wp_safe_redirect( add_query_arg(
 			array( 'view' => 'messages', 'message' => $mid, 'saved' => '1' ),
