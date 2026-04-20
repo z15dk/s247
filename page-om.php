@@ -68,6 +68,30 @@ $hero_lead    = get_theme_mod( 's247_om_hero_lead',    'Vi er et lille hold med 
 </section>
 
 <?php
+// Stort editorial-statement (mørkt fuld-breddebanner).
+$st_eyebrow = get_theme_mod( 's247_om_statement_eyebrow', 'Det vi tror på' );
+$st_a       = get_theme_mod( 's247_om_statement_text_a',  'Vi bliver der lidt længere.' );
+$st_em      = get_theme_mod( 's247_om_statement_text_em', 'Vi tager en ekstra take.' );
+$st_b       = get_theme_mod( 's247_om_statement_text_b',  'Det er ikke en service — det er en arbejdsmoral.' );
+?>
+<?php if ( $st_a || $st_em || $st_b ) : ?>
+<section class="om-statement">
+	<div class="wrap wrap--wide">
+		<div class="om-statement__inner">
+			<?php if ( $st_eyebrow ) : ?>
+				<span class="eyebrow eyebrow--on-dark eyebrow--no-line"><?php echo esc_html( $st_eyebrow ); ?></span>
+			<?php endif; ?>
+			<p class="om-statement__text">
+				<?php if ( $st_a )  : ?><span class="om-statement__line"><?php echo wp_kses_post( $st_a ); ?></span><?php endif; ?>
+				<?php if ( $st_em ) : ?><span class="om-statement__line om-statement__line--em"><em><?php echo wp_kses_post( $st_em ); ?></em></span><?php endif; ?>
+				<?php if ( $st_b )  : ?><span class="om-statement__line"><?php echo wp_kses_post( $st_b ); ?></span><?php endif; ?>
+			</p>
+		</div>
+	</div>
+</section>
+<?php endif; ?>
+
+<?php
 // Manifest-block — 3 principper i stor italic-serif.
 $mani_eyebrow = get_theme_mod( 's247_om_manifest_eyebrow', 'Vores principper' );
 $mani_title   = get_theme_mod( 's247_om_manifest_title',   'Det vi holder fast i' );
@@ -96,6 +120,34 @@ $principles   = array_filter( array(
 				</li>
 			<?php endforeach; ?>
 		</ol>
+	</div>
+</section>
+<?php endif; ?>
+
+<?php
+// Foto-collage — 5 billeder i asymmetrisk grid.
+$collage_eyebrow = get_theme_mod( 's247_om_collage_eyebrow', 'Fra studiet' );
+$collage = array_filter( array(
+	get_theme_mod( 's247_om_collage_1', '' ),
+	get_theme_mod( 's247_om_collage_2', '' ),
+	get_theme_mod( 's247_om_collage_3', '' ),
+	get_theme_mod( 's247_om_collage_4', '' ),
+	get_theme_mod( 's247_om_collage_5', '' ),
+) );
+?>
+<?php if ( count( $collage ) >= 3 ) : ?>
+<section class="om-collage">
+	<div class="wrap wrap--wide">
+		<?php if ( $collage_eyebrow ) : ?>
+			<span class="eyebrow eyebrow--accent eyebrow--no-line om-collage__eyebrow"><?php echo esc_html( $collage_eyebrow ); ?></span>
+		<?php endif; ?>
+		<div class="om-collage__grid">
+			<?php foreach ( $collage as $idx => $url ) : ?>
+				<figure class="om-collage__item om-collage__item--<?php echo (int) ( $idx + 1 ); ?>">
+					<img src="<?php echo esc_url( $url ); ?>" alt="" loading="lazy">
+				</figure>
+			<?php endforeach; ?>
+		</div>
 	</div>
 </section>
 <?php endif; ?>

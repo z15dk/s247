@@ -390,6 +390,20 @@ add_action( 'customize_register', function ( $wp_customize ) {
 
 	/* Manifest-block (3 principper) + stats-strip */
 	$om_extra_fields = array(
+		// Stor editorial-statement (mørkt fuld-breddebanner)
+		's247_om_statement_eyebrow'    => array( 'label' => 'Statement — eyebrow',       'type' => 'text',     'default' => 'Det vi tror på' ),
+		's247_om_statement_text_a'     => array( 'label' => 'Statement — tekst del 1',   'type' => 'textarea', 'default' => 'Vi bliver der lidt længere.' ),
+		's247_om_statement_text_em'    => array( 'label' => 'Statement — tekst del 2 (kursiv accent)', 'type' => 'textarea', 'default' => 'Vi tager en ekstra take.' ),
+		's247_om_statement_text_b'     => array( 'label' => 'Statement — tekst del 3',   'type' => 'textarea', 'default' => 'Det er ikke en service — det er en arbejdsmoral.' ),
+
+		// Foto-collage (5 billeder i asymmetrisk grid)
+		's247_om_collage_eyebrow'      => array( 'label' => 'Collage — eyebrow',         'type' => 'text',     'default' => 'Fra studiet' ),
+		's247_om_collage_1'            => array( 'label' => 'Collage — billede 1 (stort, venstre)',  'type' => 'image', 'default' => '' ),
+		's247_om_collage_2'            => array( 'label' => 'Collage — billede 2',       'type' => 'image',    'default' => '' ),
+		's247_om_collage_3'            => array( 'label' => 'Collage — billede 3',       'type' => 'image',    'default' => '' ),
+		's247_om_collage_4'            => array( 'label' => 'Collage — billede 4',       'type' => 'image',    'default' => '' ),
+		's247_om_collage_5'            => array( 'label' => 'Collage — billede 5',       'type' => 'image',    'default' => '' ),
+
 		's247_om_manifest_eyebrow'  => array( 'label' => 'Manifest — eyebrow',     'type' => 'text',     'default' => 'Vores principper' ),
 		's247_om_manifest_title'    => array( 'label' => 'Manifest — overskrift',  'type' => 'text',     'default' => 'Det vi holder fast i' ),
 		's247_om_manifest_1'        => array( 'label' => 'Princip 1',              'type' => 'textarea', 'default' => 'Vi siger nej, når vi mener nej.' ),
@@ -411,17 +425,25 @@ add_action( 'customize_register', function ( $wp_customize ) {
 	);
 	foreach ( $om_extra_fields as $key => $cfg ) {
 		$sanitize = 'sanitize_text_field';
-		if ( 'textarea' === $cfg['type'] ) { $sanitize = 'wp_kses_post'; }
+		if ( 'textarea' === $cfg['type'] )     { $sanitize = 'wp_kses_post'; }
+		elseif ( 'image' === $cfg['type'] )    { $sanitize = 'esc_url_raw'; }
 		$wp_customize->add_setting( $key, array(
 			'default'           => $cfg['default'],
 			'sanitize_callback' => $sanitize,
 			'transport'         => 'refresh',
 		) );
-		$wp_customize->add_control( $key, array(
-			'label'   => $cfg['label'],
-			'section' => 's247_om',
-			'type'    => 'textarea' === $cfg['type'] ? 'textarea' : 'text',
-		) );
+		if ( 'image' === $cfg['type'] ) {
+			$wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, $key, array(
+				'label'   => $cfg['label'],
+				'section' => 's247_om',
+			) ) );
+		} else {
+			$wp_customize->add_control( $key, array(
+				'label'   => $cfg['label'],
+				'section' => 's247_om',
+				'type'    => 'textarea' === $cfg['type'] ? 'textarea' : 'text',
+			) );
+		}
 	}
 
 	for ( $i = 1; $i <= 8; $i++ ) {
