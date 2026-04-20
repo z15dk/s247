@@ -1862,7 +1862,7 @@ body.team-modal-open { overflow: hidden; }
 /* ─── Modern shop-hero ─── */
 .shop-hero {
 	position: relative;
-	padding: var(--sp-16) 0 var(--sp-12);
+	padding: calc(var(--sp-16) + 30px) 0 var(--sp-12);
 	background: #15100d;
 	color: var(--color-ink-on-dark);
 	overflow: hidden;
@@ -2005,45 +2005,98 @@ body.team-modal-open { overflow: hidden; }
 .shop-cats__row {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 8px;
+	gap: 10px;
 }
 
 .shop-cat-chip {
 	display: inline-flex;
 	align-items: center;
-	gap: 8px;
-	height: 36px;
-	padding: 0 14px;
+	gap: 12px;
+	height: 52px;
+	padding: 0 20px 0 16px;
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
-	border-radius: 999px;
+	border-radius: var(--radius-md, 12px);
 	color: var(--color-ink);
 	font-family: var(--font-sans);
-	font-weight: 600;
-	font-size: 13px;
-	letter-spacing: -0.005em;
+	font-weight: 700;
+	font-size: 15px;
+	letter-spacing: -0.015em;
 	text-decoration: none;
-	transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+	position: relative;
+	overflow: hidden;
+	transition: background 220ms ease, border-color 220ms ease, color 220ms ease,
+	            transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+	            box-shadow 220ms ease;
+}
+.shop-cat-chip::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 3px;
+	background: var(--color-accent);
+	transform: scaleY(0.35);
+	transform-origin: center;
+	transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .shop-cat-chip:hover {
 	background: var(--color-ink);
 	border-color: var(--color-ink);
 	color: var(--color-ink-on-dark);
-	transform: translateY(-1px);
+	transform: translateY(-2px);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+.shop-cat-chip:hover::before {
+	transform: scaleY(1);
+}
+.shop-cat-chip__num {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: 1.3rem;
+	line-height: 1;
+	color: var(--color-accent);
+	min-width: 22px;
+}
+.shop-cat-chip__name {
+	flex: 1;
+	white-space: nowrap;
 }
 .shop-cat-chip__count {
 	font-family: var(--font-mono);
 	font-size: 10px;
 	font-weight: 700;
-	letter-spacing: 0.05em;
-	color: var(--color-accent);
-	padding: 2px 7px;
-	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+	letter-spacing: 0.08em;
+	color: var(--color-ink-mute);
+	padding: 3px 8px;
+	background: transparent;
+	border: 1px solid var(--color-border);
 	border-radius: 999px;
+	transition: color 220ms ease, border-color 220ms ease, background 220ms ease;
 }
 .shop-cat-chip:hover .shop-cat-chip__count {
-	background: color-mix(in srgb, var(--color-accent) 30%, transparent);
 	color: var(--color-ink-on-dark);
+	border-color: color-mix(in srgb, var(--color-ink-on-dark) 30%, transparent);
+}
+.shop-cat-chip__arrow {
+	display: inline-flex;
+	align-items: center;
+	color: var(--color-accent);
+	margin-left: -4px;
+	width: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1),
+	            opacity 180ms ease,
+	            margin-left 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.shop-cat-chip:hover .shop-cat-chip__arrow {
+	width: 18px;
+	opacity: 1;
+	margin-left: 0;
+	color: var(--color-accent);
 }
 
 .shop__head--compact {

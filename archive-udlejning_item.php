@@ -78,10 +78,12 @@ if ( ! $is_term_archive && ! empty( $categories ) && ! is_wp_error( $categories 
 			<h2 class="shop-cats__title"><?php esc_html_e( 'Find din kategori', 'studie247' ); ?></h2>
 		</header>
 		<div class="shop-cats__row">
-			<?php foreach ( $categories as $cat ) : ?>
+			<?php foreach ( $categories as $idx => $cat ) : ?>
 				<a class="shop-cat-chip" href="<?php echo esc_url( get_term_link( $cat ) ); ?>">
+					<span class="shop-cat-chip__num"><?php printf( '%02d', $idx + 1 ); ?></span>
 					<span class="shop-cat-chip__name"><?php echo esc_html( $cat->name ); ?></span>
 					<span class="shop-cat-chip__count"><?php echo (int) $cat->count; ?></span>
+					<span class="shop-cat-chip__arrow" aria-hidden="true"><?php echo studie247_icon( 'arrow-right', 14 ); ?></span>
 				</a>
 			<?php endforeach; ?>
 		</div>
