@@ -60,6 +60,10 @@ $hero_display_image = get_theme_mod( 's247_hero_display_image' );
 				<?php esc_html_e( 'Vi producerer podcasts, SoMe-videoer, online kurser og fotoshoots — fra idé til færdigt resultat.', 'studie247' ); ?>
 			</p>
 			<div class="hero__actions">
+				<a class="btn btn--primary btn--lg" href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>">
+					<?php esc_html_e( 'Book studiet', 'studie247' ); ?>
+					<?php echo studie247_icon( 'arrow-right', 16 ); ?>
+				</a>
 				<a class="btn btn--ghost" href="#services">
 					<?php esc_html_e( 'Se services', 'studie247' ); ?>
 					<?php echo studie247_icon( 'arrow-right', 16 ); ?>

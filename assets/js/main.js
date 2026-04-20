@@ -6,21 +6,21 @@
 	'use strict';
 
 	// ──────────────────────────────────────────────
-	// Sticky header — altid synlig, får subtil skygge når man scroller
+	// Header: glider ind ved første scroll og bliver synlig (one-way).
 	// ──────────────────────────────────────────────
 	const header = document.querySelector('[data-site-header]');
 	if (header) {
-		header.classList.add('site-header--visible');
-		let lastScrolled = false;
-		const update = () => {
-			const scrolled = window.scrollY > 40;
-			if (scrolled !== lastScrolled) {
-				header.classList.toggle('site-header--scrolled', scrolled);
-				lastScrolled = scrolled;
+		const showAt = 20;
+		let shown = false;
+		const onScroll = () => {
+			if (!shown && window.scrollY > showAt) {
+				header.classList.add('site-header--visible');
+				shown = true;
+				window.removeEventListener('scroll', onScroll);
 			}
 		};
-		update();
-		window.addEventListener('scroll', update, { passive: true });
+		onScroll();
+		window.addEventListener('scroll', onScroll, { passive: true });
 	}
 
 	// ──────────────────────────────────────────────

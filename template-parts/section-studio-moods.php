@@ -38,24 +38,7 @@ if ( empty( $moods ) ) {
 			<span class="moods__title-b"><?php echo esc_html( $title_b ); ?></span>
 		</h2>
 
-		<div class="moods__panel" data-moods data-moods-count="<?php echo count( $moods ); ?>">
-			<div class="moods__tabs" role="tablist" aria-orientation="vertical">
-				<?php foreach ( $moods as $idx => $mood ) : ?>
-					<button
-						type="button"
-						role="tab"
-						class="moods__tab<?php echo 0 === $idx ? ' is-active' : ''; ?>"
-						aria-selected="<?php echo 0 === $idx ? 'true' : 'false'; ?>"
-						aria-controls="mood-panel-<?php echo esc_attr( $idx ); ?>"
-						id="mood-tab-<?php echo esc_attr( $idx ); ?>"
-						data-mood-target="<?php echo esc_attr( $idx ); ?>"
-					>
-						<?php echo studie247_icon( $mood['icon'], 20 ); ?>
-						<span><?php echo esc_html( $mood['label'] ); ?></span>
-					</button>
-				<?php endforeach; ?>
-			</div>
-
+		<div class="moods__panel moods__panel--full" data-moods data-moods-count="<?php echo count( $moods ); ?>">
 			<div class="moods__stage">
 				<div class="moods__track" data-moods-track>
 					<?php foreach ( $moods as $idx => $mood ) : ?>
@@ -63,7 +46,6 @@ if ( empty( $moods ) ) {
 							class="moods__slide"
 							role="tabpanel"
 							id="mood-panel-<?php echo esc_attr( $idx ); ?>"
-							aria-labelledby="mood-tab-<?php echo esc_attr( $idx ); ?>"
 							data-mood-panel="<?php echo esc_attr( $idx ); ?>"
 						>
 							<?php if ( $mood['image'] ) : ?>
@@ -71,11 +53,22 @@ if ( empty( $moods ) ) {
 							<?php else : ?>
 								<div class="moods__image-placeholder"><?php esc_html_e( 'Upload billede i Customizer', 'studie247' ); ?></div>
 							<?php endif; ?>
-							<div class="moods__slide-caption">
-								<?php echo studie247_icon( $mood['icon'], 16 ); ?>
-								<span><?php echo esc_html( $mood['label'] ); ?></span>
-							</div>
 						</div>
+					<?php endforeach; ?>
+				</div>
+
+				<div class="moods__tabs-overlay" role="tablist">
+					<?php foreach ( $moods as $idx => $mood ) : ?>
+						<button
+							type="button"
+							role="tab"
+							class="moods__chip<?php echo 0 === $idx ? ' is-active' : ''; ?>"
+							aria-selected="<?php echo 0 === $idx ? 'true' : 'false'; ?>"
+							data-mood-target="<?php echo esc_attr( $idx ); ?>"
+						>
+							<?php echo studie247_icon( $mood['icon'], 16 ); ?>
+							<span><?php echo esc_html( $mood['label'] ); ?></span>
+						</button>
 					<?php endforeach; ?>
 				</div>
 
@@ -86,11 +79,6 @@ if ( empty( $moods ) ) {
 					<button type="button" class="moods__nav moods__nav--next" data-moods-next aria-label="<?php esc_attr_e( 'Næste', 'studie247' ); ?>">
 						<?php echo studie247_icon( 'arrow-right', 18 ); ?>
 					</button>
-					<div class="moods__dots" role="presentation">
-						<?php foreach ( $moods as $idx => $mood ) : ?>
-							<button type="button" class="moods__dot<?php echo 0 === $idx ? ' is-active' : ''; ?>" data-mood-target="<?php echo esc_attr( $idx ); ?>" aria-label="<?php echo esc_attr( sprintf( '%s', $mood['label'] ) ); ?>"></button>
-						<?php endforeach; ?>
-					</div>
 				<?php endif; ?>
 			</div>
 		</div>

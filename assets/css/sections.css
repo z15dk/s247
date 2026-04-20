@@ -3,7 +3,7 @@
    testimonials, FAQ, CTA, footer
    ================================================================= */
 
-/* ─── Site header — sticky floating pill, altid synlig ─── */
+/* ─── Site header — glider ind ved første scroll og bliver synlig ─── */
 .site-header {
 	position: fixed;
 	top: var(--sp-4);
@@ -17,19 +17,18 @@
 	border-radius: var(--radius-pill);
 	padding: 8px 10px 8px 26px;
 	color: var(--color-ink-on-dark);
-	transform: translateY(0);
-	opacity: 1;
-	transition: box-shadow var(--dur) var(--ease);
+	transform: translateY(calc(-100% - var(--sp-6)));
+	opacity: 0;
+	transition: transform var(--dur-slow) var(--ease-smooth),
+	            opacity var(--dur-slow) var(--ease-smooth),
+	            box-shadow var(--dur) var(--ease);
 	will-change: transform;
-}
-
-.site-header--scrolled {
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .site-header--visible {
 	transform: translateY(0);
 	opacity: 1;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .site-header__inner {
@@ -1135,7 +1134,53 @@
 		grid-template-columns: minmax(240px, 320px) 1fr;
 		gap: var(--sp-10);
 	}
+	/* Full-variant: slider fylder hele sektionen — ingen tab-kolonne. */
+	.moods__panel--full {
+		grid-template-columns: 1fr;
+		gap: 0;
+	}
+	.moods__panel--full .moods__stage { aspect-ratio: 21 / 9; }
 }
+
+/* Chip-overlay (label-knapper oven på billedet) */
+.moods__tabs-overlay {
+	position: absolute;
+	left: 50%;
+	bottom: var(--sp-5);
+	transform: translateX(-50%);
+	display: inline-flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px;
+	padding: 8px;
+	background: rgba(0, 0, 0, 0.5);
+	border-radius: 999px;
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	z-index: 3;
+	max-width: calc(100% - var(--sp-10));
+}
+.moods__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 16px;
+	background: transparent;
+	border: 0;
+	border-radius: 999px;
+	color: rgba(255, 255, 255, 0.75);
+	font-family: var(--font-sans);
+	font-weight: 600;
+	font-size: 13px;
+	cursor: pointer;
+	transition: background 160ms ease, color 160ms ease;
+}
+.moods__chip:hover { color: #fff; }
+.moods__chip.is-active {
+	background: var(--color-accent);
+	color: #fff;
+}
+.moods__chip .icon { opacity: 0.9; }
 
 .moods__tabs {
 	display: flex;
