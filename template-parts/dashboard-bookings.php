@@ -246,6 +246,102 @@ if ( $detail ) :
 	return; // Detalje renderet — stop før tabel.
 endif;
 
+/* ───── Månedskalender øverst ───── */
+$cal_ym = isset( $_GET['m'] ) ? sanitize_text_field( wp_unslash( $_GET['m'] ) ) : date( 'Y-m' );
+if ( ! preg_match( '/^\d{4}-\d{2}$/', $cal_ym ) ) { $cal_ym = date( 'Y-m' ); }
+$cal_first_ts = strtotime( $cal_ym . '-01' );
+$cal_days     = (int) date( 't', $cal_first_ts );
+$cal_first_wd = (int) date( 'N', $cal_first_ts ); // 1=man .. 7=søn
+$cal_prev_ym  = date( 'Y-m', strtotime( '-1 month', $cal_first_ts ) );
+$cal_next_ym  = date( 'Y-m', strtotime( '+1 month', $cal_first_ts ) );
+$cal_label    = ucfirst( date_i18n( 'F Y', $cal_first_ts ) );
+$cal_today    = date( 'Y-m-d' );
+
+// Hent alle studie-bookinger i måneden.
+$cal_start = $cal_ym . '-01';
+$cal_end   = date( 'Y-m-t', $cal_first_ts );
+$cal_posts = get_posts( array(
+	'post_type'      => 'booking',
+	'post_status'    => array( 'pending', 'publish' ),
+	'posts_per_page' => -1,
+	'meta_query'     => array(
+		'relation' => 'AND',
+		array(
+			'relation' => 'OR',
+			array( 'key' => '_s247_produkt', 'compare' => 'NOT EXISTS' ),
+			array( 'key' => '_s247_produkt', 'value' => '', 'compare' => '=' ),
+		),
+		array( 'key' => '_s247_date', 'value' => array( $cal_start, $cal_end ), 'type' => 'DATE', 'compare' => 'BETWEEN' ),
+	),
+) );
+$cal_map = array(); // iso-date → array of {name, status, id}
+foreach ( $cal_posts as $p ) {
+	$d = get_post_meta( $p->ID, '_s247_date', true );
+	if ( ! $d ) { continue; }
+	$cal_map[ $d ][] = array(
+		'id'     => $p->ID,
+		'name'   => get_post_meta( $p->ID, '_s247_name', true ) ?: '(uden navn)',
+		'start'  => get_post_meta( $p->ID, '_s247_start', true ),
+		'status' => $p->post_status,
+	);
+}
+?>
+
+<div class="sd-cal">
+	<header class="sd-cal__head">
+		<div class="sd-cal__title"><?php echo esc_html( $cal_label ); ?></div>
+		<div class="sd-cal__nav">
+			<a class="sd-cal__arrow" href="<?php echo esc_url( add_query_arg( array( 'view' => 'bookings', 'm' => $cal_prev_ym ), home_url( '/dashboard/' ) ) ); ?>" aria-label="<?php esc_attr_e( 'Forrige måned', 'studie247' ); ?>">‹</a>
+			<?php if ( $cal_ym !== date( 'Y-m' ) ) : ?>
+				<a class="sd-cal__today" href="<?php echo esc_url( add_query_arg( array( 'view' => 'bookings' ), home_url( '/dashboard/' ) ) ); ?>"><?php esc_html_e( 'I dag', 'studie247' ); ?></a>
+			<?php endif; ?>
+			<a class="sd-cal__arrow" href="<?php echo esc_url( add_query_arg( array( 'view' => 'bookings', 'm' => $cal_next_ym ), home_url( '/dashboard/' ) ) ); ?>" aria-label="<?php esc_attr_e( 'Næste måned', 'studie247' ); ?>">›</a>
+		</div>
+	</header>
+	<div class="sd-cal__weeknames" aria-hidden="true">
+		<span>Man</span><span>Tir</span><span>Ons</span><span>Tor</span><span>Fre</span><span>Lør</span><span>Søn</span>
+	</div>
+	<div class="sd-cal__grid">
+		<?php
+		// Tomme celler før måneden starter
+		for ( $e = 1; $e < $cal_first_wd; $e++ ) {
+			echo '<div class="sd-cal__cell sd-cal__cell--empty"></div>';
+		}
+		for ( $d = 1; $d <= $cal_days; $d++ ) {
+			$iso = sprintf( '%s-%02d', $cal_ym, $d );
+			$ts  = strtotime( $iso );
+			$classes = array( 'sd-cal__cell' );
+			if ( $iso === $cal_today ) { $classes[] = 'sd-cal__cell--today'; }
+			if ( $ts < strtotime( $cal_today ) ) { $classes[] = 'sd-cal__cell--past'; }
+			$wd = (int) date( 'N', $ts );
+			if ( $wd >= 6 ) { $classes[] = 'sd-cal__cell--weekend'; }
+			$has = ! empty( $cal_map[ $iso ] );
+			if ( $has ) { $classes[] = 'sd-cal__cell--has'; }
+			?>
+			<div class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+				<span class="sd-cal__num"><?php echo (int) $d; ?></span>
+				<?php if ( $has ) : ?>
+					<div class="sd-cal__bookings">
+						<?php foreach ( $cal_map[ $iso ] as $bk ) : ?>
+							<a class="sd-cal__booking sd-cal__booking--<?php echo esc_attr( $bk['status'] ); ?>"
+								href="<?php echo esc_url( home_url( '/dashboard/?view=bookings&booking=' . $bk['id'] ) ); ?>"
+								title="<?php echo esc_attr( $bk['name'] . ( $bk['start'] ? ' · ' . $bk['start'] : '' ) ); ?>">
+								<?php if ( $bk['start'] ) : ?><span class="sd-cal__time"><?php echo esc_html( substr( $bk['start'], 0, 5 ) ); ?></span><?php endif; ?>
+								<span class="sd-cal__name"><?php echo esc_html( $bk['name'] ); ?></span>
+							</a>
+						<?php endforeach; ?>
+					</div>
+				<?php endif; ?>
+			</div>
+		<?php } ?>
+	</div>
+	<div class="sd-cal__legend">
+		<span><span class="sd-cal__legend-dot sd-cal__legend-dot--publish"></span> <?php esc_html_e( 'Godkendt', 'studie247' ); ?></span>
+		<span><span class="sd-cal__legend-dot sd-cal__legend-dot--pending"></span> <?php esc_html_e( 'Afventer', 'studie247' ); ?></span>
+	</div>
+</div>
+
+<?php
 /* ───── Liste-visning ───── */
 // Byg query-args
 $args = array(

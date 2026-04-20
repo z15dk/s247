@@ -584,6 +584,166 @@ a.sd-stat:hover {
 	font-size: 16px;
 }
 
+/* ─── Kalender (bookings-oversigt) ─── */
+.sd-cal {
+	background: #FFF;
+	border: 1px solid var(--sd-border);
+	border-radius: 12px;
+	padding: 18px 20px 16px;
+	margin-bottom: 18px;
+}
+.sd-cal__head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 14px;
+}
+.sd-cal__title {
+	font-size: 17px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+.sd-cal__nav { display: inline-flex; gap: 4px; align-items: center; }
+.sd-cal__arrow,
+.sd-cal__today {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 32px;
+	height: 32px;
+	padding: 0 10px;
+	background: #FFF;
+	border: 1px solid var(--sd-border);
+	border-radius: 8px;
+	color: var(--sd-ink-soft);
+	font-weight: 500;
+	font-size: 14px;
+	transition: background 140ms ease, color 140ms ease;
+}
+.sd-cal__arrow { font-size: 18px; line-height: 1; }
+.sd-cal__arrow:hover,
+.sd-cal__today:hover { background: var(--sd-border-soft); color: var(--sd-ink); }
+
+.sd-cal__weeknames {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 6px;
+	margin-bottom: 6px;
+}
+.sd-cal__weeknames span {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--sd-ink-mute);
+	padding: 0 6px;
+}
+
+.sd-cal__grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 6px;
+}
+.sd-cal__cell {
+	position: relative;
+	min-height: 88px;
+	padding: 6px 7px;
+	background: var(--sd-border-soft);
+	border-radius: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	overflow: hidden;
+}
+.sd-cal__cell--empty {
+	background: transparent;
+	min-height: 0;
+}
+.sd-cal__cell--weekend { background: #EEF0F4; }
+.sd-cal__cell--past   { opacity: 0.55; }
+.sd-cal__cell--today {
+	background: var(--sd-accent-soft);
+	outline: 2px solid var(--sd-accent);
+	outline-offset: -2px;
+}
+.sd-cal__cell--has { background: #FFF; border: 1px solid var(--sd-border); }
+.sd-cal__cell--has.sd-cal__cell--today {
+	background: #FFF;
+	outline: 2px solid var(--sd-accent);
+}
+
+.sd-cal__num {
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--sd-ink-mute);
+	align-self: flex-end;
+}
+.sd-cal__cell--today .sd-cal__num { color: var(--sd-accent); }
+
+.sd-cal__bookings {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-top: auto;
+}
+.sd-cal__booking {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 6px;
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--sd-ink);
+	background: #FFF;
+	border-left: 3px solid var(--sd-ink-mute);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	transition: background 140ms ease;
+}
+.sd-cal__booking:hover { background: var(--sd-border-soft); }
+.sd-cal__booking--publish { border-left-color: #0a7c2f; background: #D1FADF; color: #0a5e23; }
+.sd-cal__booking--publish:hover { background: #A6F4C5; }
+.sd-cal__booking--pending { border-left-color: #9a6300; background: #FEF3CF; color: #7a4d00; }
+.sd-cal__booking--pending:hover { background: #FDE68A; }
+.sd-cal__time {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 10px;
+	opacity: 0.75;
+	flex-shrink: 0;
+}
+.sd-cal__name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sd-cal__legend {
+	display: flex;
+	gap: 16px;
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid var(--sd-border-soft);
+	font-size: 11px;
+	color: var(--sd-ink-mute);
+}
+.sd-cal__legend span { display: inline-flex; align-items: center; gap: 5px; }
+.sd-cal__legend-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 2px;
+}
+.sd-cal__legend-dot--publish { background: #0a7c2f; }
+.sd-cal__legend-dot--pending { background: #9a6300; }
+
+@media (max-width: 900px) {
+	.sd-cal__cell { min-height: 72px; padding: 4px 6px; }
+	.sd-cal__num { font-size: 11px; }
+	.sd-cal__booking { font-size: 10px; padding: 2px 4px; }
+	.sd-cal__time { display: none; }
+}
+
 /* Status-badges */
 .sd-status {
 	display: inline-flex;
