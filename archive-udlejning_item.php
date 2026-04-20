@@ -77,21 +77,11 @@ if ( ! $is_term_archive && ! empty( $categories ) && ! is_wp_error( $categories 
 			<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Bladr', 'studie247' ); ?></span>
 			<h2 class="shop-cats__title"><?php esc_html_e( 'Find din kategori', 'studie247' ); ?></h2>
 		</header>
-		<div class="shop-cats__grid">
-			<?php foreach ( $categories as $cat ) :
-				// Hent første produkt i kategorien til baggrunds-billede.
-				$preview = get_posts( array(
-					'post_type'      => 'udlejning_item',
-					'posts_per_page' => 1,
-					'tax_query'      => array( array( 'taxonomy' => 'udlejning_kategori', 'field' => 'term_id', 'terms' => $cat->term_id ) ),
-					'meta_query'     => array( array( 'key' => '_thumbnail_id', 'compare' => 'EXISTS' ) ),
-				) );
-				$bg = ! empty( $preview ) ? get_the_post_thumbnail_url( $preview[0], 's247-card' ) : '';
-				?>
-				<a class="shop-cat-tile" href="<?php echo esc_url( get_term_link( $cat ) ); ?>"<?php if ( $bg ) : ?> style="background-image: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.85) 100%), url('<?php echo esc_url( $bg ); ?>');"<?php endif; ?>>
-					<span class="shop-cat-tile__count"><?php echo (int) $cat->count; ?></span>
-					<span class="shop-cat-tile__name"><?php echo esc_html( $cat->name ); ?></span>
-					<span class="shop-cat-tile__cta"><?php esc_html_e( 'Se alle', 'studie247' ); ?> <?php echo studie247_icon( 'arrow-right', 14 ); ?></span>
+		<div class="shop-cats__row">
+			<?php foreach ( $categories as $cat ) : ?>
+				<a class="shop-cat-chip" href="<?php echo esc_url( get_term_link( $cat ) ); ?>">
+					<span class="shop-cat-chip__name"><?php echo esc_html( $cat->name ); ?></span>
+					<span class="shop-cat-chip__count"><?php echo (int) $cat->count; ?></span>
 				</a>
 			<?php endforeach; ?>
 		</div>
