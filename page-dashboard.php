@@ -58,30 +58,14 @@ if ( isset( $_POST['s247_dash_save_message'] ) && is_user_logged_in() && current
 if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current_user_can( 'edit_posts' ) ) {
 	$save_id = (int) $_POST['s247_dash_save_booking'];
 	if ( $save_id && check_admin_referer( 's247_dash_edit_' . $save_id ) && 'booking' === get_post_type( $save_id ) ) {
-		$text_fields = array(
-			'_s247_name', '_s247_email', '_s247_phone', '_s247_company', '_s247_cvr',
-			'_s247_date', '_s247_start', '_s247_duration',
-			'_s247_use_type', '_s247_edit_type', '_s247_podcast_type',
-			'_s247_tilkoeb', '_s247_format',
-		);
-		foreach ( $text_fields as $key ) {
-			if ( isset( $_POST[ $key ] ) ) {
-				update_post_meta( $save_id, $key, sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) );
-			}
-		}
-		if ( isset( $_POST['_s247_notes'] ) ) {
-			update_post_meta( $save_id, '_s247_notes', sanitize_textarea_field( wp_unslash( $_POST['_s247_notes'] ) ) );
-		}
-		if ( isset( $_POST['_s247_video_count'] ) ) {
-			update_post_meta( $save_id, '_s247_video_count', max( 0, (int) $_POST['_s247_video_count'] ) );
-		}
-		if ( isset( $_POST['_s247_video_duration'] ) ) {
-			update_post_meta( $save_id, '_s247_video_duration', max( 0, (int) $_POST['_s247_video_duration'] ) );
-		}
+		// Kunde-felter (navn/email/tlf/virksomhed/cvr, dato/tid/varighed,
+		// formål, noter) er read-only i dashboardet — vi rører ikke ved
+		// hvad kunden har indsendt. Kun interne felter opdateres:
+		// pris, intern-toggle, post-status.
+
 		if ( isset( $_POST['_s247_estimated_price'] ) && ( studie247_can_view_dash( 'revenue' ) || current_user_can( 'manage_options' ) ) ) {
 			update_post_meta( $save_id, '_s247_estimated_price', max( 0, (int) $_POST['_s247_estimated_price'] ) );
 		}
-		// Intern brug: brug fælles helper så pris-backup/gendan matcher wp-admin-knappen.
 		if ( function_exists( 'studie247_apply_internal_state' ) ) {
 			$want_internal = ! empty( $_POST['_s247_internal'] );
 			$is_internal   = '1' === get_post_meta( $save_id, '_s247_internal', true );
@@ -98,14 +82,6 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 				}
 			}
 		}
-		// Opdater title så den afspejler ændringer.
-		$new_title = sprintf(
-			'%s — %s %s',
-			get_post_meta( $save_id, '_s247_name', true ) ?: '(uden navn)',
-			get_post_meta( $save_id, '_s247_date', true ),
-			get_post_meta( $save_id, '_s247_start', true )
-		);
-		wp_update_post( array( 'ID' => $save_id, 'post_title' => $new_title ) );
 
 		wp_safe_redirect( add_query_arg(
 			array( 'view' => 'bookings', 'booking' => $save_id, 'saved' => '1' ),
