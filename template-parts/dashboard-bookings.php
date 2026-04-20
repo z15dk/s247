@@ -79,9 +79,30 @@ if ( $detail ) :
 		's247_reject_' . $detail->ID
 	);
 ?>
-	<div class="sd-detail">
+	<?php
+	$saved = isset( $_GET['saved'] ) && '1' === $_GET['saved'];
+	$status_options = array(
+		'pending' => __( 'Afventer godkendelse', 'studie247' ),
+		'publish' => __( 'Godkendt', 'studie247' ),
+		'trash'   => __( 'Afvist / aflyst', 'studie247' ),
+	);
+	$use_type_options = array(
+		'' => __( '— Ikke angivet —', 'studie247' ),
+		'podcast' => 'Podcast', 'kursusvideo' => 'Kursusvideo',
+		'undervisningsvideo' => 'Undervisningsvideo',
+		'some-content' => 'SoMe Content', 'annonce-video' => 'Annonce-video',
+	);
+	$edit_options = array( '' => __( '— Ikke angivet —', 'studie247' ), 'redigering' => 'Redigering', 'kun-filer' => 'Kun filerne' );
+	$podcast_options = array( '' => '—', 'lyd' => 'Lyd-podcast', 'video' => 'Video-podcast' );
+	$tilkoeb_options = array( '' => __( 'Ingen', 'studie247' ), 'jingle-standard' => 'Jingle — standard', 'jingle-skraeddersyet' => 'Jingle — skræddersyet' );
+	$format_options  = array( '' => '—', '16:9' => '16:9', '9:16' => '9:16', '4:5' => '4:5', '1:1' => '1:1' );
+	?>
+	<form method="post" action="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>" class="sd-detail sd-edit">
+		<?php wp_nonce_field( 's247_dash_edit_' . $detail->ID ); ?>
+		<input type="hidden" name="s247_dash_save_booking" value="<?php echo (int) $detail->ID; ?>">
+
 		<header class="sd-detail__head">
-			<a class="sd-btn sd-btn--ghost" href="<?php echo esc_url( home_url( '/dashboard/?view=bookings' ) ); ?>">← <?php esc_html_e( 'Tilbage til liste', 'studie247' ); ?></a>
+			<a class="sd-btn sd-btn--ghost" href="<?php echo esc_url( home_url( '/dashboard/?view=bookings' ) ); ?>">← <?php esc_html_e( 'Tilbage', 'studie247' ); ?></a>
 			<div class="sd-detail__titlewrap">
 				<span class="sd-status sd-status--<?php echo esc_attr( $sl[1] ); ?>"><?php echo esc_html( $sl[0] ); ?></span>
 				<h2 class="sd-detail__title"><?php echo esc_html( $d_name ?: '(uden navn)' ); ?></h2>
@@ -93,70 +114,131 @@ if ( $detail ) :
 			</div>
 			<div class="sd-detail__actions">
 				<?php if ( 'pending' === $detail->post_status ) : ?>
-					<a class="sd-btn" href="<?php echo esc_url( $approve_url ); ?>">✓ <?php esc_html_e( 'Godkend', 'studie247' ); ?></a>
-					<a class="sd-btn sd-btn--danger" href="<?php echo esc_url( $reject_url ); ?>" onclick="return confirm('<?php esc_attr_e( 'Afvis denne forespørgsel?', 'studie247' ); ?>');">✕ <?php esc_html_e( 'Afvis', 'studie247' ); ?></a>
+					<a class="sd-btn" href="<?php echo esc_url( $approve_url ); ?>">✓ <?php esc_html_e( 'Godkend + mail', 'studie247' ); ?></a>
+					<a class="sd-btn sd-btn--danger" href="<?php echo esc_url( $reject_url ); ?>" onclick="return confirm('<?php esc_attr_e( 'Afvis + send mail?', 'studie247' ); ?>');">✕ <?php esc_html_e( 'Afvis + mail', 'studie247' ); ?></a>
 				<?php elseif ( 'publish' === $detail->post_status ) : ?>
-					<a class="sd-btn sd-btn--danger" href="<?php echo esc_url( $reject_url ); ?>" onclick="return confirm('<?php esc_attr_e( 'Aflys denne booking?', 'studie247' ); ?>');">✕ <?php esc_html_e( 'Aflys', 'studie247' ); ?></a>
+					<a class="sd-btn sd-btn--danger" href="<?php echo esc_url( $reject_url ); ?>" onclick="return confirm('<?php esc_attr_e( 'Aflys + send mail?', 'studie247' ); ?>');">✕ <?php esc_html_e( 'Aflys + mail', 'studie247' ); ?></a>
 				<?php endif; ?>
-				<a class="sd-btn sd-btn--ghost" href="<?php echo esc_url( get_edit_post_link( $detail->ID ) ); ?>"><?php esc_html_e( 'Rediger i wp-admin', 'studie247' ); ?> ↗</a>
+				<button type="submit" class="sd-btn"><?php esc_html_e( 'Gem ændringer', 'studie247' ); ?></button>
 			</div>
 		</header>
+
+		<?php if ( $saved ) : ?>
+			<div class="sd-notice sd-notice--success">✓ <?php esc_html_e( 'Ændringer gemt.', 'studie247' ); ?></div>
+		<?php endif; ?>
 
 		<div class="sd-detail__grid">
 			<div class="sd-panel">
 				<header class="sd-panel__head"><h2><?php esc_html_e( 'Kunde', 'studie247' ); ?></h2></header>
-				<dl class="sd-dl">
-					<div><dt><?php esc_html_e( 'Navn', 'studie247' ); ?></dt><dd><?php echo esc_html( $d_name ?: '—' ); ?></dd></div>
-					<div><dt>Email</dt><dd><?php echo $d_email ? '<a href="mailto:' . esc_attr( $d_email ) . '">' . esc_html( $d_email ) . '</a>' : '—'; ?></dd></div>
-					<div><dt><?php esc_html_e( 'Telefon', 'studie247' ); ?></dt><dd><?php echo $d_phone ? '<a href="tel:' . esc_attr( $d_phone ) . '">' . esc_html( $d_phone ) . '</a>' : '—'; ?></dd></div>
-					<?php if ( $d_company ) : ?><div><dt><?php esc_html_e( 'Virksomhed', 'studie247' ); ?></dt><dd><?php echo esc_html( $d_company ); ?></dd></div><?php endif; ?>
-					<?php if ( $d_cvr ) : ?><div><dt>CVR</dt><dd class="sd-mono"><?php echo esc_html( $d_cvr ); ?></dd></div><?php endif; ?>
-					<?php if ( $d_newsletter ) : ?><div><dt><?php esc_html_e( 'Nyhedsbrev', 'studie247' ); ?></dt><dd>✓ <?php esc_html_e( 'tilmeldt', 'studie247' ); ?></dd></div><?php endif; ?>
-				</dl>
+				<div class="sd-form">
+					<label class="sd-field"><span><?php esc_html_e( 'Navn', 'studie247' ); ?></span>
+						<input type="text" name="_s247_name" value="<?php echo esc_attr( $d_name ); ?>"></label>
+					<label class="sd-field"><span>E-mail</span>
+						<input type="email" name="_s247_email" value="<?php echo esc_attr( $d_email ); ?>"></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Telefon', 'studie247' ); ?></span>
+						<input type="tel" name="_s247_phone" value="<?php echo esc_attr( $d_phone ); ?>"></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Virksomhed', 'studie247' ); ?></span>
+						<input type="text" name="_s247_company" value="<?php echo esc_attr( $d_company ); ?>"></label>
+					<label class="sd-field"><span>CVR</span>
+						<input type="text" name="_s247_cvr" value="<?php echo esc_attr( $d_cvr ); ?>" inputmode="numeric" maxlength="8"></label>
+				</div>
 			</div>
 
 			<div class="sd-panel">
-				<header class="sd-panel__head"><h2><?php esc_html_e( 'Formål', 'studie247' ); ?></h2></header>
-				<dl class="sd-dl">
-					<?php if ( $d_use_type && isset( $use_type_map[ $d_use_type ] ) ) : ?><div><dt><?php esc_html_e( 'Type', 'studie247' ); ?></dt><dd><?php echo esc_html( $use_type_map[ $d_use_type ] ); ?></dd></div><?php endif; ?>
-					<?php if ( $d_edit_type && isset( $edit_map[ $d_edit_type ] ) ) : ?><div><dt><?php esc_html_e( 'Ønsker', 'studie247' ); ?></dt><dd><?php echo esc_html( $edit_map[ $d_edit_type ] ); ?></dd></div><?php endif; ?>
-					<?php if ( $d_podcast_type && isset( $podcast_map[ $d_podcast_type ] ) ) : ?><div><dt>Podcast</dt><dd><?php echo esc_html( $podcast_map[ $d_podcast_type ] ); ?></dd></div><?php endif; ?>
-					<?php if ( $d_tilkoeb && isset( $tilkoeb_map[ $d_tilkoeb ] ) ) : ?><div><dt>Tilkøb</dt><dd><?php echo esc_html( $tilkoeb_map[ $d_tilkoeb ] ); ?></dd></div><?php endif; ?>
-					<?php if ( $d_video_count ) : ?><div><dt><?php esc_html_e( 'Antal videoer', 'studie247' ); ?></dt><dd><?php echo (int) $d_video_count; ?></dd></div><?php endif; ?>
-					<?php if ( $d_video_dur ) : ?><div><dt><?php esc_html_e( 'Varighed/video', 'studie247' ); ?></dt><dd><?php echo (int) $d_video_dur; ?> min</dd></div><?php endif; ?>
-					<?php if ( $d_format ) : ?><div><dt>Format</dt><dd><?php echo esc_html( $d_format ); ?></dd></div><?php endif; ?>
-					<?php if ( $d_pid ) : ?><div><dt><?php esc_html_e( 'Udstyr', 'studie247' ); ?></dt><dd><?php echo esc_html( get_the_title( $d_pid ) ); ?></dd></div><?php endif; ?>
-					<?php if ( ! $d_use_type && ! $d_pid ) : ?><div><dt>—</dt><dd class="sd-muted"><?php esc_html_e( 'Ingen formåls-detaljer angivet', 'studie247' ); ?></dd></div><?php endif; ?>
-				</dl>
+				<header class="sd-panel__head"><h2><?php esc_html_e( 'Tidsplan', 'studie247' ); ?></h2></header>
+				<div class="sd-form">
+					<label class="sd-field"><span><?php esc_html_e( 'Dato', 'studie247' ); ?></span>
+						<input type="date" name="_s247_date" value="<?php echo esc_attr( $d_date ); ?>"></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Start-tid', 'studie247' ); ?></span>
+						<input type="time" name="_s247_start" value="<?php echo esc_attr( $d_start ); ?>"></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Varighed', 'studie247' ); ?></span>
+						<input type="text" name="_s247_duration" value="<?php echo esc_attr( $d_dur ); ?>"></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Status', 'studie247' ); ?></span>
+						<select name="_s247_post_status">
+							<?php foreach ( $status_options as $val => $label ) : ?>
+								<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $detail->post_status, $val ); ?>><?php echo esc_html( $label ); ?></option>
+							<?php endforeach; ?>
+						</select></label>
+				</div>
+				<p class="sd-hint"><?php esc_html_e( 'Tip: Skift status direkte her (uden mail) eller brug "Godkend/Afvis + mail"-knapperne ovenfor hvis kunden skal have besked.', 'studie247' ); ?></p>
 			</div>
 
 			<?php if ( $can_revenue ) : ?>
 				<div class="sd-panel">
 					<header class="sd-panel__head"><h2><?php esc_html_e( 'Økonomi', 'studie247' ); ?></h2></header>
-					<dl class="sd-dl">
-						<div><dt><?php esc_html_e( 'Estimeret pris', 'studie247' ); ?></dt>
-							<dd class="sd-mono"><?php echo $d_price ? esc_html( $fmt_dkk( $d_price ) ) : '—'; ?></dd></div>
-						<?php if ( $d_internal ) : ?><div><dt><?php esc_html_e( 'Intern brug', 'studie247' ); ?></dt><dd>✓ <?php esc_html_e( 'ja', 'studie247' ); ?></dd></div><?php endif; ?>
-					</dl>
+					<div class="sd-form">
+						<label class="sd-field"><span><?php esc_html_e( 'Estimeret pris (kr)', 'studie247' ); ?></span>
+							<input type="number" name="_s247_estimated_price" value="<?php echo (int) $d_price; ?>" min="0" step="1"></label>
+					</div>
+					<?php if ( $d_internal ) : ?>
+						<p class="sd-hint">⚙ <?php esc_html_e( 'Markeret som intern brug. Brug wp-admin for at toggle flaget.', 'studie247' ); ?></p>
+					<?php endif; ?>
 				</div>
 			<?php endif; ?>
 
-			<?php if ( $d_notes ) : ?>
-				<div class="sd-panel sd-panel--wide">
-					<header class="sd-panel__head"><h2><?php esc_html_e( 'Kundens noter', 'studie247' ); ?></h2></header>
-					<div class="sd-notes"><?php echo nl2br( esc_html( $d_notes ) ); ?></div>
+			<div class="sd-panel sd-panel--wide">
+				<header class="sd-panel__head"><h2><?php esc_html_e( 'Formål', 'studie247' ); ?></h2></header>
+				<div class="sd-form sd-form--cols">
+					<label class="sd-field"><span><?php esc_html_e( 'Type', 'studie247' ); ?></span>
+						<select name="_s247_use_type">
+							<?php foreach ( $use_type_options as $val => $label ) : ?>
+								<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $d_use_type, $val ); ?>><?php echo esc_html( $label ); ?></option>
+							<?php endforeach; ?>
+						</select></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Ønsker', 'studie247' ); ?></span>
+						<select name="_s247_edit_type">
+							<?php foreach ( $edit_options as $val => $label ) : ?>
+								<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $d_edit_type, $val ); ?>><?php echo esc_html( $label ); ?></option>
+							<?php endforeach; ?>
+						</select></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Podcast-type', 'studie247' ); ?></span>
+						<select name="_s247_podcast_type">
+							<?php foreach ( $podcast_options as $val => $label ) : ?>
+								<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $d_podcast_type, $val ); ?>><?php echo esc_html( $label ); ?></option>
+							<?php endforeach; ?>
+						</select></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Tilkøb', 'studie247' ); ?></span>
+						<select name="_s247_tilkoeb">
+							<?php foreach ( $tilkoeb_options as $val => $label ) : ?>
+								<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $d_tilkoeb, $val ); ?>><?php echo esc_html( $label ); ?></option>
+							<?php endforeach; ?>
+						</select></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Antal videoer', 'studie247' ); ?></span>
+						<input type="number" name="_s247_video_count" value="<?php echo (int) $d_video_count; ?>" min="0" max="20"></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Varighed/video (min)', 'studie247' ); ?></span>
+						<input type="number" name="_s247_video_duration" value="<?php echo (int) $d_video_dur; ?>" min="0" max="60"></label>
+					<label class="sd-field"><span><?php esc_html_e( 'Format', 'studie247' ); ?></span>
+						<select name="_s247_format">
+							<?php foreach ( $format_options as $val => $label ) : ?>
+								<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $d_format, $val ); ?>><?php echo esc_html( $label ); ?></option>
+							<?php endforeach; ?>
+						</select></label>
 				</div>
-			<?php endif; ?>
+			</div>
+
+			<div class="sd-panel sd-panel--wide">
+				<header class="sd-panel__head"><h2><?php esc_html_e( 'Kundens noter', 'studie247' ); ?></h2></header>
+				<div class="sd-form">
+					<textarea name="_s247_notes" rows="4" class="sd-textarea"><?php echo esc_textarea( $d_notes ); ?></textarea>
+				</div>
+			</div>
 
 			<div class="sd-panel sd-panel--wide">
 				<header class="sd-panel__head"><h2><?php esc_html_e( 'Samtykke (GDPR)', 'studie247' ); ?></h2></header>
 				<dl class="sd-dl sd-dl--row">
 					<div><dt><?php esc_html_e( 'Accepteret', 'studie247' ); ?></dt><dd class="sd-mono"><?php echo esc_html( $d_consent_ts ?: '—' ); ?></dd></div>
 					<div><dt>IP</dt><dd class="sd-mono"><?php echo esc_html( $d_consent_ip ?: '—' ); ?></dd></div>
+					<?php if ( $d_newsletter ) : ?>
+						<div><dt><?php esc_html_e( 'Nyhedsbrev', 'studie247' ); ?></dt><dd>✓ <?php esc_html_e( 'tilmeldt', 'studie247' ); ?></dd></div>
+					<?php endif; ?>
 				</dl>
 			</div>
 		</div>
-	</div>
+
+		<div class="sd-detail__footer">
+			<button type="submit" class="sd-btn sd-btn--lg"><?php esc_html_e( 'Gem ændringer', 'studie247' ); ?></button>
+		</div>
+	</form>
 <?php
 	return; // Detalje renderet — stop før tabel.
 endif;
