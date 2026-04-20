@@ -355,6 +355,42 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		'type'        => 'textarea',
 	) );
 
+	/* Manifest-block (3 principper) + stats-strip */
+	$om_extra_fields = array(
+		's247_om_manifest_eyebrow'  => array( 'label' => 'Manifest — eyebrow',     'type' => 'text',     'default' => 'Vores principper' ),
+		's247_om_manifest_title'    => array( 'label' => 'Manifest — overskrift',  'type' => 'text',     'default' => 'Det vi holder fast i' ),
+		's247_om_manifest_1'        => array( 'label' => 'Princip 1',              'type' => 'textarea', 'default' => 'Vi siger nej, når vi mener nej.' ),
+		's247_om_manifest_2'        => array( 'label' => 'Princip 2',              'type' => 'textarea', 'default' => 'Et minut for meget er et minut for dårligt.' ),
+		's247_om_manifest_3'        => array( 'label' => 'Princip 3',              'type' => 'textarea', 'default' => 'Hvis det ikke er sjovt, så er det forkert.' ),
+
+		's247_om_stat1_num'   => array( 'label' => 'Stat 1 — tal',   'type' => 'text', 'default' => '6' ),
+		's247_om_stat1_unit'  => array( 'label' => 'Stat 1 — enhed', 'type' => 'text', 'default' => 'år' ),
+		's247_om_stat1_label' => array( 'label' => 'Stat 1 — label', 'type' => 'text', 'default' => 'i branchen' ),
+		's247_om_stat2_num'   => array( 'label' => 'Stat 2 — tal',   'type' => 'text', 'default' => '340+' ),
+		's247_om_stat2_unit'  => array( 'label' => 'Stat 2 — enhed', 'type' => 'text', 'default' => '' ),
+		's247_om_stat2_label' => array( 'label' => 'Stat 2 — label', 'type' => 'text', 'default' => 'Projekter leveret' ),
+		's247_om_stat3_num'   => array( 'label' => 'Stat 3 — tal',   'type' => 'text', 'default' => '4.500+' ),
+		's247_om_stat3_unit'  => array( 'label' => 'Stat 3 — enhed', 'type' => 'text', 'default' => 'timer' ),
+		's247_om_stat3_label' => array( 'label' => 'Stat 3 — label', 'type' => 'text', 'default' => 'Optage-tid i studiet' ),
+		's247_om_stat4_num'   => array( 'label' => 'Stat 4 — tal',   'type' => 'text', 'default' => '96%' ),
+		's247_om_stat4_unit'  => array( 'label' => 'Stat 4 — enhed', 'type' => 'text', 'default' => '' ),
+		's247_om_stat4_label' => array( 'label' => 'Stat 4 — label', 'type' => 'text', 'default' => 'Vender tilbage' ),
+	);
+	foreach ( $om_extra_fields as $key => $cfg ) {
+		$sanitize = 'sanitize_text_field';
+		if ( 'textarea' === $cfg['type'] ) { $sanitize = 'wp_kses_post'; }
+		$wp_customize->add_setting( $key, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => $sanitize,
+			'transport'         => 'refresh',
+		) );
+		$wp_customize->add_control( $key, array(
+			'label'   => $cfg['label'],
+			'section' => 's247_om',
+			'type'    => 'textarea' === $cfg['type'] ? 'textarea' : 'text',
+		) );
+	}
+
 	for ( $i = 1; $i <= 8; $i++ ) {
 		$fields = array(
 			"s247_team{$i}_name"        => array( 'label' => sprintf( __( 'Person %d — navn', 'studie247' ), $i ), 'type' => 'text' ),
