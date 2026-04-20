@@ -2005,13 +2005,13 @@ body.team-modal-open { overflow: hidden; }
 .shop-cats__grid {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
-	gap: 10px;
+	gap: var(--sp-3);
 }
-@media (min-width: 540px) {
-	.shop-cats__grid { grid-template-columns: repeat(3, 1fr); }
+@media (min-width: 720px) {
+	.shop-cats__grid { grid-template-columns: repeat(3, 1fr); gap: var(--sp-4); }
 }
-@media (min-width: 820px) {
-	.shop-cats__grid { grid-template-columns: repeat(6, 1fr); }
+@media (min-width: 1024px) {
+	.shop-cats__grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 .shop-cat-tile {
@@ -2019,44 +2019,82 @@ body.team-modal-open { overflow: hidden; }
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;
-	aspect-ratio: 1 / 1;
-	padding: 14px;
-	border-radius: var(--radius-md, 12px);
+	aspect-ratio: 3 / 4;
+	padding: 18px;
+	border-radius: var(--radius-lg);
 	overflow: hidden;
 	background: var(--color-surface-deep);
 	background-size: cover;
 	background-position: center;
 	color: var(--color-ink-on-dark);
 	text-decoration: none;
-	transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease;
+	border: 1px solid transparent;
+	transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+	            box-shadow 280ms ease,
+	            border-color 200ms ease;
+}
+.shop-cat-tile::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0.85) 100%);
+	pointer-events: none;
+	transition: background 280ms ease;
 }
 .shop-cat-tile:hover {
-	transform: translateY(-3px);
-	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
+	transform: translateY(-4px);
+	box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+	border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+.shop-cat-tile:hover::after {
+	background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(158,43,37,0.18) 70%, rgba(0,0,0,0.9) 100%);
 }
 .shop-cat-tile__count {
 	position: absolute;
-	top: 8px;
-	right: 8px;
-	background: rgba(255, 255, 255, 0.95);
+	top: 12px;
+	right: 12px;
+	background: rgba(255, 255, 255, 0.92);
 	color: var(--color-ink);
 	font-family: var(--font-mono);
 	font-size: 10px;
 	font-weight: 700;
-	letter-spacing: 0.05em;
-	padding: 2px 8px;
+	letter-spacing: 0.08em;
+	padding: 3px 9px;
 	border-radius: 999px;
+	z-index: 2;
 }
 .shop-cat-tile__name {
+	position: relative;
+	z-index: 2;
 	font-family: var(--font-sans);
 	font-weight: 700;
-	font-size: 0.95rem;
+	font-size: clamp(1rem, 0.85rem + 0.5vw, 1.2rem);
 	line-height: 1.15;
-	letter-spacing: -0.01em;
+	letter-spacing: -0.015em;
 	color: var(--color-ink-on-dark);
 }
 .shop-cat-tile__cta {
-	display: none; /* for kompakt — navn + count er nok */
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 4px;
+	position: relative;
+	z-index: 2;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: color-mix(in srgb, var(--color-ink-on-dark) 70%, transparent);
+	transition: gap 160ms ease, color 160ms ease;
+	opacity: 0;
+	transform: translateY(4px);
+	transition: opacity 220ms ease, transform 220ms ease, color 160ms ease, gap 160ms ease;
+}
+.shop-cat-tile:hover .shop-cat-tile__cta {
+	opacity: 1;
+	transform: translateY(0);
+	color: var(--color-accent);
+	gap: 8px;
 }
 
 .shop__head--compact {
