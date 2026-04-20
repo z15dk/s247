@@ -72,9 +72,14 @@
 		let autoTimer = null;
 		const autoDelay = 5000;
 
+		// Full-variant = fuld-bredde med peek: slide 92vw + 2vw gap = 94vw step.
+		// Default-variant = track fylder stage, 100% step.
+		const isFull = root.classList.contains('moods__panel--full');
+		const step   = isFull ? '94vw' : '100%';
+
 		const goto = (i) => {
 			current = (i + count) % count;
-			track.style.transform = 'translateX(-' + (current * 100) + '%)';
+			track.style.transform = 'translateX(calc(-' + current + ' * ' + step + '))';
 			tabs.forEach((t) => {
 				const active = parseInt(t.dataset.moodTarget, 10) === current;
 				t.classList.toggle('is-active', active);

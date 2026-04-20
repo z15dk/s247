@@ -1134,12 +1134,38 @@
 		grid-template-columns: minmax(240px, 320px) 1fr;
 		gap: var(--sp-10);
 	}
-	/* Full-variant: slider fylder hele sektionen — ingen tab-kolonne. */
+	/* Full-variant: slider spænder hele viewport, med peek af næste slide. */
 	.moods__panel--full {
 		grid-template-columns: 1fr;
 		gap: 0;
 	}
 	.moods__panel--full .moods__stage { aspect-ratio: 21 / 9; }
+}
+
+/* Full-bleed breakout af .wrap-containeren */
+.moods__panel--full {
+	margin-left: calc(50% - 50vw);
+	margin-right: calc(50% - 50vw);
+	width: 100vw;
+	max-width: 100vw;
+	margin-top: var(--sp-8);
+}
+.moods__panel--full .moods__stage {
+	border-radius: 0;
+}
+/* Track: slides er 92vw brede med 2vw gap → 6vw total peek-plads
+   (3vw på begge sider i midten, mindre i kanterne). */
+.moods__panel--full .moods__track {
+	padding-left: 3vw;
+}
+.moods__panel--full .moods__slide {
+	flex: 0 0 92vw;
+	margin-right: 2vw;
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+}
+.moods__panel--full .moods__slide:last-child {
+	margin-right: 3vw;
 }
 
 /* Chip-overlay (label-knapper oven på billedet) */
