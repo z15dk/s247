@@ -465,4 +465,66 @@
 		// Fallback: show everything immediately
 		reveals.forEach((el) => el.classList.add('is-visible'));
 	}
+	// ──────────────────────────────────────────────
+	// Count-up animation på stats — tik fra 0 til slut-værdi
+	// når sektionen ruller ind i viewporten. Fungerer for tal som
+	// "200", "4K", "340+", "4.500+", "96%", "24/7".
+	// ──────────────────────────────────────────────
+	const numEls = document.querySelectorAll('.studiet-stats__num');
+	if (numEls.length && 'IntersectionObserver' in window) {
+		const parseTarget = (raw) => {
+			// Slash-tal (24/7) animeres ikke — returnér null = skip.
+			if (raw.includes('/')) return null;
+			// Saml alle cifre fra begyndelsen indtil første ikke-tal-tegn.
+			// Respektér dansk tusind-separator "." (fx 4.500).
+			const match = raw.match(/^([\d.,]+)(.*)$/);
+			if (!match) return null;
+			const numStr = match[1].replace(/\./g, '').replace(',', '.');
+			const num    = parseFloat(numStr);
+			if (isNaN(num)) return null;
+			const suffix = match[2] || '';
+			return { num, suffix, raw };
+		};
+
+		const formatDKK = (n) => Math.round(n).toLocaleString('da-DK');
+
+		const animate = (el) => {
+			const target = parseTarget(el.textContent.trim());
+			if (!target) return;
+			el.dataset.finalText = target.raw;
+			const duration = 1400;
+			const start = performance.now();
+			const tick = (now) => {
+				const t = Math.min(1, (now - start) / duration);
+				// ease-out-cubic
+				const eased = 1 - Math.pow(1 - t, 3);
+				const val = Math.round(target.num * eased);
+				el.textContent = (target.num >= 1000 ? formatDKK(val) : String(val)) + target.suffix;
+				if (t < 1) requestAnimationFrame(tick);
+				else el.textContent = target.raw; // Lås præcist på slut-værdien.
+			};
+			requestAnimationFrame(tick);
+		};
+
+		const countIO = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					animate(entry.target);
+					countIO.unobserve(entry.target);
+				}
+			});
+		}, { threshold: 0.4 });
+
+		numEls.forEach((el) => {
+			// Sæt startværdi til 0 inden IO trigger så brugeren ikke ser
+			// endelige tal et kort sekund før animation.
+			const target = parseTarget(el.textContent.trim());
+			if (target) {
+				el.dataset.finalText = target.raw;
+				el.textContent = '0' + target.suffix;
+			}
+			countIO.observe(el);
+		});
+	}
+
 })();
