@@ -58,26 +58,54 @@
 	});
 
 	// ──────────────────────────────────────────────
-	// Studio moods — tab switcher
+	// Studio moods — stillbillede-slider med glide-transition
 	// ──────────────────────────────────────────────
 	document.querySelectorAll('[data-moods]').forEach((root) => {
-		const tabs   = root.querySelectorAll('[data-mood-target]');
-		const panels = root.querySelectorAll('[data-mood-panel]');
-		tabs.forEach((tab) => {
-			tab.addEventListener('click', () => {
-				const target = tab.dataset.moodTarget;
-				tabs.forEach((t) => {
-					const active = t.dataset.moodTarget === target;
-					t.classList.toggle('is-active', active);
-					t.setAttribute('aria-selected', active ? 'true' : 'false');
-				});
-				panels.forEach((p) => {
-					const active = p.dataset.moodPanel === target;
-					p.classList.toggle('is-active', active);
-					if (active) { p.removeAttribute('hidden'); } else { p.setAttribute('hidden', ''); }
-				});
+		const track = root.querySelector('[data-moods-track]');
+		const tabs  = root.querySelectorAll('[data-mood-target]');
+		const prev  = root.querySelector('[data-moods-prev]');
+		const next  = root.querySelector('[data-moods-next]');
+		const count = parseInt(root.dataset.moodsCount || '0', 10);
+		if (!track || count < 1) return;
+
+		let current = 0;
+		let autoTimer = null;
+		const autoDelay = 5000;
+
+		const goto = (i) => {
+			current = (i + count) % count;
+			track.style.transform = 'translateX(-' + (current * 100) + '%)';
+			tabs.forEach((t) => {
+				const active = parseInt(t.dataset.moodTarget, 10) === current;
+				t.classList.toggle('is-active', active);
+				if (t.hasAttribute('role')) t.setAttribute('aria-selected', active ? 'true' : 'false');
 			});
+		};
+
+		const resetAuto = () => {
+			if (autoTimer) clearInterval(autoTimer);
+			autoTimer = setInterval(() => goto(current + 1), autoDelay);
+		};
+
+		tabs.forEach((t) => t.addEventListener('click', () => {
+			goto(parseInt(t.dataset.moodTarget, 10));
+			resetAuto();
+		}));
+		if (prev) prev.addEventListener('click', () => { goto(current - 1); resetAuto(); });
+		if (next) next.addEventListener('click', () => { goto(current + 1); resetAuto(); });
+
+		// Pause auto når bruger hover'er, genoptag når de forlader
+		root.addEventListener('mouseenter', () => { if (autoTimer) clearInterval(autoTimer); });
+		root.addEventListener('mouseleave', resetAuto);
+
+		// Tastatur-nav (pile-taster når slideren har fokus)
+		root.addEventListener('keydown', (e) => {
+			if (e.key === 'ArrowLeft')  { goto(current - 1); resetAuto(); }
+			if (e.key === 'ArrowRight') { goto(current + 1); resetAuto(); }
 		});
+
+		goto(0);
+		resetAuto();
 	});
 
 	// ──────────────────────────────────────────────
