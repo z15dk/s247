@@ -769,6 +769,35 @@ a.sd-stat:hover {
 .sd-status--available { color: #0a7c2f; background: #D1FADF; }
 .sd-status--partial   { color: #9a6300; background: #FEF3CF; }
 .sd-status--out       { color: #b42318; background: #FEE4E2; }
+.sd-status--active    { color: var(--sd-accent); background: var(--sd-accent-soft); }
+.sd-status--upcoming  { color: #1849A9; background: #D1E9FF; }
+
+/* Kategori-checkboxes i item-edit */
+.sd-checkboxes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.sd-checkbox {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	background: var(--sd-border-soft);
+	border: 1px solid transparent;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 140ms ease, border-color 140ms ease;
+}
+.sd-checkbox:hover { border-color: var(--sd-border); }
+.sd-checkbox:has(input:checked) {
+	background: var(--sd-accent-soft);
+	border-color: var(--sd-accent);
+	color: var(--sd-accent);
+}
+.sd-checkbox input { accent-color: var(--sd-accent); margin: 0; }
 
 /* Udlejning — vare-thumb + rental-count */
 .sd-item-thumb {
