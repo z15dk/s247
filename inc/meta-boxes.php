@@ -45,6 +45,18 @@ function studie247_render_service_meta( $post ) {
 	$bg_id     = (int) get_post_meta( $post->ID, '_s247_bg_image', true );
 	$bg_url    = $bg_id ? wp_get_attachment_image_url( $bg_id, 's247-card' ) : '';
 
+	// Nye felter til det dynamiske single-service-layout.
+	$hero_video = get_post_meta( $post->ID, '_s247_hero_video', true );
+	$statement  = get_post_meta( $post->ID, '_s247_statement', true );
+	$gallery    = array();
+	for ( $g = 1; $g <= 5; $g++ ) {
+		$gid = (int) get_post_meta( $post->ID, "_s247_gallery_{$g}", true );
+		$gallery[ $g ] = array(
+			'id'  => $gid,
+			'url' => $gid ? wp_get_attachment_image_url( $gid, 's247-card' ) : '',
+		);
+	}
+
 	$icons = array(
 		''         => __( '— Vælg ikon —', 'studie247' ),
 		'video'    => 'Video',
@@ -91,6 +103,42 @@ function studie247_render_service_meta( $post ) {
 		<button type="button" class="button s247-bg-pick"><?php esc_html_e( 'Vælg billede', 'studie247' ); ?></button>
 		<button type="button" class="button s247-bg-remove" style="<?php echo $bg_url ? '' : 'display:none;'; ?>"><?php esc_html_e( 'Fjern', 'studie247' ); ?></button>
 	</p>
+
+	<hr style="margin:20px 0;">
+	<h3 style="margin:0 0 12px;"><?php esc_html_e( 'Dynamisk single-layout', 'studie247' ); ?></h3>
+
+	<p>
+		<label for="s247_hero_video"><strong><?php esc_html_e( 'Hero-video (MP4 URL)', 'studie247' ); ?></strong></label><br>
+		<span class="description" style="display:block;margin-bottom:4px;"><?php esc_html_e( 'Valgfri — afspilles autoplay/muted/loop som baggrund i hero. Hvis tom bruges featured image.', 'studie247' ); ?></span>
+		<input type="url" id="s247_hero_video" name="s247_hero_video" value="<?php echo esc_attr( $hero_video ); ?>" style="width:100%" placeholder="https://…mp4">
+	</p>
+
+	<p>
+		<label for="s247_statement"><strong><?php esc_html_e( 'Stort statement', 'studie247' ); ?></strong></label><br>
+		<span class="description" style="display:block;margin-bottom:4px;"><?php esc_html_e( 'Kort editorial-udsagn der vises som stor italic-serif under hero. Brug *stjerner* om en frase for accent-kursiv.', 'studie247' ); ?></span>
+		<textarea id="s247_statement" name="s247_statement" rows="3" style="width:100%" placeholder="Vi vender hver sten. *Også de små.*"><?php echo esc_textarea( $statement ); ?></textarea>
+	</p>
+
+	<p>
+		<strong><?php esc_html_e( 'Foto-mosaik (op til 5 billeder)', 'studie247' ); ?></strong><br>
+		<span class="description" style="display:block;margin-bottom:8px;">
+			<?php esc_html_e( 'Vises som asymmetrisk grid. 3 billeder er minimum for at sektionen vises.', 'studie247' ); ?>
+		</span>
+		<?php foreach ( $gallery as $gi => $g ) : ?>
+			<span class="s247-gal-row" data-idx="<?php echo (int) $gi; ?>" style="display:flex;align-items:center;gap:10px;margin:6px 0;padding:6px;border:1px solid #e0e0e0;border-radius:4px;">
+				<span class="s247-gal-preview" style="flex-shrink:0;width:80px;height:60px;background:#f3f4f6;display:grid;place-items:center;overflow:hidden;">
+					<?php if ( $g['url'] ) : ?>
+						<img src="<?php echo esc_url( $g['url'] ); ?>" style="width:100%;height:100%;object-fit:cover;">
+					<?php else : ?>
+						<span style="color:#aaa;font-size:11px;"><?php echo (int) $gi; ?></span>
+					<?php endif; ?>
+				</span>
+				<input type="hidden" name="s247_gallery_<?php echo (int) $gi; ?>" value="<?php echo esc_attr( $g['id'] ); ?>" class="s247-gal-input">
+				<button type="button" class="button s247-gal-pick"><?php esc_html_e( $g['id'] ? 'Skift' : 'Vælg billede', 'studie247' ); ?></button>
+				<button type="button" class="button-link s247-gal-clear" style="color:#b32d2e;<?php echo $g['id'] ? '' : 'display:none;'; ?>"><?php esc_html_e( 'Fjern', 'studie247' ); ?></button>
+			</span>
+		<?php endforeach; ?>
+	</p>
 	<script>
 	(function($){
 		$(function(){
@@ -119,6 +167,35 @@ function studie247_render_service_meta( $post ) {
 				$('.s247-bg-preview').hide().empty();
 				$(this).hide();
 			});
+
+			// Gallery-pickers — hver række har sin egen frame og state.
+			$('.s247-gal-pick').on('click', function(e){
+				e.preventDefault();
+				var $row = $(this).closest('.s247-gal-row');
+				var frame = wp.media({
+					title: 'Vælg billede',
+					button: { text: 'Brug dette billede' },
+					library: { type: 'image' },
+					multiple: false
+				});
+				frame.on('select', function(){
+					var att = frame.state().get('selection').first().toJSON();
+					var url = (att.sizes && att.sizes['s247-card']) ? att.sizes['s247-card'].url : att.url;
+					$row.find('.s247-gal-input').val(att.id);
+					$row.find('.s247-gal-preview').html('<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">');
+					$row.find('.s247-gal-clear').show();
+					$row.find('.s247-gal-pick').text('Skift');
+				});
+				frame.open();
+			});
+			$('.s247-gal-clear').on('click', function(e){
+				e.preventDefault();
+				var $row = $(this).closest('.s247-gal-row');
+				$row.find('.s247-gal-input').val('');
+				$row.find('.s247-gal-preview').html('<span style="color:#aaa;font-size:11px;">—</span>');
+				$row.find('.s247-gal-clear').hide();
+				$row.find('.s247-gal-pick').text('Vælg billede');
+			});
 		});
 	})(jQuery);
 	</script>
@@ -135,11 +212,14 @@ add_action( 'save_post_service', function ( $post_id ) {
 	if ( ! current_user_can( 'edit_post', $post_id ) ) {
 		return;
 	}
-	$fields = array( 's247_tagline', 's247_icon', 's247_startpris', 's247_cta_text', 's247_included' );
+	$fields = array( 's247_tagline', 's247_icon', 's247_startpris', 's247_cta_text', 's247_included', 's247_statement' );
 	foreach ( $fields as $field ) {
 		if ( isset( $_POST[ $field ] ) ) {
 			update_post_meta( $post_id, '_' . $field, sanitize_textarea_field( wp_unslash( $_POST[ $field ] ) ) );
 		}
+	}
+	if ( isset( $_POST['s247_hero_video'] ) ) {
+		update_post_meta( $post_id, '_s247_hero_video', esc_url_raw( wp_unslash( $_POST['s247_hero_video'] ) ) );
 	}
 	if ( isset( $_POST['s247_bg_image'] ) ) {
 		$bg = absint( $_POST['s247_bg_image'] );
@@ -147,6 +227,16 @@ add_action( 'save_post_service', function ( $post_id ) {
 			update_post_meta( $post_id, '_s247_bg_image', $bg );
 		} else {
 			delete_post_meta( $post_id, '_s247_bg_image' );
+		}
+	}
+	for ( $g = 1; $g <= 5; $g++ ) {
+		if ( isset( $_POST[ "s247_gallery_{$g}" ] ) ) {
+			$gid = absint( $_POST[ "s247_gallery_{$g}" ] );
+			if ( $gid ) {
+				update_post_meta( $post_id, "_s247_gallery_{$g}", $gid );
+			} else {
+				delete_post_meta( $post_id, "_s247_gallery_{$g}" );
+			}
 		}
 	}
 } );
