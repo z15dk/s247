@@ -7,6 +7,18 @@
 
 get_header();
 
+// Sørg for at enkel-\n linjer fra CSV-import bliver til rigtige afsnit.
+add_filter( 'the_content', function ( $content ) {
+	if ( ! is_singular( 'udlejning_item' ) ) { return $content; }
+	// Hvis der ikke allerede findes dobbelt-newlines, forvandl hver enkelt \n
+	// til en afsnit-adskiller. Tåler blandede linjeskift (\r\n, \r, \n).
+	$normalized = str_replace( array( "\r\n", "\r" ), "\n", $content );
+	if ( strpos( $normalized, "\n\n" ) === false && strpos( $normalized, "\n" ) !== false ) {
+		$content = str_replace( "\n", "\n\n", $normalized );
+	}
+	return $content;
+}, 5 );
+
 while ( have_posts() ) : the_post();
 	$pris_dag = get_post_meta( get_the_ID(), '_s247_pris_dag', true );
 	$pris_uge = get_post_meta( get_the_ID(), '_s247_pris_uge', true );
@@ -14,6 +26,15 @@ while ( have_posts() ) : the_post();
 	$sku      = get_post_meta( get_the_ID(), '_s247_sku', true );
 	$in_stock = '1' === get_post_meta( get_the_ID(), '_s247_in_stock', true );
 	$cats     = get_the_terms( get_the_ID(), 'udlejning_kategori' );
+
+	// Normalisér pris-strenge: "99kr" → "99 kr", "1.499kr." → "1.499 kr".
+	$fmt_price = function ( $v ) {
+		$v = trim( (string) $v );
+		return preg_replace( '/(\d)\s*(kr\.?)\s*$/i', '$1 kr', $v );
+	};
+	$pris_dag = $fmt_price( $pris_dag );
+	$pris_uge = $fmt_price( $pris_uge );
+	$deposit  = $fmt_price( $deposit );
 ?>
 <section class="section">
 	<div class="wrap wrap--wide">
@@ -44,7 +65,7 @@ while ( have_posts() ) : the_post();
 					<span class="product-card__status product-card__status--out" style="position:static;align-self:flex-start;"><?php esc_html_e( 'Udlejet', 'studie247' ); ?></span>
 				<?php endif; ?>
 
-				<div style="font-size: var(--fs-base); color: var(--color-ink-soft); line-height: var(--lh-base);">
+				<div class="single-udlejning__content">
 					<?php the_content(); ?>
 				</div>
 
