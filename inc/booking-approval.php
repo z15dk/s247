@@ -281,13 +281,8 @@ function studie247_send_booking_confirmation( $booking_id, $action ) {
 
 	$date_dk = $date ? date_i18n( 'l j. F Y', strtotime( $date ) ) : $date;
 
-	$headers = array(
-		'Content-Type: text/plain; charset=UTF-8',
-		'From: Studie 247 <info@s247.dk>',
-		'Reply-To: info@s247.dk',
-	);
-
 	$is_rental = (bool) $pid;
+	$is_html   = false;
 
 	if ( 'approved' === $action ) {
 		$mail    = studie247_render_mail_template( 'booking_approved', array(
@@ -302,6 +297,7 @@ function studie247_send_booking_confirmation( $booking_id, $action ) {
 		) );
 		$subject = $mail['subject'];
 		$body    = $mail['body'];
+		$is_html = studie247_mail_template_is_html( 'booking_approved' );
 	} else {
 		if ( $is_rental ) {
 			$subject = 'Lejeforespørgsel afvist — Studie 247';
@@ -317,6 +313,12 @@ function studie247_send_booking_confirmation( $booking_id, $action ) {
 			$body   .= "\nSkriv til os hvis du vil booke en anden tid — vi hjælper dig gerne med at finde en løsning.\n\n— Studie 247\ninfo@s247.dk";
 		}
 	}
+
+	$headers = array(
+		'Content-Type: ' . ( $is_html ? 'text/html' : 'text/plain' ) . '; charset=UTF-8',
+		'From: Studie 247 <info@s247.dk>',
+		'Reply-To: info@s247.dk',
+	);
 
 	@wp_mail( $email, $subject, $body, $headers );
 }

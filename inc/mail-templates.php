@@ -20,7 +20,7 @@ function studie247_mail_templates_config() {
 			'label'       => __( 'Kontakt-form — kvittering', 'studie247' ),
 			'description' => __( 'Sendes til kunden efter udfyldt kontakt-formular.', 'studie247' ),
 			'subject'     => 'Tak for din henvendelse — Studie 247',
-			'body'        => "Hej {navn},\n\nTak for at du kontaktede os. Vi vender tilbage til dig hurtigst muligt — typisk inden for 24 timer på hverdage.\n\nDu valgte: {side}\n\nDin besked:\n{besked}\n\n— Studie 247\ninfo@s247.dk",
+			'body'        => "<p>Hej {navn},</p>\n<p>Tak for at du kontaktede os. Vi vender tilbage til dig hurtigst muligt — typisk inden for 24 timer på hverdage.</p>\n<p>Du valgte: <strong>{side}</strong></p>\n<p>Din besked:<br>{besked}</p>\n<p>— Studie 247<br><a href=\"mailto:info@s247.dk\">info@s247.dk</a></p>",
 			'placeholders' => array(
 				'navn'    => 'Kundens navn',
 				'email'   => 'Kundens email',
@@ -32,7 +32,7 @@ function studie247_mail_templates_config() {
 			'label'       => __( 'Booking modtaget', 'studie247' ),
 			'description' => __( 'Sendes når en kunde indsender en booking/lejeforespørgsel — før admin godkender.', 'studie247' ),
 			'subject'     => 'Tak for din booking af {booking_label} — Studie 247',
-			'body'        => "Hej {navn},\n\nTak for din booking af {booking_label}. Vi vender tilbage med en endelig bekræftelse hurtigst muligt — typisk inden for 24 timer på hverdage.\n\nProdukt: {produkt}\nDato: {dato}\nStart: {start}\nVarighed: {varighed}\nEstimeret pris: {pris}\n\nVirksomhed: {virksomhed}\nCVR: {cvr}\n\nFormål: {formaal}\nØnsker: {oensker}\nPodcast-type: {podcast_type}\nTilkøb: {tilkoeb}\nAntal videoer: {antal_videoer}\nVarighed pr. video: {video_varighed}\nFormat: {format}\n\nDine noter:\n{noter}\n\nDin booking er foreløbigt reserveret og afventer godkendelse.\n\n— Studie 247\ninfo@s247.dk",
+			'body'        => "<p>Hej {navn},</p>\n<p>Tak for din booking af <strong>{booking_label}</strong>. Vi vender tilbage med en endelig bekræftelse hurtigst muligt — typisk inden for 24 timer på hverdage.</p>\n<p>Produkt: {produkt}<br>Dato: {dato}<br>Start: {start}<br>Varighed: {varighed}<br>Estimeret pris: {pris}</p>\n<p>Virksomhed: {virksomhed}<br>CVR: {cvr}</p>\n<p>Formål: {formaal}<br>Ønsker: {oensker}<br>Podcast-type: {podcast_type}<br>Tilkøb: {tilkoeb}<br>Antal videoer: {antal_videoer}<br>Varighed pr. video: {video_varighed}<br>Format: {format}</p>\n<p>Dine noter:<br>{noter}</p>\n<p>Din booking er foreløbigt reserveret og afventer godkendelse.</p>\n<p>— Studie 247<br><a href=\"mailto:info@s247.dk\">info@s247.dk</a></p>",
 			'placeholders' => array(
 				'navn'           => 'Kundens navn',
 				'email'          => 'Kundens email',
@@ -59,7 +59,7 @@ function studie247_mail_templates_config() {
 			'label'       => __( 'Booking godkendt', 'studie247' ),
 			'description' => __( 'Sendes når admin trykker "Godkend" i wp-admin.', 'studie247' ),
 			'subject'     => 'Din booking er godkendt — Studie 247',
-			'body'        => "Hej {navn},\n\nDin booking er godkendt. Vi glæder os til at se dig.\n\nProdukt: {produkt}\nDato: {dato}\nStart: {start}\nVarighed: {varighed}\n\nHar du spørgsmål inden da, så ring eller skriv.\n\n— Studie 247\ninfo@s247.dk",
+			'body'        => "<p>Hej {navn},</p>\n<p>Din booking er godkendt. Vi glæder os til at se dig.</p>\n<p>Produkt: {produkt}<br>Dato: {dato}<br>Start: {start}<br>Varighed: {varighed}</p>\n<p>Har du spørgsmål inden da, så ring eller skriv.</p>\n<p>— Studie 247<br><a href=\"mailto:info@s247.dk\">info@s247.dk</a></p>",
 			'placeholders' => array(
 				'navn'       => 'Kundens navn',
 				'email'      => 'Kundens email',
@@ -89,17 +89,22 @@ function studie247_get_mail_template( $key ) {
 }
 
 /**
- * Render en skabelon med værdier. Linjer hvor en placeholder er tom
- * fjernes, så optional-felter (produkt/pris/formål osv.) ikke
- * efterlader fx "Produkt: ".
+ * Render en skabelon med værdier. Linjer (eller <br>/<p>-fragmenter)
+ * hvor en placeholder er tom fjernes, så optional-felter (produkt,
+ * pris osv.) ikke efterlader fx "Produkt: ".
+ *
+ * Virker med både plain tekst og HTML (wp_editor-output).
  */
 function studie247_render_mail_template( $key, $vars ) {
 	$tpl     = studie247_get_mail_template( $key );
 	$subject = $tpl['subject'];
 	$body    = $tpl['body'];
 
-	// Drop linjer hvor en af placeholderne er tom (alle vars uanset om brugt).
-	$lines = preg_split( '/\r\n|\r|\n/', $body );
+	// Normalisér: behandl <br> og </p> som linjeskift så strip-logikken
+	// virker ens uanset om skabelonen er HTML eller plain.
+	$normalized = preg_replace( '#<br\s*/?>#i', "\n", $body );
+	$normalized = preg_replace( '#</p>#i', "</p>\n", $normalized );
+	$lines = preg_split( '/\r\n|\r|\n/', $normalized );
 	$kept  = array();
 	foreach ( $lines as $line ) {
 		$skip = false;
@@ -121,10 +126,19 @@ function studie247_render_mail_template( $key, $vars ) {
 		$body    = str_replace( '{' . $k . '}', (string) $v, $body );
 	}
 
-	// Kollaps 3+ blanke linjer → 2.
+	// Ryd tomme <p></p> og kollaps 3+ blanke linjer → 2.
+	$body = preg_replace( '#<p>\s*</p>#i', '', $body );
 	$body = preg_replace( "/\n{3,}/", "\n\n", $body );
 
 	return array( 'subject' => $subject, 'body' => $body );
+}
+
+/**
+ * Er skabelonens body HTML? Bruges til at sætte Content-Type på mailen.
+ */
+function studie247_mail_template_is_html( $key ) {
+	$tpl = studie247_get_mail_template( $key );
+	return (bool) preg_match( '/<[a-z][a-z0-9]*(\s[^>]*)?>/i', $tpl['body'] );
 }
 
 /* ───────── Admin-side: Værktøjer → Mail-skabeloner ───────── */
@@ -202,9 +216,31 @@ function studie247_mail_templates_page() {
 							<td><input type="text" class="large-text" id="tpl-<?php echo esc_attr( $key ); ?>-subject" name="tpl[<?php echo esc_attr( $key ); ?>][subject]" value="<?php echo esc_attr( $cur['subject'] ); ?>"></td>
 						</tr>
 						<tr>
-							<th scope="row"><label for="tpl-<?php echo esc_attr( $key ); ?>-body"><?php esc_html_e( 'Tekst', 'studie247' ); ?></label></th>
+							<th scope="row"><label for="tpl-<?php echo esc_attr( $key ); ?>-body"><?php esc_html_e( 'Indhold', 'studie247' ); ?></label></th>
 							<td>
-								<textarea class="large-text code" id="tpl-<?php echo esc_attr( $key ); ?>-body" name="tpl[<?php echo esc_attr( $key ); ?>][body]" rows="12" style="font-family:inherit;"><?php echo esc_textarea( $cur['body'] ); ?></textarea>
+								<?php
+								$editor_id = 'tpl_' . $key . '_body';
+								wp_editor(
+									$cur['body'],
+									$editor_id,
+									array(
+										'textarea_name' => 'tpl[' . $key . '][body]',
+										'textarea_rows' => 14,
+										'media_buttons' => false,
+										'teeny'         => false,
+										'tinymce'       => array(
+											'toolbar1' => 'formatselect,bold,italic,underline,|,bullist,numlist,|,link,unlink,|,forecolor,hr,|,removeformat,undo,redo',
+											'toolbar2' => '',
+											'block_formats' => 'Paragraf=p; Overskrift 2=h2; Overskrift 3=h3',
+										),
+										'quicktags'     => true,
+										'default_editor' => 'tinymce',
+									)
+								);
+								?>
+								<p style="color:#666;margin-top:8px;">
+									<?php esc_html_e( 'Skift mellem Visuel (WYSIWYG) og Tekst (HTML) i fanerne øverst. Brug shortcodes som {navn} i både overskrifter og links.', 'studie247' ); ?>
+								</p>
 							</td>
 						</tr>
 						<tr>

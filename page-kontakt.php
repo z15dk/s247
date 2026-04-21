@@ -55,10 +55,15 @@ if ( ! empty( $_POST['s247_ko_nonce'] ) && wp_verify_nonce( $_POST['s247_ko_nonc
 			'Reply-To: ' . $form_name . ' <' . $form_email . '>',
 		) );
 
-		$user_subject = 'Tak for din besked — Studie 247';
-		$user_body    = "Hej {$form_name},\n\nTak for at du skrev. Vi vender tilbage inden for 24 timer på hverdage.\n\nDin besked:\n{$form_message}\n\n— Studie 247\ninfo@s247.dk";
-		@wp_mail( $form_email, $user_subject, $user_body, array(
-			'Content-Type: text/plain; charset=UTF-8',
+		$mail = studie247_render_mail_template( 'contact', array(
+			'navn'   => $form_name,
+			'email'  => $form_email,
+			'side'   => $form_topic,
+			'besked' => nl2br( $form_message ),
+		) );
+		$is_html = studie247_mail_template_is_html( 'contact' );
+		@wp_mail( $form_email, $mail['subject'], $mail['body'], array(
+			'Content-Type: ' . ( $is_html ? 'text/html' : 'text/plain' ) . '; charset=UTF-8',
 			'From: Studie 247 <info@s247.dk>',
 			'Reply-To: info@s247.dk',
 		) );
