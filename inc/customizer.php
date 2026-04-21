@@ -233,6 +233,36 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		) );
 	}
 
+	/* ───────── Footer-tekster ───────── */
+	$wp_customize->add_section( 's247_footer_section', array(
+		'title'    => __( 'Footer', 'studie247' ),
+		'priority' => 90,
+	) );
+
+	$footer_fields = array(
+		's247_footer_tagline_a' => array( 'label' => __( 'Stor tagline — del 1 (sans)', 'studie247' ),   'type' => 'text',     'default' => 'Optag.' ),
+		's247_footer_tagline_b' => array( 'label' => __( 'Stor tagline — del 2 (kursiv)', 'studie247' ), 'type' => 'text',     'default' => 'Skab.' ),
+		's247_footer_tagline_c' => array( 'label' => __( 'Stor tagline — del 3 (sans)', 'studie247' ),   'type' => 'text',     'default' => 'Udgiv' ),
+		's247_footer_tagline_d' => array( 'label' => __( 'Stor tagline — del 4 (kursiv, accent)', 'studie247' ), 'type' => 'text', 'default' => '247.' ),
+		's247_footer_about'     => array( 'label' => __( 'Beskrivelse (under logo)', 'studie247' ),      'type' => 'textarea', 'default' => 'Dit studie — døgnet rundt. Simpelt. Professionelt. Menneskeligt.' ),
+		's247_footer_address'   => array( 'label' => __( 'Adresse / by', 'studie247' ),                  'type' => 'text',     'default' => 'Amager' ),
+		's247_footer_cvr'       => array( 'label' => __( 'CVR-tekst', 'studie247' ),                     'type' => 'text',     'default' => 'CVR: 00000000' ),
+		's247_footer_company'   => array( 'label' => __( 'Copyright-navn', 'studie247' ),                'type' => 'text',     'default' => 'Studie 247' ),
+	);
+
+	foreach ( $footer_fields as $id => $cfg ) {
+		$wp_customize->add_setting( $id, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => ( 'textarea' === $cfg['type'] ) ? 'sanitize_textarea_field' : 'sanitize_text_field',
+			'transport'         => 'refresh',
+		) );
+		$wp_customize->add_control( $id, array(
+			'label'   => $cfg['label'],
+			'section' => 's247_footer_section',
+			'type'    => $cfg['type'],
+		) );
+	}
+
 	/* ───────── Studiet ───────── */
 	$wp_customize->add_section( 's247_studio', array(
 		'title'    => __( 'Studiet (forside)', 'studie247' ),

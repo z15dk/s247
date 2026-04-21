@@ -11,10 +11,10 @@
 	<div class="wrap wrap--wide">
 		<div class="site-footer__top" data-reveal>
 			<p class="site-footer__big">
-				<?php esc_html_e( 'Optag.', 'studie247' ); ?>
-				<em><?php esc_html_e( 'Skab.', 'studie247' ); ?></em>
-				<?php esc_html_e( 'Udgiv', 'studie247' ); ?>
-				<em style="font-family:var(--font-serif);font-style:italic;color:var(--color-accent);">247.</em>
+				<?php echo esc_html( get_theme_mod( 's247_footer_tagline_a', __( 'Optag.', 'studie247' ) ) ); ?>
+				<em><?php echo esc_html( get_theme_mod( 's247_footer_tagline_b', __( 'Skab.', 'studie247' ) ) ); ?></em>
+				<?php echo esc_html( get_theme_mod( 's247_footer_tagline_c', __( 'Udgiv', 'studie247' ) ) ); ?>
+				<em style="font-family:var(--font-serif);font-style:italic;color:var(--color-accent);"><?php echo esc_html( get_theme_mod( 's247_footer_tagline_d', '247.' ) ); ?></em>
 			</p>
 		</div>
 
@@ -25,7 +25,7 @@
 					<span class="logo__num">247</span>
 				</div>
 				<p style="max-width: 34ch; color: var(--s247-bone-60); font-size: var(--fs-sm); margin-top: var(--sp-5); line-height: var(--lh-base);">
-					<?php esc_html_e( 'Dit studie — døgnet rundt. Simpelt. Professionelt. Menneskeligt.', 'studie247' ); ?>
+					<?php echo esc_html( get_theme_mod( 's247_footer_about', __( 'Dit studie — døgnet rundt. Simpelt. Professionelt. Menneskeligt.', 'studie247' ) ) ); ?>
 				</p>
 			</div>
 
@@ -51,10 +51,10 @@
 					<li><a href="mailto:<?php echo esc_attr( $ft_email ); ?>"><?php echo esc_html( $ft_email ); ?></a></li>
 					<li><a href="tel:<?php echo esc_attr( $ft_phone_link ); ?>"><?php echo esc_html( $ft_phone_display ); ?></a></li>
 					<li style="color:var(--s247-bone-60);">
-						<?php esc_html_e( 'Amager', 'studie247' ); ?>
+						<?php echo esc_html( get_theme_mod( 's247_footer_address', __( 'Amager', 'studie247' ) ) ); ?>
 						<span class="site-footer__heart" aria-hidden="true">♥</span>
 					</li>
-					<li style="color:var(--s247-bone-60);"><?php esc_html_e( 'CVR: 00000000', 'studie247' ); ?></li>
+					<li style="color:var(--s247-bone-60);"><?php echo esc_html( get_theme_mod( 's247_footer_cvr', __( 'CVR: 00000000', 'studie247' ) ) ); ?></li>
 				</ul>
 			</div>
 
@@ -69,7 +69,7 @@
 		</div>
 
 		<div class="site-footer__bottom">
-			<span>&copy; <?php echo esc_html( date( 'Y' ) ); ?> Studie 247</span>
+			<span>&copy; <?php echo esc_html( date( 'Y' ) ); ?> <?php echo esc_html( get_theme_mod( 's247_footer_company', 'Studie 247' ) ); ?></span>
 			<ul>
 				<li><a href="<?php echo esc_url( home_url( '/privatlivspolitik/' ) ); ?>"><?php esc_html_e( 'Privatliv', 'studie247' ); ?></a></li>
 				<li><a href="<?php echo esc_url( home_url( '/cookies/' ) ); ?>"><?php esc_html_e( 'Cookies', 'studie247' ); ?></a></li>
