@@ -697,7 +697,12 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 
 <div class="sd-shell">
 
-	<aside class="sd-side">
+	<button class="sd-menu-btn" type="button" aria-label="<?php esc_attr_e( 'Åbn menu', 'studie247' ); ?>" aria-expanded="false" aria-controls="sd-sidebar">
+		<span></span><span></span><span></span>
+	</button>
+	<div class="sd-side-overlay" aria-hidden="true"></div>
+
+	<aside class="sd-side" id="sd-sidebar">
 		<div class="sd-brand"><span>STUDIE</span><span class="sd-brand__num">247</span></div>
 
 		<nav class="sd-nav">
@@ -868,6 +873,31 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 </div>
 
 <?php endif; // logged-in + edit_posts ?>
+
+<script>
+(function(){
+	var btn = document.querySelector('.sd-menu-btn');
+	var shell = document.querySelector('.sd-shell');
+	var overlay = document.querySelector('.sd-side-overlay');
+	if (!btn || !shell || !overlay) return;
+	function setOpen(open){
+		shell.classList.toggle('is-menu-open', open);
+		btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+		document.body.style.overflow = open ? 'hidden' : '';
+	}
+	btn.addEventListener('click', function(){
+		setOpen(!shell.classList.contains('is-menu-open'));
+	});
+	overlay.addEventListener('click', function(){ setOpen(false); });
+	document.addEventListener('keydown', function(e){
+		if (e.key === 'Escape') setOpen(false);
+	});
+	// Luk når man klikker på et nav-link (samme side-navigation)
+	document.querySelectorAll('.sd-side .sd-nav__item').forEach(function(a){
+		a.addEventListener('click', function(){ setOpen(false); });
+	});
+})();
+</script>
 
 <?php wp_footer(); ?>
 </body>

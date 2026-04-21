@@ -1567,3 +1567,189 @@ a.sd-barlist__name:hover { color: var(--sd-accent); }
 	padding: 8px 14px;
 	font-size: 13px;
 }
+
+/* =========================================================
+   MOBIL-OPTIMERING
+   ========================================================= */
+
+/* Hamburger + overlay skjult på desktop */
+.sd-menu-btn {
+	display: none;
+	position: fixed;
+	top: 14px;
+	right: 14px;
+	z-index: 1002;
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	background: #FFF;
+	border: 1px solid var(--sd-border);
+	box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08);
+	cursor: pointer;
+	padding: 0;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	-webkit-tap-highlight-color: transparent;
+}
+.sd-menu-btn span {
+	display: block;
+	width: 20px;
+	height: 2px;
+	background: var(--sd-ink);
+	border-radius: 2px;
+	transition: transform 200ms ease, opacity 150ms ease;
+}
+.sd-shell.is-menu-open .sd-menu-btn span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.sd-shell.is-menu-open .sd-menu-btn span:nth-child(2) { opacity: 0; }
+.sd-shell.is-menu-open .sd-menu-btn span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+.sd-side-overlay {
+	display: none;
+	position: fixed;
+	inset: 0;
+	background: rgba(16, 24, 40, 0.45);
+	z-index: 1000;
+	opacity: 0;
+	transition: opacity 200ms ease;
+}
+
+@media (max-width: 899px) {
+	.sd-menu-btn { display: inline-flex; }
+
+	.sd-shell {
+		grid-template-columns: 1fr;
+	}
+
+	/* Sidebar som slide-in drawer */
+	.sd-side {
+		position: fixed;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		width: 78vw;
+		max-width: 300px;
+		z-index: 1001;
+		transform: translateX(-100%);
+		transition: transform 260ms ease;
+		box-shadow: 0 0 24px rgba(16, 24, 40, 0.15);
+		overflow-y: auto;
+	}
+	.sd-shell.is-menu-open .sd-side { transform: translateX(0); }
+	.sd-shell.is-menu-open .sd-side-overlay {
+		display: block;
+		opacity: 1;
+	}
+
+	/* Main får fuld bredde + mindre padding */
+	.sd-main {
+		padding: 20px 16px 28px;
+	}
+
+	/* Topbar — plads til hamburger-knap i højre hjørne */
+	.sd-topbar {
+		padding-right: 56px;
+		margin-bottom: 20px;
+	}
+	.sd-topbar__title {
+		font-size: 22px;
+	}
+	.sd-topbar__title-sub {
+		display: block;
+		margin-left: 0;
+		font-size: 13px;
+		margin-top: 2px;
+	}
+	.sd-topbar__actions {
+		width: 100%;
+	}
+	.sd-topbar__actions .sd-btn {
+		flex: 1;
+		justify-content: center;
+	}
+
+	/* Stats — altid 2 kolonner på mobil */
+	.sd-stats {
+		grid-template-columns: repeat(2, 1fr);
+		gap: 10px;
+	}
+	.sd-stat { padding: 14px 14px; }
+	.sd-stat__num { font-size: 24px; }
+	.sd-stat__label { font-size: 11px; }
+
+	/* Tabeller scroller horisontalt i stedet for at bryde layoutet */
+	.sd-panel { overflow-x: auto; }
+	.sd-table { min-width: 560px; }
+
+	/* Detalje-sider — kolonner stables */
+	.sd-detail__grid,
+	.sd-crm-grid {
+		grid-template-columns: 1fr !important;
+	}
+
+	/* Form-rækker stables */
+	.sd-form__row { grid-template-columns: 1fr !important; }
+	.sd-form { padding: 14px 16px; }
+
+	/* Kalender — kompakt */
+	.sd-cal__cell { min-height: 56px; padding: 3px 4px; }
+	.sd-cal__num { font-size: 10px; }
+	.sd-cal__booking { font-size: 9px; padding: 1px 3px; }
+	.sd-cal__name { max-width: 60px; }
+
+	/* Toolbar stables */
+	.sd-toolbar {
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+	.sd-toolbar > * { flex: 1 1 100%; }
+
+	/* Audit-log tighter */
+	.sd-audit { padding: 16px; }
+	.sd-audit__item { padding: 10px 0; }
+
+	/* Detalje-header tighter */
+	.sd-detail__head {
+		flex-wrap: wrap;
+		gap: 10px;
+		padding: 16px;
+	}
+	.sd-detail__title { font-size: 20px; }
+
+	/* Inputs — touch-venlige højder */
+	.sd-field input,
+	.sd-field select,
+	.sd-field textarea,
+	.sd-textarea,
+	.sd-btn {
+		min-height: 44px;
+		font-size: 15px; /* undgå iOS auto-zoom */
+	}
+
+	/* Bruger-liste: kollaps kolonner der ikke er vigtige */
+	.sd-users-table th:nth-child(3),
+	.sd-users-table td:nth-child(3),
+	.sd-users-table th:nth-child(4),
+	.sd-users-table td:nth-child(4) {
+		display: none;
+	}
+	.sd-users-table { min-width: 0; }
+
+	/* Månedsrapport-panel */
+	.sd-export-month .sd-form__row {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media (max-width: 480px) {
+	.sd-stats { grid-template-columns: 1fr; }
+	.sd-main { padding: 16px 12px 24px; }
+	.sd-topbar__title { font-size: 20px; }
+	.sd-panel__head {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
+	}
+	.sd-export-month .sd-form__row { grid-template-columns: 1fr; }
+}
