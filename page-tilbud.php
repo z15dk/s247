@@ -83,7 +83,7 @@ if ( ! empty( $_POST['s247_tilbud_nonce'] ) && wp_verify_nonce( $_POST['s247_til
 			) );
 		}
 
-		wp_safe_redirect( add_query_arg( 'sendt', '1', wp_get_referer() ?: home_url( '/tilbud/' ) ) );
+		wp_safe_redirect( home_url( '/tilbud/?sendt=1' ) );
 		exit;
 	}
 }
