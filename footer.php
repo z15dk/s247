@@ -73,6 +73,7 @@
 			<ul>
 				<li><a href="<?php echo esc_url( home_url( '/privatlivspolitik/' ) ); ?>"><?php esc_html_e( 'Privatliv', 'studie247' ); ?></a></li>
 				<li><a href="<?php echo esc_url( home_url( '/cookies/' ) ); ?>"><?php esc_html_e( 'Cookies', 'studie247' ); ?></a></li>
+				<li><a href="#" data-open-cookie-settings><?php esc_html_e( 'Cookie-indstillinger', 'studie247' ); ?></a></li>
 				<li><a href="<?php echo esc_url( home_url( '/handelsbetingelser/' ) ); ?>"><?php esc_html_e( 'Vilkår', 'studie247' ); ?></a></li>
 			</ul>
 		</div>
