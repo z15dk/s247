@@ -10,13 +10,13 @@ $services = studie247_get_services();
 		<header class="section-head" data-reveal>
 			<div class="section-head__meta">
 				<span class="section-num">02</span>
-				<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Services', 'studie247' ); ?></span>
+				<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php echo esc_html( get_theme_mod( 's247_services_eyebrow', __( 'Services', 'studie247' ) ) ); ?></span>
 			</div>
 			<h2 id="services-title" class="section-head__title">
-				<?php esc_html_e( 'Hvad vi', 'studie247' ); ?> <em><?php esc_html_e( 'laver for dig', 'studie247' ); ?></em>
+				<?php echo esc_html( get_theme_mod( 's247_services_title_a', __( 'Hvad vi', 'studie247' ) ) ); ?> <em><?php echo esc_html( get_theme_mod( 's247_services_title_b', __( 'laver for dig', 'studie247' ) ) ); ?></em>
 			</h2>
 			<p class="section-head__lead">
-				<?php echo wp_kses_post( __( 'Vi skræddersyer hver produktion — men alting starter samme sted: <em>vores studie og vores team.</em>', 'studie247' ) ); ?>
+				<?php echo wp_kses_post( get_theme_mod( 's247_services_lead', __( 'Vi skræddersyer hver produktion — men alting starter samme sted: <em>vores studie og vores team.</em>', 'studie247' ) ) ); ?>
 			</p>
 		</header>
 

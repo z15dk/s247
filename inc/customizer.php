@@ -89,6 +89,48 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		'type'        => 'textarea',
 	) );
 
+	/* ───────── Services-sektion (forside "02 Services") ───────── */
+	$wp_customize->add_section( 's247_services_section', array(
+		'title'    => __( 'Services-sektion (forside)', 'studie247' ),
+		'priority' => 33,
+	) );
+
+	$services_fields = array(
+		's247_services_eyebrow' => array(
+			'label'   => __( 'Eyebrow (over titlen)', 'studie247' ),
+			'type'    => 'text',
+			'default' => 'Services',
+		),
+		's247_services_title_a' => array(
+			'label'   => __( 'Overskrift — del 1 (sans)', 'studie247' ),
+			'type'    => 'text',
+			'default' => 'Hvad vi',
+		),
+		's247_services_title_b' => array(
+			'label'   => __( 'Overskrift — del 2 (kursiv)', 'studie247' ),
+			'type'    => 'text',
+			'default' => 'laver for dig',
+		),
+		's247_services_lead'    => array(
+			'label'   => __( 'Intro-tekst (HTML tilladt)', 'studie247' ),
+			'type'    => 'textarea',
+			'default' => 'Vi skræddersyer hver produktion — men alting starter samme sted: <em>vores studie og vores team.</em>',
+		),
+	);
+
+	foreach ( $services_fields as $id => $cfg ) {
+		$wp_customize->add_setting( $id, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => ( 'textarea' === $cfg['type'] ) ? 'wp_kses_post' : 'sanitize_text_field',
+			'transport'         => 'refresh',
+		) );
+		$wp_customize->add_control( $id, array(
+			'label'   => $cfg['label'],
+			'section' => 's247_services_section',
+			'type'    => $cfg['type'],
+		) );
+	}
+
 	/* ───────── Studiet ───────── */
 	$wp_customize->add_section( 's247_studio', array(
 		'title'    => __( 'Studiet (forside)', 'studie247' ),
