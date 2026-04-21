@@ -465,6 +465,19 @@ a.sd-stat:hover {
 	background: var(--sd-accent-soft);
 	color: var(--sd-accent);
 }
+.sd-badge--tilbud {
+	background: var(--sd-accent);
+	color: #FFF;
+	margin-left: 6px;
+	padding: 2px 8px;
+	font-size: 10px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	border-radius: 999px;
+	display: inline-block;
+	vertical-align: middle;
+	font-weight: 700;
+}
 
 /* Liste (beskeder) */
 .sd-list {
@@ -543,6 +556,10 @@ a.sd-stat:hover {
 	color: var(--sd-ink-soft);
 	border-radius: 999px;
 	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.sd-filter--accent .sd-filter__count {
+	background: var(--sd-accent);
+	color: #FFF;
 }
 .sd-filter.is-active .sd-filter__count {
 	background: rgba(255,255,255,0.2);

@@ -14,7 +14,7 @@ if ( ! studie247_can_view_dash( 'messages' ) && ! current_user_can( 'manage_opti
 
 // Filter + søgning
 $filter = isset( $_GET['filter'] ) ? sanitize_key( $_GET['filter'] ) : 'unhandled';
-$allowed_filters = array( 'unhandled', 'handled', 'archive', 'all' );
+$allowed_filters = array( 'unhandled', 'tilbud', 'handled', 'archive', 'all' );
 if ( ! in_array( $filter, $allowed_filters, true ) ) { $filter = 'unhandled'; }
 $search = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
 
@@ -58,7 +58,12 @@ if ( $detail ) :
 				<?php else : ?>
 					<span class="sd-status sd-status--pending"><?php esc_html_e( 'Ubehandlet', 'studie247' ); ?></span>
 				<?php endif; ?>
-				<h2 class="sd-detail__title"><?php echo esc_html( $m_name ?: '(uden navn)' ); ?></h2>
+				<h2 class="sd-detail__title">
+					<?php echo esc_html( $m_name ?: '(uden navn)' ); ?>
+					<?php if ( 'tilbud' === $m_source ) : ?>
+						<span class="sd-badge sd-badge--tilbud" style="vertical-align:middle;margin-left:8px;font-size:11px;padding:3px 10px;"><?php esc_html_e( 'Tilbud', 'studie247' ); ?></span>
+					<?php endif; ?>
+				</h2>
 				<p class="sd-detail__sub">
 					<?php echo esc_html( get_the_date( 'l j. F Y · H:i', $detail ) ); ?>
 					<?php if ( $m_topic ) : ?> · <strong><?php echo esc_html( $m_topic ); ?></strong><?php endif; ?>
@@ -177,6 +182,10 @@ switch ( $filter ) {
 		$args['post_status'] = 'publish';
 		$args['meta_query']  = array( array( 'key' => '_s247_msg_handled', 'value' => '1' ) );
 		break;
+	case 'tilbud':
+		$args['post_status'] = array( 'publish', 'trash' );
+		$args['meta_query']  = array( array( 'key' => '_s247_source', 'value' => 'tilbud' ) );
+		break;
 	case 'archive':
 		$args['post_status'] = 'trash';
 		break;
@@ -208,6 +217,13 @@ $count_handled = count( get_posts( array(
 	'meta_query' => array( array( 'key' => '_s247_msg_handled', 'value' => '1' ) ),
 ) ) );
 $count_archive = (int) wp_count_posts( 'kontakt_besked' )->trash;
+$count_tilbud  = count( get_posts( array(
+	'post_type' => 'kontakt_besked',
+	'post_status' => array( 'publish', 'trash' ),
+	'posts_per_page' => -1,
+	'fields' => 'ids',
+	'meta_query' => array( array( 'key' => '_s247_source', 'value' => 'tilbud' ) ),
+) ) );
 $count_all     = $count_unhandled + $count_handled + $count_archive;
 ?>
 
@@ -216,6 +232,7 @@ $count_all     = $count_unhandled + $count_handled + $count_archive;
 		<?php
 		$filters = array(
 			'unhandled' => array( __( 'Ubehandlede', 'studie247' ), $count_unhandled, 'alert' ),
+			'tilbud'    => array( __( 'Tilbud', 'studie247' ), $count_tilbud, 'accent' ),
 			'handled'   => array( __( 'Håndteret', 'studie247' ), $count_handled, '' ),
 			'archive'   => array( __( 'Arkiv', 'studie247' ), $count_archive, '' ),
 			'all'       => array( __( 'Alle', 'studie247' ), $count_all, '' ),
@@ -224,9 +241,12 @@ $count_all     = $count_unhandled + $count_handled + $count_archive;
 			$url = add_query_arg( array( 'view' => 'messages', 'filter' => $key ), home_url( '/dashboard/' ) );
 			if ( $search ) { $url = add_query_arg( 'q', $search, $url ); }
 			$is_active = $filter === $key;
-			$alert     = 'alert' === $row[2] && $row[1] > 0;
+			$alert     = 'alert'  === $row[2] && $row[1] > 0;
+			$accent    = 'accent' === $row[2] && $row[1] > 0;
+			$extra     = $alert && ! $is_active ? ' sd-filter--alert'  : '';
+			$extra    .= $accent && ! $is_active ? ' sd-filter--accent' : '';
 		?>
-			<a class="sd-filter <?php echo $is_active ? 'is-active' : ''; ?><?php echo $alert && ! $is_active ? ' sd-filter--alert' : ''; ?>" href="<?php echo esc_url( $url ); ?>">
+			<a class="sd-filter <?php echo $is_active ? 'is-active' : ''; ?><?php echo $extra; ?>" href="<?php echo esc_url( $url ); ?>">
 				<?php echo esc_html( $row[0] ); ?>
 				<span class="sd-filter__count"><?php echo (int) $row[1]; ?></span>
 			</a>
@@ -282,6 +302,9 @@ $count_all     = $count_unhandled + $count_handled + $count_archive;
 						</td>
 						<td class="sd-table__name">
 							<a href="<?php echo $detail_href; ?>"><?php echo esc_html( $name ?: '—' ); ?></a>
+							<?php if ( 'tilbud' === $source ) : ?>
+								<span class="sd-badge sd-badge--tilbud" title="<?php esc_attr_e( 'Tilbudsforespørgsel', 'studie247' ); ?>"><?php esc_html_e( 'Tilbud', 'studie247' ); ?></span>
+							<?php endif; ?>
 							<?php if ( $email ) : ?><span class="sd-row-sub"><?php echo esc_html( $email ); ?></span><?php endif; ?>
 						</td>
 						<td><?php echo esc_html( $topic ?: '—' ); ?></td>
