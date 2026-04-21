@@ -8,6 +8,12 @@
  *
  * Tekster redigeres i Customizer → Cookie-banner.
  *
+ * Cookie-registry: Ugentlig WP-cron scanner aktive plugins og
+ * enqueuede scripts for kendte cookies (Google Analytics, Meta Pixel
+ * m.fl.) og opdaterer listen. Admin kan tilføje/fjerne manuelt i
+ * Værktøjer → Cookies. Shortcode [s247_cookies_table] viser listen
+ * fx på /cookies/-siden.
+ *
  * Andre scripts kan tjekke samtykke via:
  *   window.s247Consent.has('analytics')   → boolean
  *   window.s247Consent.open()             → åbn indstillinger-modal
@@ -18,6 +24,307 @@
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
+}
+
+/**
+ * Kendte cookies (provider, formål, varighed) grupperet pr. kategori.
+ * Scanneren matcher detekterede services mod denne liste.
+ */
+function studie247_cookies_known() {
+	return array(
+		// Altid til stede — teknisk nødvendige.
+		'_base_necessary' => array(
+			array( 'name' => 's247_consent',        'category' => 'necessary', 'provider' => 'Studie 247',    'purpose' => 'Gemmer dit cookie-samtykke.',                                   'duration' => '12 måneder' ),
+			array( 'name' => 'wordpress_test_cookie','category' => 'necessary','provider' => 'WordPress',     'purpose' => 'Bruges til at teste om din browser accepterer cookies.',        'duration' => 'Session' ),
+			array( 'name' => 'wordpress_logged_in_*','category' => 'necessary','provider' => 'WordPress',     'purpose' => 'Holder dig logget ind.',                                        'duration' => '15 dage' ),
+			array( 'name' => 'wp-settings-*',        'category' => 'necessary','provider' => 'WordPress',     'purpose' => 'Husker dine præferencer i wp-admin.',                            'duration' => '1 år' ),
+			array( 'name' => 'PHPSESSID',            'category' => 'necessary','provider' => 'Server',        'purpose' => 'Holder din session mens du browser.',                            'duration' => 'Session' ),
+		),
+		'ga' => array(
+			array( 'name' => '_ga',      'category' => 'analytics', 'provider' => 'Google Analytics', 'purpose' => 'Anvendes til at skelne mellem brugere.',          'duration' => '2 år' ),
+			array( 'name' => '_ga_*',    'category' => 'analytics', 'provider' => 'Google Analytics', 'purpose' => 'Anvendes til at holde session-state.',            'duration' => '2 år' ),
+			array( 'name' => '_gid',     'category' => 'analytics', 'provider' => 'Google Analytics', 'purpose' => 'Anvendes til at skelne mellem brugere.',          'duration' => '24 timer' ),
+			array( 'name' => '_gat*',    'category' => 'analytics', 'provider' => 'Google Analytics', 'purpose' => 'Begrænser request-frekvensen.',                    'duration' => '1 minut' ),
+		),
+		'meta_pixel' => array(
+			array( 'name' => '_fbp',     'category' => 'marketing', 'provider' => 'Meta (Facebook) Pixel', 'purpose' => 'Unikt bruger-ID for konverteringssporing.',   'duration' => '3 måneder' ),
+			array( 'name' => 'fr',       'category' => 'marketing', 'provider' => 'Meta (Facebook)',       'purpose' => 'Leveret af Facebook til annoncering.',       'duration' => '3 måneder' ),
+		),
+		'tiktok' => array(
+			array( 'name' => '_ttp',     'category' => 'marketing', 'provider' => 'TikTok Pixel', 'purpose' => 'Sporer interaktioner til annoncemåling.', 'duration' => '13 måneder' ),
+		),
+		'linkedin' => array(
+			array( 'name' => 'li_sugr',  'category' => 'marketing', 'provider' => 'LinkedIn Insight', 'purpose' => 'Browser-ID til retargeting.',                'duration' => '3 måneder' ),
+			array( 'name' => 'lidc',     'category' => 'marketing', 'provider' => 'LinkedIn',         'purpose' => 'Routing.',                                    'duration' => '1 dag' ),
+		),
+		'hotjar' => array(
+			array( 'name' => '_hjSessionUser_*',  'category' => 'analytics', 'provider' => 'Hotjar', 'purpose' => 'Sporer bruger-adfærd på tværs af sessioner.', 'duration' => '1 år' ),
+			array( 'name' => '_hjSession_*',      'category' => 'analytics', 'provider' => 'Hotjar', 'purpose' => 'Holder session-data.',                        'duration' => '30 minutter' ),
+		),
+		'clarity' => array(
+			array( 'name' => '_clck',    'category' => 'analytics', 'provider' => 'Microsoft Clarity', 'purpose' => 'Bruger-ID og præferencer.', 'duration' => '1 år' ),
+			array( 'name' => '_clsk',    'category' => 'analytics', 'provider' => 'Microsoft Clarity', 'purpose' => 'Session-data.',              'duration' => '1 dag' ),
+		),
+		'woocommerce' => array(
+			array( 'name' => 'woocommerce_cart_hash',  'category' => 'necessary', 'provider' => 'WooCommerce', 'purpose' => 'Holder styr på indhold i kurven.', 'duration' => 'Session' ),
+			array( 'name' => 'woocommerce_items_in_cart','category' => 'necessary','provider' => 'WooCommerce','purpose' => 'Antal varer i kurven.',            'duration' => 'Session' ),
+			array( 'name' => 'wp_woocommerce_session_*','category' => 'necessary','provider' => 'WooCommerce', 'purpose' => 'Session-data for kunden.',        'duration' => '48 timer' ),
+		),
+	);
+}
+
+/**
+ * Scan det aktive site for services der typisk sætter cookies.
+ * Kører ugentligt via WP-cron + manuelt fra admin-siden.
+ */
+function studie247_cookies_scan() {
+	$known    = studie247_cookies_known();
+	$detected = array();
+
+	// Altid-nødvendige cookies (WP + vores egen).
+	foreach ( $known['_base_necessary'] as $c ) { $detected[] = $c; }
+
+	// Tjek aktive plugins for kendte tracking-integrationer.
+	$plugins = get_option( 'active_plugins', array() );
+	foreach ( $plugins as $p ) {
+		if ( false !== strpos( $p, 'woocommerce' ) ) {
+			foreach ( $known['woocommerce'] as $c ) { $detected[] = $c; }
+		}
+		if ( false !== strpos( $p, 'google-analytics' ) || false !== strpos( $p, 'ga-google-analytics' ) || false !== strpos( $p, 'monsterinsights' ) || false !== strpos( $p, 'site-kit' ) ) {
+			foreach ( $known['ga'] as $c ) { $detected[] = $c; }
+		}
+		if ( false !== strpos( $p, 'facebook-for-wordpress' ) || false !== strpos( $p, 'pixel-caffeine' ) || false !== strpos( $p, 'meta-pixel' ) ) {
+			foreach ( $known['meta_pixel'] as $c ) { $detected[] = $c; }
+		}
+	}
+
+	// Scan forsidens HTML for kendte tracking-URLs (fanger inline scripts der ikke går gennem wp_enqueue).
+	$home   = home_url( '/' );
+	$resp   = wp_remote_get( $home, array( 'timeout' => 10, 'redirection' => 3, 'user-agent' => 'Studie247-CookieScanner/1.0' ) );
+	$html   = is_wp_error( $resp ) ? '' : wp_remote_retrieve_body( $resp );
+	$checks = array(
+		'ga'         => array( 'googletagmanager.com/gtag', 'google-analytics.com/analytics.js', 'google-analytics.com/ga.js', 'gtag(' ),
+		'meta_pixel' => array( 'connect.facebook.net', 'fbq(', 'fbevents.js' ),
+		'tiktok'     => array( 'analytics.tiktok.com', 'ttq.', 'ttq(' ),
+		'linkedin'   => array( 'snap.licdn.com', 'px.ads.linkedin.com' ),
+		'hotjar'     => array( 'static.hotjar.com', '_hjSettings' ),
+		'clarity'    => array( 'clarity.ms/tag' ),
+	);
+	foreach ( $checks as $key => $needles ) {
+		foreach ( $needles as $needle ) {
+			if ( false !== strpos( $html, $needle ) ) {
+				foreach ( $known[ $key ] as $c ) { $detected[] = $c; }
+				break;
+			}
+		}
+	}
+
+	// Flet med admin-tilføjede custom cookies.
+	$custom = get_option( 's247_cookies_custom', array() );
+	if ( is_array( $custom ) ) {
+		foreach ( $custom as $c ) { $detected[] = $c; }
+	}
+
+	// De-dup på (name, provider).
+	$out = array();
+	foreach ( $detected as $c ) {
+		$key = strtolower( ( $c['name'] ?? '' ) . '|' . ( $c['provider'] ?? '' ) );
+		if ( ! isset( $out[ $key ] ) ) { $out[ $key ] = $c; }
+	}
+	$out = array_values( $out );
+
+	update_option( 's247_cookies_detected', $out );
+	update_option( 's247_cookies_last_scan', time() );
+
+	if ( function_exists( 'studie247_audit_log' ) ) {
+		studie247_audit_log( sprintf( __( 'cookie-scan — %d cookies fundet', 'studie247' ), count( $out ) ), 0, 'cookies' );
+	}
+
+	return $out;
+}
+
+/**
+ * Planlæg ugentlig scanning.
+ */
+add_action( 'init', function () {
+	if ( ! wp_next_scheduled( 'studie247_cookies_weekly_scan' ) ) {
+		wp_schedule_event( time() + 60, 'weekly', 'studie247_cookies_weekly_scan' );
+	}
+} );
+add_action( 'studie247_cookies_weekly_scan', 'studie247_cookies_scan' );
+
+// Kør første scan når temaet aktiveres (ingen scan endnu).
+add_action( 'after_setup_theme', function () {
+	if ( ! get_option( 's247_cookies_last_scan' ) ) {
+		// Forsink lidt så after_setup_theme ikke bliver tung.
+		wp_schedule_single_event( time() + 5, 'studie247_cookies_weekly_scan' );
+	}
+}, 50 );
+
+/**
+ * Hent nuværende liste (detected + custom, pr. kategori).
+ */
+function studie247_cookies_get_list() {
+	$list = get_option( 's247_cookies_detected', array() );
+	if ( ! is_array( $list ) || empty( $list ) ) {
+		$list = studie247_cookies_scan();
+	}
+	$grouped = array( 'necessary' => array(), 'analytics' => array(), 'marketing' => array() );
+	foreach ( $list as $c ) {
+		$cat = isset( $c['category'] ) && isset( $grouped[ $c['category'] ] ) ? $c['category'] : 'necessary';
+		$grouped[ $cat ][] = $c;
+	}
+	return $grouped;
+}
+
+/**
+ * Shortcode [s247_cookies_table] — viser alle cookies i en pæn tabel.
+ * Bruges typisk på /cookies/-siden.
+ */
+add_shortcode( 's247_cookies_table', function () {
+	$grouped = studie247_cookies_get_list();
+	$labels  = array(
+		'necessary' => __( 'Nødvendige cookies', 'studie247' ),
+		'analytics' => __( 'Statistik-cookies', 'studie247' ),
+		'marketing' => __( 'Marketing-cookies', 'studie247' ),
+	);
+	$last_scan = (int) get_option( 's247_cookies_last_scan' );
+
+	ob_start(); ?>
+	<div class="s247-cookies-table">
+		<?php foreach ( $grouped as $cat => $items ) : if ( empty( $items ) ) continue; ?>
+			<h3><?php echo esc_html( $labels[ $cat ] ); ?></h3>
+			<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+				<thead>
+					<tr style="text-align:left;border-bottom:2px solid currentColor;">
+						<th style="padding:8px 10px;"><?php esc_html_e( 'Navn', 'studie247' ); ?></th>
+						<th style="padding:8px 10px;"><?php esc_html_e( 'Udbyder', 'studie247' ); ?></th>
+						<th style="padding:8px 10px;"><?php esc_html_e( 'Formål', 'studie247' ); ?></th>
+						<th style="padding:8px 10px;"><?php esc_html_e( 'Varighed', 'studie247' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $items as $c ) : ?>
+						<tr style="border-bottom:1px solid rgba(0,0,0,0.08);">
+							<td style="padding:8px 10px;font-family:monospace;font-size:13px;"><?php echo esc_html( $c['name'] ?? '' ); ?></td>
+							<td style="padding:8px 10px;"><?php echo esc_html( $c['provider'] ?? '' ); ?></td>
+							<td style="padding:8px 10px;"><?php echo esc_html( $c['purpose'] ?? '' ); ?></td>
+							<td style="padding:8px 10px;white-space:nowrap;"><?php echo esc_html( $c['duration'] ?? '' ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		<?php endforeach; ?>
+		<?php if ( $last_scan ) : ?>
+			<p style="font-size:12px;color:#666;"><?php printf( esc_html__( 'Sidst scannet: %s', 'studie247' ), esc_html( date_i18n( 'j. M Y H:i', $last_scan ) ) ); ?></p>
+		<?php endif; ?>
+	</div>
+	<?php
+	return ob_get_clean();
+} );
+
+/**
+ * Admin-side: Værktøjer → Cookies (manuelt scan + custom cookies).
+ */
+add_action( 'admin_menu', function () {
+	add_submenu_page(
+		'tools.php',
+		__( 'Studie 247 — Cookies', 'studie247' ),
+		__( 'Cookies', 'studie247' ),
+		'manage_options',
+		's247-cookies',
+		'studie247_cookies_admin_page'
+	);
+} );
+
+function studie247_cookies_admin_page() {
+	if ( isset( $_POST['s247_cookies_scan_now'] ) && check_admin_referer( 's247_cookies' ) ) {
+		studie247_cookies_scan();
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Scan kørt.', 'studie247' ) . '</p></div>';
+	}
+	if ( isset( $_POST['s247_cookies_save_custom'] ) && check_admin_referer( 's247_cookies' ) ) {
+		$in = isset( $_POST['cc'] ) && is_array( $_POST['cc'] ) ? wp_unslash( $_POST['cc'] ) : array();
+		$out = array();
+		foreach ( $in as $row ) {
+			$name = sanitize_text_field( $row['name'] ?? '' );
+			if ( ! $name ) { continue; }
+			$out[] = array(
+				'name'     => $name,
+				'category' => in_array( ( $row['category'] ?? '' ), array( 'necessary', 'analytics', 'marketing' ), true ) ? $row['category'] : 'necessary',
+				'provider' => sanitize_text_field( $row['provider'] ?? '' ),
+				'purpose'  => sanitize_text_field( $row['purpose'] ?? '' ),
+				'duration' => sanitize_text_field( $row['duration'] ?? '' ),
+			);
+		}
+		update_option( 's247_cookies_custom', $out );
+		studie247_cookies_scan();
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Custom cookies gemt + scan kørt.', 'studie247' ) . '</p></div>';
+	}
+
+	$list      = get_option( 's247_cookies_detected', array() );
+	$custom    = get_option( 's247_cookies_custom', array() );
+	$last_scan = (int) get_option( 's247_cookies_last_scan' );
+	?>
+	<div class="wrap">
+		<h1><?php esc_html_e( 'Cookies', 'studie247' ); ?></h1>
+		<p><?php esc_html_e( 'Cookies scannes automatisk én gang om ugen. Du kan også scanne manuelt og tilføje custom cookies herunder. Listen bruges i banneret og via shortcode', 'studie247' ); ?> <code>[s247_cookies_table]</code>.</p>
+
+		<form method="post" style="margin:16px 0;">
+			<?php wp_nonce_field( 's247_cookies' ); ?>
+			<button type="submit" name="s247_cookies_scan_now" value="1" class="button button-primary">🔍 <?php esc_html_e( 'Scan nu', 'studie247' ); ?></button>
+			<?php if ( $last_scan ) : ?>
+				<span style="margin-left:12px;color:#666;"><?php printf( esc_html__( 'Sidste scan: %s', 'studie247' ), esc_html( date_i18n( 'j. M Y H:i', $last_scan ) ) ); ?></span>
+			<?php endif; ?>
+		</form>
+
+		<h2><?php esc_html_e( 'Detekteret', 'studie247' ); ?> (<?php echo (int) count( $list ); ?>)</h2>
+		<table class="widefat striped">
+			<thead><tr><th>Navn</th><th>Kategori</th><th>Udbyder</th><th>Formål</th><th>Varighed</th></tr></thead>
+			<tbody>
+				<?php foreach ( $list as $c ) : ?>
+					<tr>
+						<td><code><?php echo esc_html( $c['name'] ?? '' ); ?></code></td>
+						<td><?php echo esc_html( $c['category'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $c['provider'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $c['purpose'] ?? '' ); ?></td>
+						<td><?php echo esc_html( $c['duration'] ?? '' ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+
+		<h2 style="margin-top:32px;"><?php esc_html_e( 'Tilføj custom cookies', 'studie247' ); ?></h2>
+		<p style="color:#666;"><?php esc_html_e( 'Brug dette hvis du har tilføjet tracking/udbydere som scanneren ikke kender.', 'studie247' ); ?></p>
+		<form method="post">
+			<?php wp_nonce_field( 's247_cookies' ); ?>
+			<table class="widefat" id="s247-cc-table">
+				<thead><tr><th>Navn</th><th>Kategori</th><th>Udbyder</th><th>Formål</th><th>Varighed</th><th></th></tr></thead>
+				<tbody>
+					<?php
+					$rows = $custom ? $custom : array();
+					$rows[] = array(); // tom række til ny
+					foreach ( $rows as $i => $row ) : ?>
+						<tr>
+							<td><input type="text" name="cc[<?php echo $i; ?>][name]"     value="<?php echo esc_attr( $row['name']     ?? '' ); ?>" placeholder="fx _pk_id"></td>
+							<td>
+								<select name="cc[<?php echo $i; ?>][category]">
+									<option value="necessary" <?php selected( ( $row['category'] ?? '' ), 'necessary' ); ?>>necessary</option>
+									<option value="analytics" <?php selected( ( $row['category'] ?? '' ), 'analytics' ); ?>>analytics</option>
+									<option value="marketing" <?php selected( ( $row['category'] ?? '' ), 'marketing' ); ?>>marketing</option>
+								</select>
+							</td>
+							<td><input type="text" name="cc[<?php echo $i; ?>][provider]" value="<?php echo esc_attr( $row['provider'] ?? '' ); ?>" placeholder="fx Matomo"></td>
+							<td><input type="text" name="cc[<?php echo $i; ?>][purpose]"  value="<?php echo esc_attr( $row['purpose']  ?? '' ); ?>" placeholder="kort beskrivelse"></td>
+							<td><input type="text" name="cc[<?php echo $i; ?>][duration]" value="<?php echo esc_attr( $row['duration'] ?? '' ); ?>" placeholder="fx 1 år"></td>
+							<td></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<p><button type="submit" name="s247_cookies_save_custom" value="1" class="button button-primary"><?php esc_html_e( 'Gem custom cookies + kør scan', 'studie247' ); ?></button></p>
+		</form>
+	</div>
+	<?php
 }
 
 /**
@@ -84,28 +391,43 @@ function studie247_cookie_banner_render() {
 				<?php endif; ?>
 			</div>
 
+			<?php
+			$cookies_grouped = studie247_cookies_get_list();
+			$cat_config = array(
+				'necessary' => array( 'label' => __( 'Nødvendige', 'studie247' ), 'desc' => $cat_nec,   'always' => true ),
+				'analytics' => array( 'label' => __( 'Statistik', 'studie247' ),  'desc' => $cat_stats, 'always' => false ),
+				'marketing' => array( 'label' => __( 'Marketing', 'studie247' ),  'desc' => $cat_mkt,   'always' => false ),
+			);
+			?>
 			<div class="s247-cookie__options" hidden data-s247-cookie-options>
-				<label class="s247-cookie__cat">
-					<input type="checkbox" checked disabled data-key="necessary">
-					<div>
-						<strong><?php esc_html_e( 'Nødvendige', 'studie247' ); ?></strong>
-						<span><?php echo esc_html( $cat_nec ); ?></span>
+				<?php foreach ( $cat_config as $key => $cfg ) : $items = $cookies_grouped[ $key ] ?? array(); ?>
+					<div class="s247-cookie__cat-wrap">
+						<label class="s247-cookie__cat">
+							<input type="checkbox" data-key="<?php echo esc_attr( $key ); ?>" <?php if ( $cfg['always'] ) echo 'checked disabled'; ?>>
+							<div>
+								<strong><?php echo esc_html( $cfg['label'] ); ?><?php if ( $items ) : ?> <span class="s247-cookie__count">(<?php echo (int) count( $items ); ?>)</span><?php endif; ?></strong>
+								<span><?php echo esc_html( $cfg['desc'] ); ?></span>
+							</div>
+						</label>
+						<?php if ( $items ) : ?>
+							<details class="s247-cookie__details">
+								<summary><?php esc_html_e( 'Se cookies i brug', 'studie247' ); ?></summary>
+								<table>
+									<thead><tr><th><?php esc_html_e( 'Navn', 'studie247' ); ?></th><th><?php esc_html_e( 'Udbyder', 'studie247' ); ?></th><th><?php esc_html_e( 'Varighed', 'studie247' ); ?></th></tr></thead>
+									<tbody>
+										<?php foreach ( $items as $c ) : ?>
+											<tr>
+												<td><code><?php echo esc_html( $c['name'] ?? '' ); ?></code></td>
+												<td><?php echo esc_html( $c['provider'] ?? '' ); ?></td>
+												<td><?php echo esc_html( $c['duration'] ?? '' ); ?></td>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+							</details>
+						<?php endif; ?>
 					</div>
-				</label>
-				<label class="s247-cookie__cat">
-					<input type="checkbox" data-key="analytics">
-					<div>
-						<strong><?php esc_html_e( 'Statistik', 'studie247' ); ?></strong>
-						<span><?php echo esc_html( $cat_stats ); ?></span>
-					</div>
-				</label>
-				<label class="s247-cookie__cat">
-					<input type="checkbox" data-key="marketing">
-					<div>
-						<strong><?php esc_html_e( 'Marketing', 'studie247' ); ?></strong>
-						<span><?php echo esc_html( $cat_mkt ); ?></span>
-					</div>
-				</label>
+				<?php endforeach; ?>
 			</div>
 
 			<div class="s247-cookie__actions">
@@ -127,7 +449,17 @@ function studie247_cookie_banner_render() {
 	.s247-cookie__intro{margin:0 0 14px;color:#404040;}
 	.s247-cookie__intro p{margin:0 0 8px;}
 	.s247-cookie__intro a{color:#9E2B25;font-weight:500;text-decoration:underline;}
-	.s247-cookie__options{display:grid;gap:8px;margin:0 0 14px;padding:14px;background:#F4E9DD;border-radius:10px;}
+	.s247-cookie__options{display:grid;gap:14px;margin:0 0 14px;padding:14px;background:#F4E9DD;border-radius:10px;max-height:50vh;overflow-y:auto;}
+	.s247-cookie__cat-wrap{border-bottom:1px solid rgba(40,40,40,0.08);padding-bottom:10px;}
+	.s247-cookie__cat-wrap:last-child{border-bottom:0;padding-bottom:0;}
+	.s247-cookie__count{font-weight:400;color:#9E2B25;margin-left:4px;}
+	.s247-cookie__details{margin-top:8px;font-size:12px;}
+	.s247-cookie__details summary{cursor:pointer;color:#9E2B25;font-weight:500;padding:4px 0;user-select:none;}
+	.s247-cookie__details[open] summary{margin-bottom:6px;}
+	.s247-cookie__details table{width:100%;border-collapse:collapse;font-size:11px;background:#FBF5EC;border-radius:6px;overflow:hidden;}
+	.s247-cookie__details th{text-align:left;padding:6px 8px;background:rgba(40,40,40,0.04);font-weight:600;}
+	.s247-cookie__details td{padding:6px 8px;border-top:1px solid rgba(40,40,40,0.06);}
+	.s247-cookie__details code{font-family:'SF Mono',Menlo,monospace;font-size:10px;background:rgba(158,43,37,0.08);padding:1px 4px;border-radius:3px;color:#282828;}
 	.s247-cookie__cat{display:flex;gap:10px;align-items:flex-start;cursor:pointer;padding:6px 0;}
 	.s247-cookie__cat input{margin-top:3px;accent-color:#9E2B25;width:18px;height:18px;flex-shrink:0;}
 	.s247-cookie__cat strong{display:block;font-size:13px;margin-bottom:2px;}
