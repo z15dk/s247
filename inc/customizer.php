@@ -208,6 +208,31 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		) );
 	}
 
+	/* ───────── Kontakt-info (menu + footer + mails) ───────── */
+	$wp_customize->add_section( 's247_contact_info', array(
+		'title'    => __( 'Kontakt-info (telefon / email)', 'studie247' ),
+		'priority' => 28,
+	) );
+
+	$contact_fields = array(
+		's247_phone' => array( 'label' => __( 'Telefonnummer (vises i menu/footer)', 'studie247' ), 'default' => '+45 00 00 00 00', 'description' => __( 'Skriv som du vil have det vist, fx "+45 12 34 56 78". Tel-linket genereres automatisk ved at fjerne mellemrum.', 'studie247' ) ),
+		's247_email' => array( 'label' => __( 'Kontakt-email (vises i footer)', 'studie247' ),     'default' => 'hej@s247.dk', 'description' => __( 'Bruges også som From/Reply-To på auto-mails hvis intet andet er sat.', 'studie247' ) ),
+	);
+
+	foreach ( $contact_fields as $id => $cfg ) {
+		$wp_customize->add_setting( $id, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => 'sanitize_text_field',
+			'transport'         => 'refresh',
+		) );
+		$wp_customize->add_control( $id, array(
+			'label'       => $cfg['label'],
+			'description' => $cfg['description'] ?? '',
+			'section'     => 's247_contact_info',
+			'type'        => 'text',
+		) );
+	}
+
 	/* ───────── Studiet ───────── */
 	$wp_customize->add_section( 's247_studio', array(
 		'title'    => __( 'Studiet (forside)', 'studie247' ),

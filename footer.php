@@ -42,9 +42,14 @@
 
 			<div class="site-footer__col">
 				<h3><?php esc_html_e( 'Kontakt', 'studie247' ); ?></h3>
+				<?php
+				$ft_phone_display = get_theme_mod( 's247_phone', '+45 00 00 00 00' );
+				$ft_phone_link    = '+' . preg_replace( '/\D/', '', $ft_phone_display );
+				$ft_email         = get_theme_mod( 's247_email', 'hej@s247.dk' );
+				?>
 				<ul>
-					<li><a href="mailto:hej@studie247.dk">hej@studie247.dk</a></li>
-					<li><a href="tel:+4500000000">+45 00 00 00 00</a></li>
+					<li><a href="mailto:<?php echo esc_attr( $ft_email ); ?>"><?php echo esc_html( $ft_email ); ?></a></li>
+					<li><a href="tel:<?php echo esc_attr( $ft_phone_link ); ?>"><?php echo esc_html( $ft_phone_display ); ?></a></li>
 					<li style="color:var(--s247-bone-60);">
 						<?php esc_html_e( 'Amager', 'studie247' ); ?>
 						<span class="site-footer__heart" aria-hidden="true">♥</span>
