@@ -10,7 +10,10 @@ if ( ! studie247_can_view_dash( 'customers' ) && ! current_user_can( 'manage_opt
 }
 
 $fmt_dkk = function ( $n ) { return number_format( (int) $n, 0, ',', '.' ) . ' kr'; };
-$can_revenue = studie247_can_view_dash( 'revenue' ) || current_user_can( 'manage_options' );
+$is_admin_user      = current_user_can( 'manage_options' );
+$can_revenue        = studie247_can_view_dash( 'revenue' ) || $is_admin_user;
+$can_studio_revenue = $is_admin_user || ( $can_revenue && studie247_can_view_dash( 'studio' ) );
+$can_rental_revenue = $is_admin_user || ( $can_revenue && studie247_can_view_dash( 'rental' ) );
 
 // Detalje-visning
 $cust_id = isset( $_GET['customer'] ) ? (int) $_GET['customer'] : 0;
@@ -112,8 +115,10 @@ if ( $cust ) :
 					<div class="sd-form">
 						<div class="sd-crm-stat"><span><?php esc_html_e( 'Bookinger', 'studie247' ); ?></span><strong><?php echo count( $activity['bookings'] ); ?></strong></div>
 						<div class="sd-crm-stat"><span><?php esc_html_e( 'Beskeder', 'studie247' ); ?></span><strong><?php echo count( $activity['messages'] ); ?></strong></div>
-						<?php if ( $can_revenue ) : ?>
+						<?php if ( $can_studio_revenue ) : ?>
 							<div class="sd-crm-stat"><span><?php esc_html_e( 'Studie — forbrug', 'studie247' ); ?></span><strong><?php echo esc_html( $fmt_dkk( $studio_spend ) ); ?></strong></div>
+						<?php endif; ?>
+						<?php if ( $can_rental_revenue ) : ?>
 							<div class="sd-crm-stat"><span><?php esc_html_e( 'Udlejning — forbrug', 'studie247' ); ?></span><strong><?php echo esc_html( $fmt_dkk( $rental_spend ) ); ?></strong></div>
 						<?php endif; ?>
 						<div class="sd-crm-stat">
@@ -183,7 +188,9 @@ if ( $cust ) :
 										</a>
 										<div class="sd-timeline__meta">
 											<span class="sd-status sd-status--<?php echo esc_attr( $b->post_status ); ?>"><?php echo esc_html( $status ); ?></span>
-											<?php if ( $can_revenue && $price ) : ?><span class="sd-mono"><?php echo esc_html( $fmt_dkk( $price ) ); ?></span><?php endif; ?>
+											<?php
+											$show_row_price = $pid ? $can_rental_revenue : $can_studio_revenue;
+											if ( $show_row_price && $price ) : ?><span class="sd-mono"><?php echo esc_html( $fmt_dkk( $price ) ); ?></span><?php endif; ?>
 										</div>
 									</div>
 								</li>
@@ -285,10 +292,8 @@ $total = (int) wp_count_posts( 's247_customer' )->publish;
 					<th><?php esc_html_e( 'Kontakt', 'studie247' ); ?></th>
 					<th><?php esc_html_e( 'Aktivitet', 'studie247' ); ?></th>
 					<th><?php esc_html_e( 'Nyhedsbrev', 'studie247' ); ?></th>
-					<?php if ( $can_revenue ) : ?>
-						<th class="sd-table__right"><?php esc_html_e( 'Studie', 'studie247' ); ?></th>
-						<th class="sd-table__right"><?php esc_html_e( 'Udlejning', 'studie247' ); ?></th>
-					<?php endif; ?>
+					<?php if ( $can_studio_revenue ) : ?><th class="sd-table__right"><?php esc_html_e( 'Studie', 'studie247' ); ?></th><?php endif; ?>
+					<?php if ( $can_rental_revenue ) : ?><th class="sd-table__right"><?php esc_html_e( 'Udlejning', 'studie247' ); ?></th><?php endif; ?>
 					<th><?php esc_html_e( 'Sidst set', 'studie247' ); ?></th>
 				</tr>
 			</thead>
@@ -337,10 +342,8 @@ $total = (int) wp_count_posts( 's247_customer' )->publish;
 								<span class="sd-muted">—</span>
 							<?php endif; ?>
 						</td>
-						<?php if ( $can_revenue ) : ?>
-							<td class="sd-table__right sd-mono"><?php echo $spend_studio ? esc_html( $fmt_dkk( $spend_studio ) ) : '—'; ?></td>
-							<td class="sd-table__right sd-mono"><?php echo $spend_rental ? esc_html( $fmt_dkk( $spend_rental ) ) : '—'; ?></td>
-						<?php endif; ?>
+						<?php if ( $can_studio_revenue ) : ?><td class="sd-table__right sd-mono"><?php echo $spend_studio ? esc_html( $fmt_dkk( $spend_studio ) ) : '—'; ?></td><?php endif; ?>
+						<?php if ( $can_rental_revenue ) : ?><td class="sd-table__right sd-mono"><?php echo $spend_rental ? esc_html( $fmt_dkk( $spend_rental ) ) : '—'; ?></td><?php endif; ?>
 						<td class="sd-muted"><?php echo esc_html( $c_last ? mysql2date( 'j. M Y', $c_last ) : '—' ); ?></td>
 					</tr>
 				<?php endforeach; ?>

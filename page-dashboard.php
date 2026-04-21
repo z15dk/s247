@@ -21,6 +21,11 @@ if ( isset( $_GET['export'] ) && 'customers_csv' === $_GET['export']
 ) {
 	check_admin_referer( 's247_export_customers' );
 
+	$is_admin_user      = current_user_can( 'manage_options' );
+	$cust_can_revenue   = studie247_can_view_dash( 'revenue' ) || $is_admin_user;
+	$show_studio_spend  = $is_admin_user || ( $cust_can_revenue && studie247_can_view_dash( 'studio' ) );
+	$show_rental_spend  = $is_admin_user || ( $cust_can_revenue && studie247_can_view_dash( 'rental' ) );
+
 	$customers = get_posts( array(
 		'post_type'      => 's247_customer',
 		'post_status'    => 'publish',
@@ -35,20 +40,20 @@ if ( isset( $_GET['export'] ) && 'customers_csv' === $_GET['export']
 	header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
 
 	$out = fopen( 'php://output', 'w' );
-	// BOM for at Excel åbner æøå korrekt.
 	fwrite( $out, "\xEF\xBB\xBF" );
 
-	fputcsv( $out, array(
-		'Navn', 'E-mail', 'Telefon', 'Virksomhed', 'CVR',
-		'Nyhedsbrev', 'Nyhedsbrev_tilmeldt',
-		'Antal_bookinger', 'Antal_beskeder',
-		'Studie_forbrug_DKK', 'Udlejning_forbrug_DKK', 'Samlet_forbrug_DKK',
-		'Første_gang', 'Sidst_set', 'Interne_noter',
-	), ';' );
+	$header = array( 'Navn', 'E-mail', 'Telefon', 'Virksomhed', 'CVR',
+		'Nyhedsbrev', 'Nyhedsbrev_tilmeldt', 'Antal_bookinger', 'Antal_beskeder' );
+	if ( $show_studio_spend ) { $header[] = 'Studie_forbrug_DKK'; }
+	if ( $show_rental_spend ) { $header[] = 'Udlejning_forbrug_DKK'; }
+	if ( $show_studio_spend && $show_rental_spend ) { $header[] = 'Samlet_forbrug_DKK'; }
+	$header = array_merge( $header, array( 'Første_gang', 'Sidst_set', 'Interne_noter' ) );
+	fputcsv( $out, $header, ';' );
 
 	foreach ( $customers as $c ) {
 		$spend_studio = 0;
 		$spend_rental = 0;
+		$bk = $ms = 0;
 		if ( function_exists( 'studie247_customer_activity' ) ) {
 			$act = studie247_customer_activity( $c->ID );
 			foreach ( $act['bookings'] as $b ) {
@@ -59,11 +64,9 @@ if ( isset( $_GET['export'] ) && 'customers_csv' === $_GET['export']
 			}
 			$bk = count( $act['bookings'] );
 			$ms = count( $act['messages'] );
-		} else {
-			$bk = $ms = 0;
 		}
 
-		fputcsv( $out, array(
+		$row = array(
 			get_post_meta( $c->ID, '_s247_cust_name', true ),
 			get_post_meta( $c->ID, '_s247_cust_email', true ),
 			get_post_meta( $c->ID, '_s247_cust_phone', true ),
@@ -72,16 +75,122 @@ if ( isset( $_GET['export'] ) && 'customers_csv' === $_GET['export']
 			'1' === get_post_meta( $c->ID, '_s247_cust_newsletter', true ) ? 'Ja' : 'Nej',
 			get_post_meta( $c->ID, '_s247_cust_newsletter_ts', true ),
 			$bk, $ms,
-			$spend_studio, $spend_rental, $spend_studio + $spend_rental,
-			get_post_meta( $c->ID, '_s247_cust_first_seen', true ),
-			get_post_meta( $c->ID, '_s247_cust_last_seen', true ),
-			str_replace( array( "\r", "\n" ), ' / ', (string) get_post_meta( $c->ID, '_s247_cust_notes', true ) ),
-		), ';' );
+		);
+		if ( $show_studio_spend ) { $row[] = $spend_studio; }
+		if ( $show_rental_spend ) { $row[] = $spend_rental; }
+		if ( $show_studio_spend && $show_rental_spend ) { $row[] = $spend_studio + $spend_rental; }
+		$row[] = get_post_meta( $c->ID, '_s247_cust_first_seen', true );
+		$row[] = get_post_meta( $c->ID, '_s247_cust_last_seen', true );
+		$row[] = str_replace( array( "\r", "\n" ), ' / ', (string) get_post_meta( $c->ID, '_s247_cust_notes', true ) );
+		fputcsv( $out, $row, ';' );
 	}
 	fclose( $out );
 
 	if ( function_exists( 'studie247_audit_log' ) ) {
 		studie247_audit_log( __( 'eksporterede kunde-CSV', 'studie247' ), 0, 's247_customer' );
+	}
+	exit;
+}
+
+/**
+ * CSV-eksport af bookinger for en given måned og type (studio/rental/all).
+ * Kræver relevant sektion-adgang (studio → studie-data, rental → rental-data).
+ */
+if ( isset( $_GET['export'] ) && 'monthly_bookings' === $_GET['export']
+	&& is_user_logged_in() && current_user_can( 'edit_posts' )
+) {
+	check_admin_referer( 's247_export_monthly' );
+
+	$type  = sanitize_key( $_GET['type'] ?? 'all' );
+	$month = sanitize_text_field( $_GET['month'] ?? '' );
+	if ( ! preg_match( '/^\d{4}-\d{2}$/', $month ) ) {
+		$month = date( 'Y-m', strtotime( 'first day of last month' ) );
+	}
+
+	$is_admin_user = current_user_can( 'manage_options' );
+	$has_studio    = $is_admin_user || studie247_can_view_dash( 'studio' );
+	$has_rental    = $is_admin_user || studie247_can_view_dash( 'rental' );
+	if ( 'studio' === $type && ! $has_studio ) { wp_die( esc_html__( 'Ingen adgang.', 'studie247' ), 403 ); }
+	if ( 'rental' === $type && ! $has_rental ) { wp_die( esc_html__( 'Ingen adgang.', 'studie247' ), 403 ); }
+	if ( 'all' === $type && ! $has_studio && ! $has_rental ) { wp_die( esc_html__( 'Ingen adgang.', 'studie247' ), 403 ); }
+
+	$can_revenue        = studie247_can_view_dash( 'revenue' ) || $is_admin_user;
+	$show_studio_price  = $is_admin_user || ( $can_revenue && $has_studio );
+	$show_rental_price  = $is_admin_user || ( $can_revenue && $has_rental );
+
+	$start_ts = strtotime( $month . '-01' );
+	$end_ts   = strtotime( '+1 month', $start_ts );
+	$date_from = date( 'Y-m-d', $start_ts );
+	$date_to   = date( 'Y-m-d', $end_ts - 86400 );
+
+	$bookings = get_posts( array(
+		'post_type'      => 'booking',
+		'post_status'    => array( 'pending', 'publish', 'trash' ),
+		'posts_per_page' => -1,
+		'meta_query'     => array(
+			array( 'key' => '_s247_date', 'value' => array( $date_from, $date_to ), 'compare' => 'BETWEEN', 'type' => 'DATE' ),
+		),
+		'orderby'        => 'meta_value',
+		'meta_key'       => '_s247_date',
+		'order'          => 'ASC',
+	) );
+
+	$filename = 'studie247-bookinger-' . $type . '-' . $month . '.csv';
+	nocache_headers();
+	header( 'Content-Type: text/csv; charset=UTF-8' );
+	header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+	$out = fopen( 'php://output', 'w' );
+	fwrite( $out, "\xEF\xBB\xBF" );
+
+	fputcsv( $out, array(
+		'Type', 'Booking_ID', 'Dato', 'Varighed', 'Produkt',
+		'Status', 'Intern',
+		'Kunde', 'E-mail', 'Telefon', 'Virksomhed', 'CVR',
+		'Pris_DKK',
+		'Besked', 'Oprettet',
+	), ';' );
+
+	$status_map = array( 'pending' => 'Afventer', 'publish' => 'Godkendt', 'trash' => 'Afvist' );
+
+	foreach ( $bookings as $b ) {
+		$pid     = (int) get_post_meta( $b->ID, '_s247_produkt_id', true );
+		$row_typ = $pid ? 'Udlejning' : 'Studie';
+		if ( 'studio' === $type && $pid ) { continue; }
+		if ( 'rental' === $type && ! $pid ) { continue; }
+		if ( 'all' === $type ) {
+			if ( $pid && ! $has_rental ) { continue; }
+			if ( ! $pid && ! $has_studio ) { continue; }
+		}
+
+		$price     = (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
+		$internal  = '1' === get_post_meta( $b->ID, '_s247_internal', true );
+		$price_out = '';
+		if ( $pid ? $show_rental_price : $show_studio_price ) {
+			$price_out = $price;
+		}
+
+		fputcsv( $out, array(
+			$row_typ,
+			$b->ID,
+			get_post_meta( $b->ID, '_s247_date', true ),
+			get_post_meta( $b->ID, '_s247_duration', true ),
+			$pid ? get_the_title( $pid ) : get_post_meta( $b->ID, '_s247_produkt', true ),
+			$status_map[ $b->post_status ] ?? $b->post_status,
+			$internal ? 'Ja' : 'Nej',
+			get_post_meta( $b->ID, '_s247_name', true ),
+			get_post_meta( $b->ID, '_s247_email', true ),
+			get_post_meta( $b->ID, '_s247_phone', true ),
+			get_post_meta( $b->ID, '_s247_company', true ),
+			get_post_meta( $b->ID, '_s247_cvr', true ),
+			$price_out,
+			str_replace( array( "\r", "\n" ), ' / ', (string) get_post_meta( $b->ID, '_s247_message', true ) ),
+			get_the_date( 'Y-m-d H:i', $b ),
+		), ';' );
+	}
+	fclose( $out );
+
+	if ( function_exists( 'studie247_audit_log' ) ) {
+		studie247_audit_log( sprintf( __( 'eksporterede bookinger (%1$s, %2$s)', 'studie247' ), $type, $month ), 0, 'booking' );
 	}
 	exit;
 }
@@ -550,6 +659,11 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 	$can_messages = studie247_can_view_dash( 'messages' );
 	$can_revenue  = studie247_can_view_dash( 'revenue' );
 	$can_customers = studie247_can_view_dash( 'customers' );
+	$is_admin_user = current_user_can( 'manage_options' );
+	// Økonomi følger sektion: kun se udlejnings-omsætning hvis bruger har
+	// udlejning + økonomi (eller er admin). Samme for studie.
+	$can_studio_revenue = $is_admin_user || ( $can_revenue && $can_studio );
+	$can_rental_revenue = $is_admin_user || ( $can_revenue && $can_rental );
 	$has_any      = $can_rental || $can_studio || $can_messages || $can_revenue || $can_customers;
 	$first_name   = trim( explode( ' ', trim( $user->display_name ) )[0] ) ?: $user->display_name;
 	$initials     = strtoupper( substr( $first_name, 0, 1 ) );

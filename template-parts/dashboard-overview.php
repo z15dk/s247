@@ -8,6 +8,7 @@
  *   $rev_month_studio, $rev_year_studio, $rev_month_rental, $rev_year_rental,
  *   $recent_pending, $recent_msgs, $fmt_dkk,
  *   $can_rental, $can_studio, $can_messages, $can_revenue, $can_customers,
+ *   $can_studio_revenue, $can_rental_revenue,
  *   $has_any
  */
 
@@ -36,33 +37,82 @@ if ( ! isset( $has_any ) ) { return; }
 				<span class="sd-stat__delta"><?php esc_html_e( 'forespørgsler', 'studie247' ); ?></span>
 			</a>
 		<?php endif; ?>
-		<?php if ( $can_revenue ) : ?>
-			<div class="sd-stat sd-stat--accent">
+		<?php if ( $can_studio_revenue ) : ?>
+			<a class="sd-stat sd-stat--accent" href="<?php echo esc_url( home_url( '/dashboard/?view=bookings&status=publish' ) ); ?>">
 				<span class="sd-stat__label"><?php esc_html_e( 'Studie — omsætning', 'studie247' ); ?></span>
 				<span class="sd-stat__num sd-stat__num--money"><?php echo esc_html( $fmt_dkk( $rev_month_studio ) ); ?></span>
 				<span class="sd-stat__delta"><?php printf( esc_html__( 'YTD: %s', 'studie247' ), esc_html( $fmt_dkk( $rev_year_studio ) ) ); ?></span>
-			</div>
-			<div class="sd-stat sd-stat--accent">
+			</a>
+		<?php endif; ?>
+		<?php if ( $can_rental_revenue ) : ?>
+			<a class="sd-stat sd-stat--accent" href="<?php echo esc_url( home_url( '/dashboard/?view=rental' ) ); ?>">
 				<span class="sd-stat__label"><?php esc_html_e( 'Udlejning — omsætning', 'studie247' ); ?></span>
 				<span class="sd-stat__num sd-stat__num--money"><?php echo esc_html( $fmt_dkk( $rev_month_rental ) ); ?></span>
 				<span class="sd-stat__delta"><?php printf( esc_html__( 'YTD: %s', 'studie247' ), esc_html( $fmt_dkk( $rev_year_rental ) ) ); ?></span>
-			</div>
+			</a>
 		<?php endif; ?>
 		<?php if ( $can_messages ) : ?>
-			<a class="sd-stat" href="<?php echo esc_url( admin_url( 'edit.php?post_type=kontakt_besked' ) ); ?>">
+			<a class="sd-stat" href="<?php echo esc_url( home_url( '/dashboard/?view=messages' ) ); ?>">
 				<span class="sd-stat__label"><?php esc_html_e( 'Beskeder', 'studie247' ); ?></span>
 				<span class="sd-stat__num"><?php echo (int) $msg_count; ?></span>
 				<span class="sd-stat__delta"><?php esc_html_e( 'modtaget', 'studie247' ); ?></span>
 			</a>
 		<?php endif; ?>
 		<?php if ( $can_rental ) : ?>
-			<a class="sd-stat" href="<?php echo esc_url( admin_url( 'edit.php?post_type=udlejning_item' ) ); ?>">
+			<a class="sd-stat" href="<?php echo esc_url( home_url( '/dashboard/?view=rental' ) ); ?>">
 				<span class="sd-stat__label"><?php esc_html_e( 'Varer', 'studie247' ); ?></span>
 				<span class="sd-stat__num"><?php echo (int) $item_count; ?></span>
 				<span class="sd-stat__delta"><?php esc_html_e( 'i udlejning', 'studie247' ); ?></span>
 			</a>
 		<?php endif; ?>
+		<?php if ( $can_customers ) :
+			$cust_count = (int) wp_count_posts( 's247_customer' )->publish;
+		?>
+			<a class="sd-stat" href="<?php echo esc_url( home_url( '/dashboard/?view=crm' ) ); ?>">
+				<span class="sd-stat__label"><?php esc_html_e( 'Kunder', 'studie247' ); ?></span>
+				<span class="sd-stat__num"><?php echo (int) $cust_count; ?></span>
+				<span class="sd-stat__delta"><?php esc_html_e( 'i CRM', 'studie247' ); ?></span>
+			</a>
+		<?php endif; ?>
 	</section>
+
+	<?php if ( $can_studio || $can_rental ) :
+		$default_month = date( 'Y-m', strtotime( 'first day of last month' ) );
+	?>
+		<section class="sd-panel sd-export-month">
+			<header class="sd-panel__head">
+				<h2><?php esc_html_e( 'Månedsrapport (CSV)', 'studie247' ); ?></h2>
+				<span class="sd-panel__hint"><?php esc_html_e( 'Træk alle bookinger i en valgt måned.', 'studie247' ); ?></span>
+			</header>
+			<form class="sd-form sd-export-month__form" method="get" action="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>">
+				<input type="hidden" name="export" value="monthly_bookings">
+				<?php wp_nonce_field( 's247_export_monthly', '_wpnonce' ); ?>
+				<div class="sd-form__row">
+					<div class="sd-field">
+						<label for="s247_export_month"><?php esc_html_e( 'Måned', 'studie247' ); ?></label>
+						<input type="month" id="s247_export_month" name="month" value="<?php echo esc_attr( $default_month ); ?>" required>
+					</div>
+					<div class="sd-field">
+						<label for="s247_export_type"><?php esc_html_e( 'Type', 'studie247' ); ?></label>
+						<select id="s247_export_type" name="type">
+							<?php if ( $can_studio && $can_rental ) : ?>
+								<option value="all"><?php esc_html_e( 'Studie + udlejning', 'studie247' ); ?></option>
+							<?php endif; ?>
+							<?php if ( $can_studio ) : ?>
+								<option value="studio"><?php esc_html_e( 'Kun studie', 'studie247' ); ?></option>
+							<?php endif; ?>
+							<?php if ( $can_rental ) : ?>
+								<option value="rental"><?php esc_html_e( 'Kun udlejning', 'studie247' ); ?></option>
+							<?php endif; ?>
+						</select>
+					</div>
+				</div>
+				<div class="sd-form__actions">
+					<button type="submit" class="sd-btn">⬇ <?php esc_html_e( 'Download CSV', 'studie247' ); ?></button>
+				</div>
+			</form>
+		</section>
+	<?php endif; ?>
 
 	<section class="sd-grid">
 		<?php if ( $can_studio || $can_rental ) : ?>
@@ -80,7 +130,7 @@ if ( ! isset( $has_any ) ) { return; }
 								<th>Type</th>
 								<th><?php esc_html_e( 'Kunde', 'studie247' ); ?></th>
 								<th><?php esc_html_e( 'Dato', 'studie247' ); ?></th>
-								<?php if ( $can_revenue ) : ?><th class="sd-table__right"><?php esc_html_e( 'Pris', 'studie247' ); ?></th><?php endif; ?>
+								<?php if ( $can_studio_revenue || $can_rental_revenue ) : ?><th class="sd-table__right"><?php esc_html_e( 'Pris', 'studie247' ); ?></th><?php endif; ?>
 							</tr>
 						</thead>
 						<tbody>
@@ -96,7 +146,11 @@ if ( ! isset( $has_any ) ) { return; }
 									<td><span class="sd-badge <?php echo $pid ? 'sd-badge--accent' : 'sd-badge--neutral'; ?>"><?php echo $pid ? esc_html__( 'Udstyr', 'studie247' ) : esc_html__( 'Studie', 'studie247' ); ?></span></td>
 									<td><?php echo esc_html( $name ?: '—' ); ?></td>
 									<td class="sd-muted"><?php echo esc_html( $date ? date_i18n( 'j. M', strtotime( $date ) ) : '—' ); ?></td>
-									<?php if ( $can_revenue ) : ?><td class="sd-table__right sd-mono"><?php echo $price ? esc_html( $fmt_dkk( $price ) ) : '—'; ?></td><?php endif; ?>
+									<?php if ( $can_studio_revenue || $can_rental_revenue ) :
+										$row_shows_price = ( $pid ? $can_rental_revenue : $can_studio_revenue );
+									?>
+										<td class="sd-table__right sd-mono"><?php echo ( $row_shows_price && $price ) ? esc_html( $fmt_dkk( $price ) ) : '—'; ?></td>
+									<?php endif; ?>
 								</tr>
 							<?php endforeach; ?>
 						</tbody>
@@ -109,7 +163,7 @@ if ( ! isset( $has_any ) ) { return; }
 			<div class="sd-panel">
 				<header class="sd-panel__head">
 					<h2><?php esc_html_e( 'Seneste beskeder', 'studie247' ); ?></h2>
-					<a class="sd-panel__more" href="<?php echo esc_url( admin_url( 'edit.php?post_type=kontakt_besked' ) ); ?>"><?php esc_html_e( 'Alle', 'studie247' ); ?> →</a>
+					<a class="sd-panel__more" href="<?php echo esc_url( home_url( '/dashboard/?view=messages' ) ); ?>"><?php esc_html_e( 'Alle', 'studie247' ); ?> →</a>
 				</header>
 				<?php if ( empty( $recent_msgs ) ) : ?>
 					<p class="sd-panel__empty"><?php esc_html_e( 'Ingen endnu.', 'studie247' ); ?></p>
@@ -120,7 +174,7 @@ if ( ! isset( $has_any ) ) { return; }
 							$topic = get_post_meta( $m->ID, '_s247_topic', true );
 						?>
 							<li>
-								<a href="<?php echo esc_url( get_edit_post_link( $m->ID ) ); ?>">
+								<a href="<?php echo esc_url( home_url( '/dashboard/?view=messages&message=' . $m->ID ) ); ?>">
 									<span class="sd-list__dot"></span>
 									<span class="sd-list__body">
 										<span class="sd-list__name"><?php echo esc_html( $name ?: '—' ); ?></span>
@@ -190,7 +244,7 @@ if ( ! isset( $has_any ) ) { return; }
 		<section class="sd-panel sd-panel--wide sd-statsblock">
 			<header class="sd-panel__head">
 				<h2><?php esc_html_e( 'Udlejnings-statistik', 'studie247' ); ?></h2>
-				<span class="sd-panel__hint"><?php printf( esc_html__( '%1$d forespørgsler · %2$d godkendte', 'studie247' ), (int) $r_total_count, (int) $r_approved ); ?></span>
+				<a class="sd-panel__more" href="<?php echo esc_url( home_url( '/dashboard/?view=rental' ) ); ?>"><?php esc_html_e( 'Se alle', 'studie247' ); ?> →</a>
 			</header>
 
 			<div class="sd-ministats">
@@ -198,7 +252,7 @@ if ( ! isset( $has_any ) ) { return; }
 				<div><span class="sd-ministat__label"><?php esc_html_e( 'Næste 7 dage', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) $r_upcoming; ?></span></div>
 				<div><span class="sd-ministat__label"><?php esc_html_e( 'Udlejet MTD', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) $r_mtd_count; ?></span></div>
 				<div><span class="sd-ministat__label"><?php esc_html_e( 'Gennemførte', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) $r_completed; ?></span></div>
-				<?php if ( $can_revenue ) : ?>
+				<?php if ( $can_rental_revenue ) : ?>
 					<div><span class="sd-ministat__label"><?php esc_html_e( 'Oms. MTD', 'studie247' ); ?></span><span class="sd-ministat__num sd-ministat__num--money"><?php echo esc_html( $fmt_dkk( $r_rev_month ) ); ?></span></div>
 					<div><span class="sd-ministat__label"><?php esc_html_e( 'Oms. YTD', 'studie247' ); ?></span><span class="sd-ministat__num sd-ministat__num--money"><?php echo esc_html( $fmt_dkk( $r_rev_year ) ); ?></span></div>
 				<?php endif; ?>
@@ -234,7 +288,7 @@ if ( ! isset( $has_any ) ) { return; }
 									<span class="sd-barlist__bar"><span style="width:<?php echo (int) $pct; ?>%;"></span></span>
 									<span class="sd-barlist__val">
 										<?php echo (int) $ccnt; ?>
-										<?php if ( $can_revenue && isset( $r_cat_revenue[ $cname ] ) ) : ?>
+										<?php if ( $can_rental_revenue && isset( $r_cat_revenue[ $cname ] ) ) : ?>
 											<span class="sd-muted"> · <?php echo esc_html( $fmt_dkk( $r_cat_revenue[ $cname ] ) ); ?></span>
 										<?php endif; ?>
 									</span>
@@ -294,7 +348,7 @@ if ( ! isset( $has_any ) ) { return; }
 		<section class="sd-panel sd-panel--wide sd-statsblock">
 			<header class="sd-panel__head">
 				<h2><?php esc_html_e( 'Studie-statistik', 'studie247' ); ?></h2>
-				<span class="sd-panel__hint"><?php printf( esc_html__( '%1$d bookinger · %2$d godkendte', 'studie247' ), (int) $s_total, (int) $s_approved ); ?></span>
+				<a class="sd-panel__more" href="<?php echo esc_url( home_url( '/dashboard/?view=bookings' ) ); ?>"><?php esc_html_e( 'Se alle', 'studie247' ); ?> →</a>
 			</header>
 
 			<div class="sd-ministats">
@@ -303,7 +357,7 @@ if ( ! isset( $has_any ) ) { return; }
 				<?php if ( $s_sum ) : ?>
 					<div><span class="sd-ministat__label"><?php esc_html_e( 'Vælger redigering', 'studie247' ); ?></span><span class="sd-ministat__num"><?php echo (int) round( $s_red / $s_sum * 100 ); ?>%</span></div>
 				<?php endif; ?>
-				<?php if ( $can_revenue ) : ?>
+				<?php if ( $can_studio_revenue ) : ?>
 					<div><span class="sd-ministat__label"><?php esc_html_e( 'Oms. MTD', 'studie247' ); ?></span><span class="sd-ministat__num sd-ministat__num--money"><?php echo esc_html( $fmt_dkk( $s_rev_month ) ); ?></span></div>
 					<div><span class="sd-ministat__label"><?php esc_html_e( 'Oms. YTD', 'studie247' ); ?></span><span class="sd-ministat__num sd-ministat__num--money"><?php echo esc_html( $fmt_dkk( $s_rev_year ) ); ?></span></div>
 				<?php endif; ?>
