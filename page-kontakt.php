@@ -146,11 +146,16 @@ get_header();
 
 					<div class="ko-direct">
 						<p class="ko-direct__label"><?php esc_html_e( 'Eller direkte:', 'studie247' ); ?></p>
-						<a class="ko-direct__link" href="mailto:hej@studie247.dk">
-							<?php echo studie247_icon( 'mail', 16 ); ?> hej@studie247.dk
+						<?php
+						$ko_email = get_theme_mod( 's247_email', 'hej@s247.dk' );
+						$ko_phone = get_theme_mod( 's247_phone', '+45 00 00 00 00' );
+						$ko_phone_link = '+' . preg_replace( '/\D/', '', $ko_phone );
+						?>
+						<a class="ko-direct__link" href="mailto:<?php echo esc_attr( $ko_email ); ?>">
+							<?php echo studie247_icon( 'mail', 16 ); ?> <?php echo esc_html( $ko_email ); ?>
 						</a>
-						<a class="ko-direct__link" href="tel:+4500000000">
-							<?php echo studie247_icon( 'phone', 16 ); ?> +45 00 00 00 00
+						<a class="ko-direct__link" href="tel:<?php echo esc_attr( $ko_phone_link ); ?>">
+							<?php echo studie247_icon( 'phone', 16 ); ?> <?php echo esc_html( $ko_phone ); ?>
 						</a>
 					</div>
 				</aside>
