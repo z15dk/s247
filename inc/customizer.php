@@ -233,6 +233,29 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		) );
 	}
 
+	// Kontakt-hero video + fallback-billede
+	$wp_customize->add_setting( 's247_kontakt_hero_video', array(
+		'default'           => '',
+		'sanitize_callback' => 'esc_url_raw',
+		'transport'         => 'refresh',
+	) );
+	$wp_customize->add_control( 's247_kontakt_hero_video', array(
+		'label'       => __( 'Kontakt — hero-video (MP4 URL)', 'studie247' ),
+		'description' => __( 'Valgfri baggrundsvideo øverst på /kontakt/. Ingen lyd, auto-play, loop.', 'studie247' ),
+		'section'     => 's247_contact_info',
+		'type'        => 'url',
+	) );
+	$wp_customize->add_setting( 's247_kontakt_hero_image', array(
+		'default'           => '',
+		'sanitize_callback' => 'esc_url_raw',
+		'transport'         => 'refresh',
+	) );
+	$wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 's247_kontakt_hero_image', array(
+		'label'       => __( 'Kontakt — hero fallback-billede', 'studie247' ),
+		'description' => __( 'Vises hvis der ikke er sat video. Også video-poster.', 'studie247' ),
+		'section'     => 's247_contact_info',
+	) ) );
+
 	/* ───────── Footer-tekster ───────── */
 	$wp_customize->add_section( 's247_footer_section', array(
 		'title'    => __( 'Footer', 'studie247' ),

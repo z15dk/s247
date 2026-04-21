@@ -93,6 +93,27 @@ get_header();
 				<p class="ko-lead">Besvar tre korte spørgsmål. Vi læser hver eneste besked selv.</p>
 			</header>
 
+			<?php
+			$k_hero_video = get_theme_mod( 's247_kontakt_hero_video' );
+			$k_hero_image = get_theme_mod( 's247_kontakt_hero_image' );
+			if ( $k_hero_video || $k_hero_image ) : ?>
+				<div class="ko-hero" aria-hidden="true">
+					<?php if ( $k_hero_video ) : ?>
+						<video autoplay muted loop playsinline <?php echo $k_hero_image ? 'poster="' . esc_url( $k_hero_image ) . '"' : ''; ?>>
+							<source src="<?php echo esc_url( $k_hero_video ); ?>" type="video/mp4">
+						</video>
+					<?php elseif ( $k_hero_image ) : ?>
+						<img src="<?php echo esc_url( $k_hero_image ); ?>" alt="" loading="eager">
+					<?php endif; ?>
+					<span class="ko-hero__grain"></span>
+					<span class="ko-hero__fade"></span>
+					<div class="ko-hero__caption">
+						<span class="ko-hero__dot"></span>
+						<span><?php esc_html_e( 'Vi er i studiet lige nu', 'studie247' ); ?></span>
+					</div>
+				</div>
+			<?php endif; ?>
+
 			<div class="ko-layout">
 				<aside class="ko-side">
 					<?php
