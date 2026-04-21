@@ -5051,3 +5051,257 @@ a.dash-card:hover::before { transform: scaleY(1); }
 	gap: var(--sp-3);
 	align-items: flex-start;
 }
+
+/* ═════════════════════════════════════════════════════
+   KONTAKT — WOW LAYER
+   Dramatiske overlays, gradient-blob, moderne topic-cards,
+   bedre progress-indikator, celebratory success.
+   ═════════════════════════════════════════════════════ */
+
+.ko-section {
+	position: relative;
+	overflow: hidden;
+	padding: clamp(var(--sp-12), 8vw, var(--sp-20)) 0 var(--sp-16);
+}
+
+/* Gradient-blob bag headline */
+.ko-section::before {
+	content: "";
+	position: absolute;
+	top: -180px;
+	right: -120px;
+	width: 520px;
+	height: 520px;
+	background: radial-gradient(circle at center, color-mix(in srgb, var(--color-accent) 18%, transparent) 0%, transparent 60%);
+	pointer-events: none;
+	filter: blur(20px);
+	z-index: 0;
+}
+.ko-section::after {
+	content: "";
+	position: absolute;
+	bottom: -160px;
+	left: -100px;
+	width: 400px;
+	height: 400px;
+	background: radial-gradient(circle at center, color-mix(in srgb, var(--s247-black) 8%, transparent) 0%, transparent 60%);
+	pointer-events: none;
+	filter: blur(24px);
+	z-index: 0;
+}
+.ko-section .wrap { position: relative; z-index: 1; }
+
+/* Dramatisk headline */
+.ko-head {
+	font-size: clamp(2.75rem, 2rem + 4vw, 5.5rem);
+	line-height: 0.98;
+	letter-spacing: -0.035em;
+	margin-top: var(--sp-4);
+	text-wrap: balance;
+}
+.ko-head em {
+	position: relative;
+	display: inline-block;
+}
+.ko-head em::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0.08em;
+	height: 0.18em;
+	background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-accent) 35%, transparent), transparent);
+	border-radius: 2px;
+	z-index: -1;
+}
+.ko-lead {
+	font-size: clamp(1rem, 0.9rem + 0.4vw, 1.2rem);
+	line-height: 1.55;
+}
+
+/* Topic-knapper → moderne cards med icon-pulse på hover */
+.ko-topics { gap: 10px; }
+.ko-topic {
+	position: relative;
+	padding: 12px 22px;
+	border-radius: 14px;
+	border: 1.5px solid var(--color-border);
+	background: rgba(255, 255, 255, 0.5);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	transition: transform 220ms var(--ease-smooth),
+	            border-color 180ms var(--ease),
+	            background 180ms var(--ease),
+	            box-shadow 220ms var(--ease-smooth);
+}
+.ko-topic::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 0%, transparent), color-mix(in srgb, var(--color-accent) 18%, transparent));
+	opacity: 0;
+	transition: opacity 220ms var(--ease);
+	pointer-events: none;
+}
+.ko-topic:hover {
+	transform: translateY(-2px);
+	border-color: var(--color-accent);
+	box-shadow: 0 12px 28px -12px rgba(158, 43, 37, 0.28);
+}
+.ko-topic:hover::before { opacity: 1; }
+.ko-topic.is-selected {
+	background: var(--color-ink);
+	color: var(--color-ink-on-dark);
+	border-color: var(--color-ink);
+	box-shadow: 0 10px 30px -14px rgba(40, 40, 40, 0.5);
+	transform: translateY(-1px);
+}
+.ko-topic.is-selected::before { opacity: 0; }
+
+/* Input-felter — blødere og større */
+.ko-field input,
+.ko-field textarea {
+	padding: 16px 18px;
+	border-radius: 12px;
+	font-size: 16px;
+	background: rgba(255, 255, 255, 0.85);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+}
+
+/* Progress — bar med labels i stedet for bare dots */
+.ko-progress {
+	position: relative;
+	justify-content: space-between;
+	margin-top: var(--sp-6);
+	padding: 0 4px;
+	gap: 0;
+}
+.ko-progress::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 8px;
+	right: 8px;
+	height: 2px;
+	background: var(--color-border);
+	transform: translateY(-50%);
+	z-index: 0;
+}
+.ko-dot {
+	position: relative;
+	z-index: 1;
+	background: var(--color-bg);
+	border: 2px solid var(--color-border);
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+}
+.ko-dot.is-active {
+	background: var(--color-accent);
+	border-color: var(--color-accent);
+	width: 14px;
+	border-radius: 50%;
+	box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+/* Card-lignende form-wrapper så step'et føles "lukket" */
+.ko-main {
+	position: relative;
+}
+.ko-steps {
+	position: relative;
+	padding: clamp(var(--sp-6), 3vw, var(--sp-8));
+	background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.45));
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
+	border: 1px solid color-mix(in srgb, var(--color-ink) 8%, transparent);
+	border-radius: clamp(18px, 2vw, 28px);
+	box-shadow:
+		0 1px 2px rgba(40, 40, 40, 0.04),
+		0 24px 48px -24px rgba(40, 40, 40, 0.15);
+}
+
+/* Submit-knap — bigger, shining */
+.ko-step .btn--primary.btn--lg {
+	padding: 18px 34px;
+	font-size: 17px;
+	letter-spacing: 0.01em;
+	box-shadow: 0 14px 30px -12px rgba(158, 43, 37, 0.55);
+	transition: transform 200ms var(--ease-smooth), box-shadow 200ms var(--ease);
+}
+.ko-step .btn--primary.btn--lg:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 20px 38px -12px rgba(158, 43, 37, 0.65);
+}
+
+/* Success-state — celebratory med stor check og glow */
+.ko-success {
+	position: relative;
+	align-items: center;
+	text-align: center;
+	padding: clamp(var(--sp-10), 6vw, var(--sp-16));
+	background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.6));
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
+	border-radius: clamp(18px, 2vw, 28px);
+	overflow: hidden;
+}
+.ko-success::before {
+	content: "✓";
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 84px;
+	height: 84px;
+	margin: 0 auto var(--sp-4);
+	border-radius: 50%;
+	background: linear-gradient(135deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 80%, #7E2019));
+	color: #FFF;
+	font-size: 42px;
+	font-weight: 400;
+	line-height: 1;
+	box-shadow:
+		0 0 0 10px color-mix(in srgb, var(--color-accent) 10%, transparent),
+		0 22px 44px -16px rgba(158, 43, 37, 0.55);
+	animation: ko-check-pop 700ms var(--ease-smooth) both;
+}
+@keyframes ko-check-pop {
+	0%   { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+	60%  { opacity: 1; transform: scale(1.1) rotate(5deg); }
+	100% { transform: scale(1) rotate(0); }
+}
+.ko-success h1 {
+	font-size: clamp(2rem, 1.6rem + 2vw, 3.25rem);
+	margin: 0;
+}
+.ko-success p {
+	color: var(--color-ink-soft);
+	max-width: 48ch;
+	font-size: 1.05rem;
+	line-height: 1.6;
+}
+
+/* Sidebar — opgraderet med gradient-glow */
+.ko-stats {
+	background: linear-gradient(180deg, var(--color-surface), color-mix(in srgb, var(--color-surface) 70%, var(--color-bg)));
+	box-shadow: 0 12px 24px -16px rgba(40, 40, 40, 0.12);
+}
+.ko-direct__link {
+	padding: 10px 0;
+	border-radius: 10px;
+	transition: color 180ms var(--ease), transform 180ms var(--ease-smooth), padding-left 220ms var(--ease-smooth);
+}
+.ko-direct__link:hover {
+	color: var(--color-accent);
+	transform: translateX(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ko-section::before, .ko-section::after { display: none; }
+	.ko-topic, .ko-direct__link, .ko-step .btn--primary.btn--lg {
+		transition: none !important;
+	}
+	.ko-success::before { animation: none; }
+}
