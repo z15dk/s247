@@ -235,17 +235,24 @@ if ( isset( $_POST['s247_dash_user_action'] ) && is_user_logged_in() && current_
 				update_user_meta( $new_id, '_s247_dash_view_' . $sec, '1' );
 			}
 		}
-		// Send velkomst-mail
-		if ( $send ) {
-			$subject = __( 'Velkommen til Studie 247 dashboard', 'studie247' );
-			$body    = sprintf(
-				__( "Hej %s,\n\nDu har nu adgang til dashboardet på:\n%s\n\nBrugernavn: %s\nAdgangskode: %s\n\nLog ind og skift adgangskoden ved første besøg.\n\n— Studie 247", 'studie247' ),
-				$first ?: $email,
-				home_url( '/dashboard/' ),
+		// Send velkomst-mail via redigerbar skabelon
+		if ( $send && function_exists( 'studie247_render_mail_template' ) ) {
+			$mail = studie247_render_mail_template( 'user_welcome', array(
+				'fornavn'     => $first,
+				'efternavn'   => $last,
+				'brugernavn'  => $email,
+				'email'       => $email,
+				'adgangskode' => $pwd,
+				'login_url'   => home_url( '/dashboard/' ),
+				'rolle'       => $role,
+			) );
+			$is_html = studie247_mail_template_is_html( 'user_welcome' );
+			wp_mail(
 				$email,
-				$pwd
+				$mail['subject'],
+				$mail['body'],
+				array( 'Content-Type: ' . ( $is_html ? 'text/html' : 'text/plain' ) . '; charset=UTF-8' )
 			);
-			wp_mail( $email, $subject, $body );
 		}
 		if ( function_exists( 'studie247_audit_log' ) ) {
 			studie247_audit_log( sprintf( __( 'oprettede ny bruger %s (%s)', 'studie247' ), trim( $first . ' ' . $last ) ?: $email, $role ), $new_id, 'user' );
@@ -286,16 +293,22 @@ if ( isset( $_POST['s247_dash_user_action'] ) && is_user_logged_in() && current_
 			}
 			wp_set_password( $new_password, $uid );
 			$u = get_userdata( $uid );
-			if ( ! empty( $_POST['send_password_mail'] ) && $u && $u->user_email ) {
-				$subject = __( 'Din adgangskode er ændret — Studie 247', 'studie247' );
-				$body    = sprintf(
-					__( "Hej %s,\n\nDin adgangskode til Studie 247 dashboardet er blevet ændret af en administrator.\n\nLog ind på:\n%s\n\nBrugernavn: %s\nNy adgangskode: %s\n\nAf sikkerhedshensyn bør du ændre den til noget personligt ved næste login.\n\n— Studie 247", 'studie247' ),
-					$u->display_name ?: $u->user_login,
-					home_url( '/dashboard/' ),
-					$u->user_login,
-					$new_password
+			if ( ! empty( $_POST['send_password_mail'] ) && $u && $u->user_email && function_exists( 'studie247_render_mail_template' ) ) {
+				$first = $u->first_name ?: ( $u->display_name ?: $u->user_login );
+				$mail  = studie247_render_mail_template( 'user_password_reset', array(
+					'fornavn'     => $first,
+					'brugernavn'  => $u->user_login,
+					'email'       => $u->user_email,
+					'adgangskode' => $new_password,
+					'login_url'   => home_url( '/dashboard/' ),
+				) );
+				$is_html = studie247_mail_template_is_html( 'user_password_reset' );
+				wp_mail(
+					$u->user_email,
+					$mail['subject'],
+					$mail['body'],
+					array( 'Content-Type: ' . ( $is_html ? 'text/html' : 'text/plain' ) . '; charset=UTF-8' )
 				);
-				wp_mail( $u->user_email, $subject, $body );
 			}
 			if ( function_exists( 'studie247_audit_log' ) ) {
 				studie247_audit_log( sprintf( __( 'ændrede adgangskode for %s', 'studie247' ), $u ? $u->display_name : '#' . $uid ), $uid, 'user' );

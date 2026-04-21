@@ -11,6 +11,103 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Default HTML for booking_received — brand-designet mail med
+ * bone-baggrund, rød accent og serif-overskrifter. Inline-styles
+ * for bred mail-klient-kompatibilitet (Outlook, Gmail, Apple Mail).
+ */
+function studie247_default_booking_received_html() {
+	return <<<'HTML'
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F4E9DD;padding:32px 16px;font-family:'Helvetica Neue',Arial,sans-serif;color:#282828;">
+<tr><td align="center">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FBF5EC;border:1px solid rgba(40,40,40,0.1);border-radius:14px;overflow:hidden;">
+    <tr>
+      <td style="background:#282828;padding:28px 32px;text-align:left;">
+        <span style="color:#F4E9DD;font-size:13px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;">Studie 247</span>
+        <h1 style="margin:6px 0 0;color:#F4E9DD;font-size:32px;line-height:1.1;font-family:Georgia,serif;font-weight:400;">
+          Tak for din <em style="color:#E89B6B;">booking</em>
+        </h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:32px 32px 8px;">
+        <p style="margin:0 0 14px;font-size:16px;line-height:1.55;">Hej <strong>{navn}</strong>,</p>
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#404040;">Vi har modtaget din booking af <strong>{booking_label}</strong>. Vi vender tilbage med en endelig bekræftelse hurtigst muligt — typisk inden for 24 timer på hverdage.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 32px 20px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F4E9DD;border-radius:10px;padding:4px;">
+          <tr><td style="padding:18px 22px;">
+            <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#9E2B25;font-weight:700;margin-bottom:10px;">Detaljer</div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.7;">
+              <tr><td style="color:#666;padding:4px 0;width:130px;">Produkt</td><td style="color:#282828;font-weight:600;">{produkt}</td></tr>
+              <tr><td style="color:#666;padding:4px 0;">Dato</td><td style="color:#282828;font-weight:600;">{dato}</td></tr>
+              <tr><td style="color:#666;padding:4px 0;">Start</td><td style="color:#282828;font-weight:600;">{start}</td></tr>
+              <tr><td style="color:#666;padding:4px 0;">Varighed</td><td style="color:#282828;font-weight:600;">{varighed}</td></tr>
+              <tr><td style="color:#666;padding:4px 0;border-top:1px dashed rgba(40,40,40,0.15);">Estimeret pris</td><td style="color:#9E2B25;font-weight:700;font-size:18px;border-top:1px dashed rgba(40,40,40,0.15);padding-top:8px;">{pris}</td></tr>
+            </table>
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 32px 20px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FBF5EC;border:1px solid rgba(40,40,40,0.08);border-radius:10px;">
+          <tr><td style="padding:16px 22px;">
+            <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#666;font-weight:700;margin-bottom:8px;">Virksomhed</div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.6;">
+              <tr><td style="color:#666;width:130px;padding:2px 0;">Navn</td><td style="color:#282828;">{virksomhed}</td></tr>
+              <tr><td style="color:#666;padding:2px 0;">CVR</td><td style="color:#282828;font-family:monospace;">{cvr}</td></tr>
+            </table>
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 32px 20px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FBF5EC;border:1px solid rgba(40,40,40,0.08);border-radius:10px;">
+          <tr><td style="padding:16px 22px;">
+            <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#666;font-weight:700;margin-bottom:8px;">Produktion</div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.6;">
+              <tr><td style="color:#666;width:130px;padding:2px 0;">Formål</td><td style="color:#282828;">{formaal}</td></tr>
+              <tr><td style="color:#666;padding:2px 0;">Ønsker</td><td style="color:#282828;">{oensker}</td></tr>
+              <tr><td style="color:#666;padding:2px 0;">Podcast-type</td><td style="color:#282828;">{podcast_type}</td></tr>
+              <tr><td style="color:#666;padding:2px 0;">Tilkøb</td><td style="color:#282828;">{tilkoeb}</td></tr>
+              <tr><td style="color:#666;padding:2px 0;">Antal videoer</td><td style="color:#282828;">{antal_videoer}</td></tr>
+              <tr><td style="color:#666;padding:2px 0;">Varighed pr. video</td><td style="color:#282828;">{video_varighed}</td></tr>
+              <tr><td style="color:#666;padding:2px 0;">Format</td><td style="color:#282828;">{format}</td></tr>
+            </table>
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 32px 24px;">
+        <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#666;font-weight:700;margin-bottom:8px;">Dine noter</div>
+        <div style="background:#FBF5EC;border-left:3px solid #9E2B25;padding:14px 18px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.6;color:#404040;font-style:italic;">{noter}</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 32px 28px;">
+        <div style="background:#FEF3CF;border:1px solid #F5D58A;border-radius:8px;padding:14px 18px;font-size:13px;line-height:1.55;color:#6B4A0A;">
+          <strong>⏳ Afventer godkendelse.</strong> Din booking er foreløbigt reserveret. Du får en ny mail når vi har bekræftet.
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="background:#282828;padding:22px 32px;text-align:center;">
+        <div style="color:#F4E9DD;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Studie 247</div>
+        <div style="color:rgba(244,233,221,0.6);font-size:12px;">Optag. Skab. Udgiv — døgnet rundt.</div>
+        <div style="margin-top:12px;"><a href="mailto:info@s247.dk" style="color:#E89B6B;text-decoration:none;font-size:13px;">info@s247.dk</a></div>
+      </td>
+    </tr>
+  </table>
+</td></tr>
+</table>
+HTML;
+}
+
+/**
  * Standard-skabeloner og tilgængelige placeholders pr. skabelon.
  * Placeholder-navne er lowercase-a_z_-format og skrives som {navn}.
  */
@@ -32,7 +129,7 @@ function studie247_mail_templates_config() {
 			'label'       => __( 'Booking modtaget', 'studie247' ),
 			'description' => __( 'Sendes når en kunde indsender en booking/lejeforespørgsel — før admin godkender.', 'studie247' ),
 			'subject'     => 'Tak for din booking af {booking_label} — Studie 247',
-			'body'        => "<p>Hej {navn},</p>\n<p>Tak for din booking af <strong>{booking_label}</strong>. Vi vender tilbage med en endelig bekræftelse hurtigst muligt — typisk inden for 24 timer på hverdage.</p>\n<p>Produkt: {produkt}<br>Dato: {dato}<br>Start: {start}<br>Varighed: {varighed}<br>Estimeret pris: {pris}</p>\n<p>Virksomhed: {virksomhed}<br>CVR: {cvr}</p>\n<p>Formål: {formaal}<br>Ønsker: {oensker}<br>Podcast-type: {podcast_type}<br>Tilkøb: {tilkoeb}<br>Antal videoer: {antal_videoer}<br>Varighed pr. video: {video_varighed}<br>Format: {format}</p>\n<p>Dine noter:<br>{noter}</p>\n<p>Din booking er foreløbigt reserveret og afventer godkendelse.</p>\n<p>— Studie 247<br><a href=\"mailto:info@s247.dk\">info@s247.dk</a></p>",
+			'body'        => studie247_default_booking_received_html(),
 			'placeholders' => array(
 				'navn'           => 'Kundens navn',
 				'email'          => 'Kundens email',
@@ -69,6 +166,34 @@ function studie247_mail_templates_config() {
 				'varighed'   => 'Varighed',
 				'virksomhed' => 'Virksomhedsnavn (valgfrit)',
 				'cvr'        => 'CVR-nummer (valgfrit)',
+			),
+		),
+		'user_welcome' => array(
+			'label'       => __( 'Velkomstmail — ny bruger', 'studie247' ),
+			'description' => __( 'Sendes når en admin opretter en ny bruger i dashboardet (Brugere → Opret).', 'studie247' ),
+			'subject'     => 'Velkommen til Studie 247',
+			'body'        => "<p>Hej {fornavn},</p>\n<p>Du har nu adgang til Studie 247's dashboard. Log ind her:</p>\n<p><a href=\"{login_url}\">{login_url}</a></p>\n<p><strong>Brugernavn:</strong> {brugernavn}<br><strong>Adgangskode:</strong> {adgangskode}</p>\n<p>Af sikkerhedshensyn bør du skifte adgangskoden til noget personligt ved første login.</p>\n<p>— Studie 247</p>",
+			'placeholders' => array(
+				'fornavn'     => 'Brugerens fornavn',
+				'efternavn'   => 'Brugerens efternavn',
+				'brugernavn'  => 'Brugernavn (email)',
+				'email'       => 'Email-adresse',
+				'adgangskode' => 'Den genererede adgangskode',
+				'login_url'   => 'Link til /dashboard/',
+				'rolle'       => 'Tildelt rolle (Administrator/Redaktør)',
+			),
+		),
+		'user_password_reset' => array(
+			'label'       => __( 'Adgangskode ændret — bruger', 'studie247' ),
+			'description' => __( 'Sendes når admin ændrer en brugers adgangskode via dashboardet og klikker "Send ny kode på mail".', 'studie247' ),
+			'subject'     => 'Din adgangskode er ændret — Studie 247',
+			'body'        => "<p>Hej {fornavn},</p>\n<p>Din adgangskode til Studie 247's dashboard er blevet ændret af en administrator.</p>\n<p>Log ind på:<br><a href=\"{login_url}\">{login_url}</a></p>\n<p><strong>Brugernavn:</strong> {brugernavn}<br><strong>Ny adgangskode:</strong> {adgangskode}</p>\n<p>Af sikkerhedshensyn bør du skifte den til noget personligt ved næste login.</p>\n<p>— Studie 247</p>",
+			'placeholders' => array(
+				'fornavn'     => 'Brugerens fornavn (eller display-navn)',
+				'brugernavn'  => 'Brugernavn (email)',
+				'email'       => 'Email-adresse',
+				'adgangskode' => 'Den nye adgangskode',
+				'login_url'   => 'Link til /dashboard/',
 			),
 		),
 	);
