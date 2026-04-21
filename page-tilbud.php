@@ -132,7 +132,7 @@ get_header();
 				</div>
 			<?php endif; ?>
 
-			<form method="post" action="" class="tb-flow" data-tb-flow novalidate>
+			<form method="post" action="<?php echo esc_url( home_url( '/tilbud/' ) ); ?>" class="tb-flow" data-tb-flow novalidate>
 				<?php wp_nonce_field( 's247_tilbud', 's247_tilbud_nonce' ); ?>
 
 				<div class="tb-steps">
