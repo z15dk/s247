@@ -28,7 +28,6 @@ function studie247_dash_sections() {
 		'studio'    => __( 'Studie-bookinger', 'studie247' ),
 		'messages'  => __( 'Kontakt-beskeder', 'studie247' ),
 		'revenue'   => __( 'Omsætning (måned/år)', 'studie247' ),
-		'pending'   => __( 'Afventende forespørgsler', 'studie247' ),
 		'customers' => __( 'Kunder (CRM)', 'studie247' ),
 	);
 }

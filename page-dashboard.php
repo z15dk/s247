@@ -490,6 +490,16 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 	$msg_count       = (int) wp_count_posts( 'kontakt_besked' )->publish;
 	$item_count      = (int) wp_count_posts( 'udlejning_item' )->publish;
 
+	// Split pending i studie vs. udlejning (baseret på _s247_produkt_id).
+	$rental_pending_count = count( get_posts( array(
+		'post_type'      => 'booking',
+		'post_status'    => 'pending',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'meta_query'     => array( array( 'key' => '_s247_produkt_id', 'compare' => 'EXISTS' ) ),
+	) ) );
+	$studio_pending_count = max( 0, $pending_count - $rental_pending_count );
+
 	$month_start = date( 'Y-m-01' );
 	$year_start  = date( 'Y-01-01' );
 	$approved = get_posts( array(
@@ -539,8 +549,8 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 	$can_studio   = studie247_can_view_dash( 'studio' );
 	$can_messages = studie247_can_view_dash( 'messages' );
 	$can_revenue  = studie247_can_view_dash( 'revenue' );
-	$can_pending  = studie247_can_view_dash( 'pending' );
-	$has_any      = $can_rental || $can_studio || $can_messages || $can_revenue || $can_pending;
+	$can_customers = studie247_can_view_dash( 'customers' );
+	$has_any      = $can_rental || $can_studio || $can_messages || $can_revenue || $can_customers;
 	$first_name   = trim( explode( ' ', trim( $user->display_name ) )[0] ) ?: $user->display_name;
 	$initials     = strtoupper( substr( $first_name, 0, 1 ) );
 ?>
@@ -554,25 +564,16 @@ if ( isset( $_POST['s247_dash_save_booking'] ) && is_user_logged_in() && current
 			<a class="sd-nav__item <?php echo 'overview' === $current_view ? 'is-active' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>">
 				<span class="sd-nav__dot"></span> <?php esc_html_e( 'Oversigt', 'studie247' ); ?>
 			</a>
-			<?php if ( $can_pending || $can_studio ) : ?>
+			<?php if ( $can_studio ) : ?>
 				<a class="sd-nav__item <?php echo 'bookings' === $current_view ? 'is-active' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/?view=bookings' ) ); ?>">
 					<span class="sd-nav__dot"></span> <?php esc_html_e( 'Studie-bookinger', 'studie247' ); ?>
-					<?php if ( $pending_count ) : ?><span class="sd-nav__badge"><?php echo (int) $pending_count; ?></span><?php endif; ?>
+					<?php if ( $studio_pending_count ) : ?><span class="sd-nav__badge"><?php echo (int) $studio_pending_count; ?></span><?php endif; ?>
 				</a>
 			<?php endif; ?>
-			<?php if ( $can_rental ) :
-				// Antal afventende udlejnings-forespørgsler
-				$rental_pending = count( get_posts( array(
-					'post_type'      => 'booking',
-					'post_status'    => 'pending',
-					'posts_per_page' => -1,
-					'fields'         => 'ids',
-					'meta_query'     => array( array( 'key' => '_s247_produkt_id', 'compare' => 'EXISTS' ) ),
-				) ) );
-			?>
+			<?php if ( $can_rental ) : ?>
 				<a class="sd-nav__item <?php echo 'rental' === $current_view ? 'is-active' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/?view=rental' ) ); ?>">
 					<span class="sd-nav__dot"></span> <?php esc_html_e( 'Udlejning', 'studie247' ); ?>
-					<?php if ( $rental_pending ) : ?><span class="sd-nav__badge"><?php echo (int) $rental_pending; ?></span><?php endif; ?>
+					<?php if ( $rental_pending_count ) : ?><span class="sd-nav__badge"><?php echo (int) $rental_pending_count; ?></span><?php endif; ?>
 				</a>
 			<?php endif; ?>
 			<?php if ( $can_messages ) :

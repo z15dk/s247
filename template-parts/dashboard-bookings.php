@@ -8,7 +8,7 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 if ( ! current_user_can( 'edit_posts' ) ) { return; }
-if ( ! studie247_can_view_dash( 'studio' ) && ! studie247_can_view_dash( 'pending' ) && ! current_user_can( 'manage_options' ) ) {
+if ( ! studie247_can_view_dash( 'studio' ) && ! current_user_can( 'manage_options' ) ) {
 	echo '<div class="sd-empty"><p>' . esc_html__( 'Din bruger har ikke adgang til denne sektion.', 'studie247' ) . '</p></div>';
 	return;
 }

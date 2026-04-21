@@ -3,10 +3,11 @@
  * Dashboard-overview — stats-grid + lister (den oprindelige forside).
  * Forventer følgende variable fra caller:
  *   $pending_count, $publish_count, $trash_count, $total_bookings,
+ *   $studio_pending_count, $rental_pending_count,
  *   $msg_count, $item_count, $top_products,
  *   $rev_month_studio, $rev_year_studio, $rev_month_rental, $rev_year_rental,
  *   $recent_pending, $recent_msgs, $fmt_dkk,
- *   $can_rental, $can_studio, $can_messages, $can_revenue, $can_pending,
+ *   $can_rental, $can_studio, $can_messages, $can_revenue, $can_customers,
  *   $has_any
  */
 
@@ -21,18 +22,18 @@ if ( ! isset( $has_any ) ) { return; }
 <?php else : ?>
 
 	<section class="sd-stats">
-		<?php if ( $can_pending ) : ?>
-			<a class="sd-stat <?php echo $pending_count ? 'sd-stat--alert' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/?view=bookings&status=pending' ) ); ?>">
-				<span class="sd-stat__label"><?php esc_html_e( 'Afventer', 'studie247' ); ?></span>
-				<span class="sd-stat__num"><?php echo (int) $pending_count; ?></span>
+		<?php if ( $can_studio ) : ?>
+			<a class="sd-stat <?php echo $studio_pending_count ? 'sd-stat--alert' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/?view=bookings&status=pending' ) ); ?>">
+				<span class="sd-stat__label"><?php esc_html_e( 'Studie — afventer', 'studie247' ); ?></span>
+				<span class="sd-stat__num"><?php echo (int) $studio_pending_count; ?></span>
 				<span class="sd-stat__delta"><?php esc_html_e( 'forespørgsler', 'studie247' ); ?></span>
 			</a>
 		<?php endif; ?>
-		<?php if ( $can_studio ) : ?>
-			<a class="sd-stat" href="<?php echo esc_url( home_url( '/dashboard/?view=bookings&status=publish' ) ); ?>">
-				<span class="sd-stat__label"><?php esc_html_e( 'Godkendte', 'studie247' ); ?></span>
-				<span class="sd-stat__num"><?php echo (int) $publish_count; ?></span>
-				<span class="sd-stat__delta"><?php esc_html_e( 'total alle tider', 'studie247' ); ?></span>
+		<?php if ( $can_rental ) : ?>
+			<a class="sd-stat <?php echo $rental_pending_count ? 'sd-stat--alert' : ''; ?>" href="<?php echo esc_url( home_url( '/dashboard/?view=rental' ) ); ?>">
+				<span class="sd-stat__label"><?php esc_html_e( 'Udlejning — afventer', 'studie247' ); ?></span>
+				<span class="sd-stat__num"><?php echo (int) $rental_pending_count; ?></span>
+				<span class="sd-stat__delta"><?php esc_html_e( 'forespørgsler', 'studie247' ); ?></span>
 			</a>
 		<?php endif; ?>
 		<?php if ( $can_revenue ) : ?>
@@ -64,11 +65,11 @@ if ( ! isset( $has_any ) ) { return; }
 	</section>
 
 	<section class="sd-grid">
-		<?php if ( $can_pending ) : ?>
+		<?php if ( $can_studio || $can_rental ) : ?>
 			<div class="sd-panel">
 				<header class="sd-panel__head">
 					<h2><?php esc_html_e( 'Afventende forespørgsler', 'studie247' ); ?></h2>
-					<a class="sd-panel__more" href="<?php echo esc_url( home_url( '/dashboard/?view=bookings&status=pending' ) ); ?>"><?php esc_html_e( 'Se alle', 'studie247' ); ?> →</a>
+					<a class="sd-panel__more" href="<?php echo esc_url( home_url( '/dashboard/?view=' . ( $can_studio ? 'bookings&status=pending' : 'rental' ) ) ); ?>"><?php esc_html_e( 'Se alle', 'studie247' ); ?> →</a>
 				</header>
 				<?php if ( empty( $recent_pending ) ) : ?>
 					<p class="sd-panel__empty">✓ <?php esc_html_e( 'Intet at godkende lige nu.', 'studie247' ); ?></p>
@@ -91,7 +92,7 @@ if ( ! isset( $has_any ) ) { return; }
 								if ( $pid && ! $can_rental && ! current_user_can( 'manage_options' ) ) { continue; }
 								if ( ! $pid && ! $can_studio && ! current_user_can( 'manage_options' ) ) { continue; }
 							?>
-								<tr onclick="window.location='<?php echo esc_url( home_url( '/dashboard/?view=bookings&booking=' . $b->ID ) ); ?>'">
+								<tr onclick="window.location='<?php echo esc_url( home_url( '/dashboard/?view=' . ( $pid ? 'rental&booking=' : 'bookings&booking=' ) . $b->ID ) ); ?>'">
 									<td><span class="sd-badge <?php echo $pid ? 'sd-badge--accent' : 'sd-badge--neutral'; ?>"><?php echo $pid ? esc_html__( 'Udstyr', 'studie247' ) : esc_html__( 'Studie', 'studie247' ); ?></span></td>
 									<td><?php echo esc_html( $name ?: '—' ); ?></td>
 									<td class="sd-muted"><?php echo esc_html( $date ? date_i18n( 'j. M', strtotime( $date ) ) : '—' ); ?></td>
