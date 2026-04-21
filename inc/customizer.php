@@ -63,6 +63,32 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		'type'        => 'textarea',
 	) );
 
+	// Hero tagline (stor sætning) — HTML tilladt.
+	$wp_customize->add_setting( 's247_hero_tagline', array(
+		'default'           => 'Optag. Skab. <em>Udgiv</em> — døgnet rundt.',
+		'sanitize_callback' => 'wp_kses_post',
+		'transport'         => 'refresh',
+	) );
+	$wp_customize->add_control( 's247_hero_tagline', array(
+		'label'       => __( 'Hero — tagline', 'studie247' ),
+		'description' => __( 'Den store sætning lige under hero-billedet. HTML tilladt (fx <em>kursiv</em>).', 'studie247' ),
+		'section'     => 's247_hero',
+		'type'        => 'textarea',
+	) );
+
+	// Hero underteksten.
+	$wp_customize->add_setting( 's247_hero_sub', array(
+		'default'           => 'Vi producerer podcasts, SoMe-videoer, online kurser og fotoshoots — fra idé til færdigt resultat.',
+		'sanitize_callback' => 'wp_kses_post',
+		'transport'         => 'refresh',
+	) );
+	$wp_customize->add_control( 's247_hero_sub', array(
+		'label'       => __( 'Hero — undertekst', 'studie247' ),
+		'description' => __( 'Den mindre tekst under taglinen.', 'studie247' ),
+		'section'     => 's247_hero',
+		'type'        => 'textarea',
+	) );
+
 	/* ───────── Studiet ───────── */
 	$wp_customize->add_section( 's247_studio', array(
 		'title'    => __( 'Studiet (forside)', 'studie247' ),

@@ -54,10 +54,10 @@ $hero_display_image = get_theme_mod( 's247_hero_display_image' );
 
 		<div class="hero__below">
 			<p class="hero__tagline">
-				<?php echo wp_kses_post( __( 'Optag. Skab. <em>Udgiv</em> — døgnet rundt.', 'studie247' ) ); ?>
+				<?php echo wp_kses_post( get_theme_mod( 's247_hero_tagline', __( 'Optag. Skab. <em>Udgiv</em> — døgnet rundt.', 'studie247' ) ) ); ?>
 			</p>
 			<p class="hero__sub">
-				<?php esc_html_e( 'Vi producerer podcasts, SoMe-videoer, online kurser og fotoshoots — fra idé til færdigt resultat.', 'studie247' ); ?>
+				<?php echo wp_kses_post( get_theme_mod( 's247_hero_sub', __( 'Vi producerer podcasts, SoMe-videoer, online kurser og fotoshoots — fra idé til færdigt resultat.', 'studie247' ) ) ); ?>
 			</p>
 			<div class="hero__actions">
 				<a class="btn btn--primary btn--lg" href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>">
