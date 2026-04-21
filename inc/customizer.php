@@ -167,6 +167,47 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		) );
 	}
 
+	/* ───────── FAQ-sektion (forside "06 FAQ") ───────── */
+	$wp_customize->add_section( 's247_faq_section', array(
+		'title'    => __( 'FAQ-sektion (forside)', 'studie247' ),
+		'priority' => 36,
+	) );
+
+	$faq_defaults = array(
+		1 => array( 'Hvad er inkluderet i en booking?', 'Adgang til studiet med alt fast udstyr, rigelig opsætningstid og en producer der hjælper dig i gang. Specifikt udstyr kan tillægges.' ),
+		2 => array( 'Hvor hurtigt får jeg det færdige materiale?', 'Typisk inden for 5-10 arbejdsdage, afhængigt af omfang. Hastelevering er muligt.' ),
+		3 => array( 'Kan jeg leje studiet uden produktion?', 'Ja. Vi udlejer også studiet råt til erfarne produktionsteams. Se siden Studiet for detaljer.' ),
+		4 => array( 'Kan I hjælpe med manuskript og idéudvikling?', 'Ja. Vi har producere og tekstforfattere, som kan hjælpe fra idé til færdigt script.' ),
+		5 => array( 'Hvor ligger studiet?', 'Aarhus — præcis adresse får du med booking-bekræftelsen. Der er parkering og god offentlig transport.' ),
+		6 => array( '', '' ),
+		7 => array( '', '' ),
+		8 => array( '', '' ),
+	);
+
+	$faq_fields = array(
+		's247_faq_eyebrow' => array( 'label' => __( 'Eyebrow', 'studie247' ), 'type' => 'text', 'default' => 'FAQ' ),
+		's247_faq_title_a' => array( 'label' => __( 'Titel — del 1 (sans)', 'studie247' ),    'type' => 'text', 'default' => 'Ofte stillede' ),
+		's247_faq_title_b' => array( 'label' => __( 'Titel — del 2 (kursiv)', 'studie247' ),  'type' => 'text', 'default' => 'spørgsmål' ),
+		's247_faq_lead'    => array( 'label' => __( 'Intro-tekst (HTML tilladt)', 'studie247' ), 'type' => 'textarea', 'default' => 'Stilles ofte nok til at vi samlede dem her. Mangler du svar? <em>Skriv til os.</em>' ),
+	);
+	for ( $n = 1; $n <= 8; $n++ ) {
+		$faq_fields[ "s247_faq_q{$n}" ] = array( 'label' => sprintf( __( 'Spørgsmål %d', 'studie247' ), $n ), 'type' => 'text',     'default' => $faq_defaults[ $n ][0] );
+		$faq_fields[ "s247_faq_a{$n}" ] = array( 'label' => sprintf( __( 'Svar %d', 'studie247' ), $n ),     'type' => 'textarea', 'default' => $faq_defaults[ $n ][1] );
+	}
+
+	foreach ( $faq_fields as $id => $cfg ) {
+		$wp_customize->add_setting( $id, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => ( 'textarea' === $cfg['type'] ) ? 'wp_kses_post' : 'sanitize_text_field',
+			'transport'         => 'refresh',
+		) );
+		$wp_customize->add_control( $id, array(
+			'label'   => $cfg['label'],
+			'section' => 's247_faq_section',
+			'type'    => $cfg['type'],
+		) );
+	}
+
 	/* ───────── Studiet ───────── */
 	$wp_customize->add_section( 's247_studio', array(
 		'title'    => __( 'Studiet (forside)', 'studie247' ),
