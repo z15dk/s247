@@ -363,6 +363,59 @@ add_action( 'customize_register', function ( $wp_customize ) {
 } );
 
 /**
+ * Blok tracking-embeds (YouTube, Vimeo, Google Maps, Facebook osv.)
+ * i the_content indtil brugeren har givet samtykke til den rette
+ * kategori. Iframe'en gemmes i data-src; JS aktiverer den kun hvis
+ * samtykke eksisterer — ellers vises en placeholder med "Tillad"-knap.
+ *
+ * Selv-hostede <video>-tags påvirkes IKKE (de bruger ingen cookies).
+ */
+add_filter( 'the_content', 'studie247_cookie_gate_embeds', 50 );
+function studie247_cookie_gate_embeds( $html ) {
+	if ( is_admin() || ! is_string( $html ) || '' === $html ) { return $html; }
+
+	// Mapping: domæne → (kategori, label)
+	$gates = array(
+		'youtube.com/embed'        => array( 'marketing', 'YouTube-video' ),
+		'youtube-nocookie.com'     => array( 'marketing', 'YouTube-video' ),
+		'youtu.be'                 => array( 'marketing', 'YouTube-video' ),
+		'player.vimeo.com'         => array( 'marketing', 'Vimeo-video' ),
+		'vimeo.com/video'          => array( 'marketing', 'Vimeo-video' ),
+		'google.com/maps/embed'    => array( 'marketing', 'Google Maps' ),
+		'maps.google.com'          => array( 'marketing', 'Google Maps' ),
+		'facebook.com/plugins'     => array( 'marketing', 'Facebook embed' ),
+		'instagram.com/embed'      => array( 'marketing', 'Instagram-opslag' ),
+		'twitter.com/embed'        => array( 'marketing', 'Twitter/X-opslag' ),
+		'platform.twitter.com'     => array( 'marketing', 'Twitter/X-opslag' ),
+		'open.spotify.com/embed'   => array( 'marketing', 'Spotify-embed' ),
+		'w.soundcloud.com'         => array( 'marketing', 'SoundCloud-embed' ),
+		'tiktok.com/embed'         => array( 'marketing', 'TikTok-video' ),
+	);
+
+	return preg_replace_callback( '#<iframe\b[^>]*\bsrc=(["\'])([^"\']+)\1[^>]*>.*?</iframe>#is', function ( $m ) use ( $gates ) {
+		$src = $m[2];
+		foreach ( $gates as $needle => $info ) {
+			if ( false !== strpos( $src, $needle ) ) {
+				list( $category, $label ) = $info;
+				$esc_src = esc_url( $src );
+				$esc_lbl = esc_html( $label );
+				// Bevar øvrige iframe-attributter (width, height, allow etc.) men flyt src → data-src.
+				$tag = preg_replace( '#\bsrc=(["\'])[^"\']+\1#i', 'data-src="' . $esc_src . '" src="about:blank" loading="lazy"', $m[0] );
+				return '<div class="s247-embed-gate" data-category="' . esc_attr( $category ) . '" data-label="' . esc_attr( $label ) . '">'
+					. '<div class="s247-embed-gate__placeholder">'
+					. '<span class="s247-embed-gate__icon">🍪</span>'
+					. '<p class="s247-embed-gate__text">' . sprintf( esc_html__( '%s kræver marketing-cookies for at afspille.', 'studie247' ), $esc_lbl ) . '</p>'
+					. '<button type="button" class="s247-embed-gate__btn" data-s247-embed-accept>' . esc_html__( 'Tillad og afspil', 'studie247' ) . '</button>'
+					. '</div>'
+					. '<div class="s247-embed-gate__iframe" hidden>' . $tag . '</div>'
+					. '</div>';
+			}
+		}
+		return $m[0];
+	}, $html );
+}
+
+/**
  * Render banner HTML + inline CSS/JS i footeren.
  * Inline fordi banneret skal kunne vises før noget andet JS
  * loader (og vi vil ikke lave en ekstra request).
@@ -480,6 +533,17 @@ function studie247_cookie_banner_render() {
 		.s247-cookie{padding:8px;}
 		.s247-cookie__card{padding:16px 18px;}
 	}
+
+	/* Embed-gate (YouTube/Vimeo/Maps blokeret uden samtykke) */
+	.s247-embed-gate{position:relative;width:100%;aspect-ratio:16/9;background:#F4E9DD;border:1px solid rgba(40,40,40,0.15);border-radius:12px;overflow:hidden;margin:16px 0;}
+	.s247-embed-gate__placeholder{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:24px;text-align:center;color:#282828;}
+	.s247-embed-gate__icon{font-size:42px;line-height:1;}
+	.s247-embed-gate__text{margin:0;font-size:15px;line-height:1.5;max-width:400px;color:#404040;}
+	.s247-embed-gate__btn{background:#9E2B25;color:#FBF5EC;border:0;padding:11px 18px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;}
+	.s247-embed-gate__btn:hover{background:#7E2019;}
+	.s247-embed-gate__iframe,.s247-embed-gate__iframe iframe{width:100%;height:100%;border:0;}
+	.s247-embed-gate.is-active .s247-embed-gate__placeholder{display:none;}
+	.s247-embed-gate.is-active .s247-embed-gate__iframe{display:block;position:absolute;inset:0;}
 	</style>
 
 	<script>
@@ -557,6 +621,41 @@ function studie247_cookie_banner_render() {
 		document.querySelectorAll('[data-open-cookie-settings]').forEach(function(a){
 			a.addEventListener('click', function(e){ e.preventDefault(); window.s247Consent.open(); });
 		});
+
+		// ───────── Embed-gate ─────────
+		// Aktiverer YouTube/Vimeo/Maps iframes når samtykke gives.
+		function activateAllowedEmbeds() {
+			var consent = read();
+			if (!consent) return;
+			document.querySelectorAll('.s247-embed-gate').forEach(function(gate){
+				if (gate.classList.contains('is-active')) return;
+				var cat = gate.dataset.category || 'marketing';
+				if (!consent[cat]) return;
+				var wrap = gate.querySelector('.s247-embed-gate__iframe');
+				var iframe = wrap && wrap.querySelector('iframe');
+				if (!iframe) return;
+				var dataSrc = iframe.getAttribute('data-src');
+				if (dataSrc) { iframe.setAttribute('src', dataSrc); iframe.removeAttribute('data-src'); }
+				wrap.hidden = false;
+				gate.classList.add('is-active');
+			});
+		}
+		// Klik på "Tillad og afspil"-knappen i en gate → åbn consent-modal med den rigtige kategori forudvalgt.
+		document.addEventListener('click', function(e){
+			var btn = e.target.closest('[data-s247-embed-accept]');
+			if (!btn) return;
+			e.preventDefault();
+			var gate = btn.closest('.s247-embed-gate');
+			var cat  = gate ? gate.dataset.category : 'marketing';
+			// Åbn indstillinger med kategorien pre-ticked.
+			var existing = read() || { necessary: true };
+			existing[cat] = true;
+			setChecks(existing);
+			opts(true); show();
+		});
+		// Kør ved load og ved hver samtykke-ændring.
+		activateAllowedEmbeds();
+		document.addEventListener('s247-consent-changed', activateAllowedEmbeds);
 	})();
 	</script>
 	<?php
