@@ -131,6 +131,42 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		) );
 	}
 
+	/* ───────── Proces-sektion (forside "03 Proces") ───────── */
+	$wp_customize->add_section( 's247_process_section', array(
+		'title'    => __( 'Proces-sektion (forside)', 'studie247' ),
+		'priority' => 34,
+	) );
+
+	$process_fields = array(
+		's247_process_eyebrow' => array( 'label' => __( 'Eyebrow', 'studie247' ), 'type' => 'text', 'default' => 'Proces' ),
+		's247_process_title_a' => array( 'label' => __( 'Titel — del 1 (sans)', 'studie247' ),    'type' => 'text', 'default' => 'Fra' ),
+		's247_process_title_b' => array( 'label' => __( 'Titel — del 2 (kursiv)', 'studie247' ),  'type' => 'text', 'default' => 'idé' ),
+		's247_process_title_c' => array( 'label' => __( 'Titel — del 3 (sans)', 'studie247' ),    'type' => 'text', 'default' => 'til' ),
+		's247_process_title_d' => array( 'label' => __( 'Titel — del 4 (kursiv)', 'studie247' ),  'type' => 'text', 'default' => 'udgivelse' ),
+		's247_process_lead'    => array( 'label' => __( 'Intro-tekst (HTML tilladt)', 'studie247' ), 'type' => 'textarea', 'default' => 'En rolig og rutineret proces, hvor vi tager hånd om detaljerne — <em>så du kan fokusere på budskabet.</em>' ),
+		's247_process_s1_title' => array( 'label' => __( 'Trin 1 — titel', 'studie247' ),       'type' => 'text', 'default' => 'Vi tager en snak' ),
+		's247_process_s1_desc'  => array( 'label' => __( 'Trin 1 — beskrivelse', 'studie247' ), 'type' => 'textarea', 'default' => 'Du fortæller om projektet — vi hjælper med at ramme det rette format, længde og look.' ),
+		's247_process_s2_title' => array( 'label' => __( 'Trin 2 — titel', 'studie247' ),       'type' => 'text', 'default' => 'Vi producerer sammen' ),
+		's247_process_s2_desc'  => array( 'label' => __( 'Trin 2 — beskrivelse', 'studie247' ), 'type' => 'textarea', 'default' => 'Du møder op, og vi sørger for udstyr, opsætning og instruktion. Fokus på dit budskab.' ),
+		's247_process_s3_title' => array( 'label' => __( 'Trin 3 — titel', 'studie247' ),       'type' => 'text', 'default' => 'Vi klipper og finisher' ),
+		's247_process_s3_desc'  => array( 'label' => __( 'Trin 3 — beskrivelse', 'studie247' ), 'type' => 'textarea', 'default' => 'Klip, lyd, farveretouche og grafik — leveret fleksibelt og til tiden.' ),
+		's247_process_s4_title' => array( 'label' => __( 'Trin 4 — titel', 'studie247' ),       'type' => 'text', 'default' => 'Klar til udgivelse' ),
+		's247_process_s4_desc'  => array( 'label' => __( 'Trin 4 — beskrivelse', 'studie247' ), 'type' => 'textarea', 'default' => 'Du får filer i alle relevante formater og er klar til at udgive — 247.' ),
+	);
+
+	foreach ( $process_fields as $id => $cfg ) {
+		$wp_customize->add_setting( $id, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => ( 'textarea' === $cfg['type'] ) ? 'wp_kses_post' : 'sanitize_text_field',
+			'transport'         => 'refresh',
+		) );
+		$wp_customize->add_control( $id, array(
+			'label'   => $cfg['label'],
+			'section' => 's247_process_section',
+			'type'    => $cfg['type'],
+		) );
+	}
+
 	/* ───────── Studiet ───────── */
 	$wp_customize->add_section( 's247_studio', array(
 		'title'    => __( 'Studiet (forside)', 'studie247' ),
