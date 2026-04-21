@@ -276,6 +276,32 @@ if ( isset( $_POST['s247_dash_user_action'] ) && is_user_logged_in() && current_
 				$u->set_role( $new_role );
 			}
 		}
+
+		// Ny adgangskode (frivilligt)
+		$new_password = (string) ( $_POST['new_password'] ?? '' );
+		if ( '' !== $new_password ) {
+			if ( strlen( $new_password ) < 8 ) {
+				wp_safe_redirect( add_query_arg( array( 'view' => 'users', 'edit_user' => $uid, 'err' => 'pwd_short' ), home_url( '/dashboard/' ) ) );
+				exit;
+			}
+			wp_set_password( $new_password, $uid );
+			$u = get_userdata( $uid );
+			if ( ! empty( $_POST['send_password_mail'] ) && $u && $u->user_email ) {
+				$subject = __( 'Din adgangskode er ændret — Studie 247', 'studie247' );
+				$body    = sprintf(
+					__( "Hej %s,\n\nDin adgangskode til Studie 247 dashboardet er blevet ændret af en administrator.\n\nLog ind på:\n%s\n\nBrugernavn: %s\nNy adgangskode: %s\n\nAf sikkerhedshensyn bør du ændre den til noget personligt ved næste login.\n\n— Studie 247", 'studie247' ),
+					$u->display_name ?: $u->user_login,
+					home_url( '/dashboard/' ),
+					$u->user_login,
+					$new_password
+				);
+				wp_mail( $u->user_email, $subject, $body );
+			}
+			if ( function_exists( 'studie247_audit_log' ) ) {
+				studie247_audit_log( sprintf( __( 'ændrede adgangskode for %s', 'studie247' ), $u ? $u->display_name : '#' . $uid ), $uid, 'user' );
+			}
+		}
+
 		if ( function_exists( 'studie247_audit_log' ) ) {
 			$u = get_userdata( $uid );
 			studie247_audit_log( sprintf( __( 'opdaterede tilladelser for %s', 'studie247' ), $u ? $u->display_name : '#' . $uid ), $uid, 'user' );

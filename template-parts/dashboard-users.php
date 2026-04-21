@@ -37,6 +37,8 @@ $current_uid = get_current_user_id();
 			esc_html_e( 'En bruger med den e-mail findes allerede.', 'studie247' );
 		} elseif ( 'create' === $err ) {
 			esc_html_e( 'Kunne ikke oprette brugeren. Tjek e-mail og prøv igen.', 'studie247' );
+		} elseif ( 'pwd_short' === $err ) {
+			esc_html_e( 'Adgangskoden skal være mindst 8 tegn.', 'studie247' );
 		} elseif ( $created ) {
 			$cu = get_userdata( $created );
 			echo esc_html( sprintf( __( 'Brugeren %s er oprettet.', 'studie247' ), $cu ? $cu->display_name : '' ) );
@@ -188,6 +190,14 @@ $current_uid = get_current_user_id();
 										<?php if ( $is_self ) : ?>
 											<p class="sd-hint"><?php esc_html_e( 'Du kan ikke ændre din egen rolle.', 'studie247' ); ?></p>
 										<?php endif; ?>
+									</div>
+									<div class="sd-field">
+										<label for="s247_pwd_<?php echo esc_attr( $uid ); ?>"><?php esc_html_e( 'Ny adgangskode', 'studie247' ); ?></label>
+										<input type="text" id="s247_pwd_<?php echo esc_attr( $uid ); ?>" name="new_password" autocomplete="new-password" placeholder="<?php esc_attr_e( 'Lad stå tomt for ikke at ændre', 'studie247' ); ?>" minlength="8">
+										<label class="sd-checkbox" style="margin-top:8px;">
+											<input type="checkbox" name="send_password_mail" value="1">
+											<span><?php esc_html_e( 'Send ny kode på mail', 'studie247' ); ?></span>
+										</label>
 									</div>
 								</div>
 
