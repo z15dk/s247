@@ -129,6 +129,8 @@
 	margin: 0;
 }
 
+.site-header__nav .nav__link,
+.site-header__nav a,
 .nav__link {
 	position: relative;
 	color: var(--color-ink-on-dark);
@@ -137,6 +139,7 @@
 	padding: var(--sp-2) 0;
 	letter-spacing: 0;
 	transition: color var(--dur-fast) var(--ease);
+	text-decoration: none;
 }
 
 .nav__link::after {
@@ -159,6 +162,23 @@
 .nav__link:hover,
 .nav__link--current,
 .nav__link.current-menu-item {
+	color: var(--color-accent);
+}
+
+/* Tving bone-tekst på header-menuen (WP's current-* klasser på LI
+ * kan ellers farve alle items røde på visse sider). */
+.site-header .menu-item > a,
+.site-header .nav__link,
+.site-header__nav a {
+	color: var(--color-ink-on-dark);
+}
+.site-header .menu-item > a:hover,
+.site-header .menu-item.current-menu-item > a,
+.site-header .menu-item.current-menu-ancestor > a,
+.site-header .menu-item.current_page_item > a,
+.site-header .nav__link:hover,
+.site-header .nav__link.current-menu-item,
+.site-header__nav a:hover {
 	color: var(--color-accent);
 }
 
