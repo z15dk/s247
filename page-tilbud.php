@@ -117,7 +117,10 @@ get_header();
 		<?php else : ?>
 
 			<header class="tb-headwrap">
-				<span class="eyebrow eyebrow--accent eyebrow--no-line">💡 Få et tilbud</span>
+				<span class="tb-eyebrow">
+					<span class="tb-eyebrow__icon" aria-hidden="true"><?php echo studie247_icon( 'sparkle', 14 ); ?></span>
+					<span class="tb-eyebrow__text"><?php esc_html_e( 'Få et tilbud', 'studie247' ); ?></span>
+				</span>
 				<h1 class="tb-head">Hvad skal vi <em>skabe</em> sammen?</h1>
 				<p class="tb-lead">Fem hurtige spørgsmål — og du får et bud på pris og timing inden i morgen. Ingen forpligtelser, ingen robotter.</p>
 			</header>
@@ -142,16 +145,16 @@ get_header();
 						<div class="tb-cards" role="radiogroup" aria-label="Projekt">
 							<?php
 							$projects = array(
-								array( 'icon' => '🎙', 'label' => 'Podcast',       'sub' => 'Lyd der holder' ),
-								array( 'icon' => '📱', 'label' => 'SoMe-video',    'sub' => 'Kort og skarp' ),
-								array( 'icon' => '🎓', 'label' => 'Online kursus', 'sub' => 'Fra e-learning til keynote' ),
-								array( 'icon' => '📸', 'label' => 'Fotoshoot',     'sub' => 'Billeder der sælger' ),
-								array( 'icon' => '🎬', 'label' => 'Reklamefilm',   'sub' => 'Stort format' ),
-								array( 'icon' => '🤝', 'label' => 'Noget helt andet', 'sub' => 'Fortæl os det' ),
+								array( 'icon' => 'mic',          'label' => 'Podcast',          'sub' => 'Lyd der holder' ),
+								array( 'icon' => 'square-video', 'label' => 'SoMe-video',       'sub' => 'Kort og skarp' ),
+								array( 'icon' => 'academic',     'label' => 'Online kursus',    'sub' => 'Fra e-learning til keynote' ),
+								array( 'icon' => 'camera',       'label' => 'Fotoshoot',        'sub' => 'Billeder der sælger' ),
+								array( 'icon' => 'film',         'label' => 'Reklamefilm',      'sub' => 'Stort format' ),
+								array( 'icon' => 'handshake',    'label' => 'Noget helt andet', 'sub' => 'Fortæl os det' ),
 							);
 							foreach ( $projects as $p ) : ?>
 								<button type="button" class="tb-card<?php echo $form_project === $p['label'] ? ' is-selected' : ''; ?>" data-tb-pick="project" data-tb-value="<?php echo esc_attr( $p['label'] ); ?>" role="radio" aria-checked="<?php echo $form_project === $p['label'] ? 'true' : 'false'; ?>">
-									<span class="tb-card__icon" aria-hidden="true"><?php echo esc_html( $p['icon'] ); ?></span>
+									<span class="tb-card__icon" aria-hidden="true"><?php echo studie247_icon( $p['icon'], 32 ); ?></span>
 									<span class="tb-card__label"><?php echo esc_html( $p['label'] ); ?></span>
 									<span class="tb-card__sub"><?php echo esc_html( $p['sub'] ); ?></span>
 								</button>
@@ -169,16 +172,16 @@ get_header();
 						<div class="tb-cards tb-cards--sm" role="radiogroup" aria-label="Stemning">
 							<?php
 							$moods = array(
-								array( 'icon' => '✨', 'label' => 'Elegant & rolig' ),
-								array( 'icon' => '⚡', 'label' => 'Hurtig & energisk' ),
-								array( 'icon' => '🧊', 'label' => 'Minimal & clean' ),
-								array( 'icon' => '🔥', 'label' => 'Rå & autentisk' ),
-								array( 'icon' => '🎨', 'label' => 'Farverig & legesyg' ),
-								array( 'icon' => '🎭', 'label' => 'Fortællende & dyb' ),
+								array( 'icon' => 'feather',     'label' => 'Elegant & rolig' ),
+								array( 'icon' => 'zap',         'label' => 'Hurtig & energisk' ),
+								array( 'icon' => 'circle-dot',  'label' => 'Minimal & clean' ),
+								array( 'icon' => 'flame',       'label' => 'Rå & autentisk' ),
+								array( 'icon' => 'palette',     'label' => 'Farverig & legesyg' ),
+								array( 'icon' => 'book',        'label' => 'Fortællende & dyb' ),
 							);
 							foreach ( $moods as $m ) : ?>
 								<button type="button" class="tb-card tb-card--compact<?php echo $form_mood === $m['label'] ? ' is-selected' : ''; ?>" data-tb-pick="mood" data-tb-value="<?php echo esc_attr( $m['label'] ); ?>" role="radio" aria-checked="<?php echo $form_mood === $m['label'] ? 'true' : 'false'; ?>">
-									<span class="tb-card__icon" aria-hidden="true"><?php echo esc_html( $m['icon'] ); ?></span>
+									<span class="tb-card__icon" aria-hidden="true"><?php echo studie247_icon( $m['icon'], 26 ); ?></span>
 									<span class="tb-card__label"><?php echo esc_html( $m['label'] ); ?></span>
 								</button>
 							<?php endforeach; ?>
@@ -227,16 +230,16 @@ get_header();
 						<div class="tb-cards tb-cards--sm" role="radiogroup" aria-label="Tidshorisont">
 							<?php
 							$whens = array(
-								array( 'icon' => '🚀', 'label' => 'I går helst' ),
-								array( 'icon' => '📅', 'label' => 'Indenfor 2 uger' ),
-								array( 'icon' => '🗓', 'label' => 'Indenfor en måned' ),
-								array( 'icon' => '🌤', 'label' => '1–3 måneder' ),
-								array( 'icon' => '♾', 'label' => 'Løbende samarbejde' ),
-								array( 'icon' => '🤷', 'label' => 'Vi ved ikke' ),
+								array( 'icon' => 'rocket',         'label' => 'I går helst' ),
+								array( 'icon' => 'calendar',       'label' => 'Indenfor 2 uger' ),
+								array( 'icon' => 'calendar-clock', 'label' => 'Indenfor en måned' ),
+								array( 'icon' => 'sunrise',        'label' => '1–3 måneder' ),
+								array( 'icon' => 'infinity',       'label' => 'Løbende samarbejde' ),
+								array( 'icon' => 'help',           'label' => 'Vi ved ikke' ),
 							);
 							foreach ( $whens as $w ) : ?>
 								<button type="button" class="tb-card tb-card--compact<?php echo $form_when === $w['label'] ? ' is-selected' : ''; ?>" data-tb-pick="when" data-tb-value="<?php echo esc_attr( $w['label'] ); ?>" role="radio" aria-checked="<?php echo $form_when === $w['label'] ? 'true' : 'false'; ?>">
-									<span class="tb-card__icon" aria-hidden="true"><?php echo esc_html( $w['icon'] ); ?></span>
+									<span class="tb-card__icon" aria-hidden="true"><?php echo studie247_icon( $w['icon'], 26 ); ?></span>
 									<span class="tb-card__label"><?php echo esc_html( $w['label'] ); ?></span>
 								</button>
 							<?php endforeach; ?>

@@ -5438,15 +5438,36 @@ a.dash-card:hover::before { transform: scaleY(1); }
 	text-align: center;
 	margin-bottom: var(--sp-10);
 }
-.tb-headwrap .eyebrow {
+.tb-eyebrow {
 	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	font-size: 13px;
-	padding: 6px 14px;
-	background: color-mix(in srgb, var(--color-accent) 10%, transparent);
-	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+	gap: 8px;
+	padding: 8px 16px 8px 10px;
+	background: var(--color-ink);
+	color: var(--color-ink-on-dark);
 	border-radius: 999px;
+	font-family: var(--font-sans);
+	font-weight: 700;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.22em;
+	box-shadow: 0 10px 24px -12px rgba(40,40,40,0.4);
+}
+.tb-eyebrow__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: var(--color-accent);
+	color: #fff;
+}
+.tb-eyebrow__icon .icon {
+	animation: tb-eyebrow-spin 12s linear infinite;
+}
+@keyframes tb-eyebrow-spin {
+	to { transform: rotate(360deg); }
 }
 .tb-head {
 	font-family: var(--font-sans);
@@ -5597,13 +5618,33 @@ a.dash-card:hover::before { transform: scaleY(1); }
 .tb-card.is-selected .tb-card__sub { color: color-mix(in srgb, var(--color-ink-on-dark) 65%, transparent); }
 
 .tb-card__icon {
-	font-size: 28px;
-	line-height: 1;
-	margin-bottom: 2px;
-	display: block;
-	transition: transform 240ms var(--ease-smooth);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 42px;
+	height: 42px;
+	margin-bottom: 6px;
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+	color: var(--color-accent);
+	transition:
+		transform 240ms var(--ease-smooth),
+		background 180ms var(--ease),
+		color 180ms var(--ease);
 }
-.tb-card:hover .tb-card__icon { transform: scale(1.15) rotate(-4deg); }
+.tb-card__icon .icon {
+	width: 22px;
+	height: 22px;
+	stroke-width: 1.75;
+}
+.tb-card:hover .tb-card__icon {
+	transform: scale(1.08);
+	background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+.tb-card.is-selected .tb-card__icon {
+	background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+	color: var(--color-accent);
+}
 .tb-card__label {
 	font-weight: 700;
 	font-size: 16px;
@@ -5618,7 +5659,8 @@ a.dash-card:hover::before { transform: scaleY(1); }
 .tb-card--compact {
 	padding: 14px 16px;
 }
-.tb-card--compact .tb-card__icon { font-size: 22px; }
+.tb-card--compact .tb-card__icon { width: 34px; height: 34px; border-radius: 10px; margin-bottom: 4px; }
+.tb-card--compact .tb-card__icon .icon { width: 18px; height: 18px; }
 .tb-card--compact .tb-card__label { font-size: 14.5px; }
 
 .tb-grid {
