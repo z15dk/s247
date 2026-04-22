@@ -54,7 +54,7 @@ function studie247_seed_team_bios() {
  * gennem customer_upsert() så CRM-arkivet starter med fuld historik.
  */
 function studie247_backfill_customers() {
-	$flag = 's247_customers_backfilled_v1';
+	$flag = 's247_customers_backfilled_v2';
 	if ( get_option( $flag ) ) { return; }
 	if ( ! function_exists( 'studie247_customer_upsert' ) ) { return; }
 

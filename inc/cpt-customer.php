@@ -129,6 +129,35 @@ add_action( 'save_post_booking', function ( $post_id, $post, $update ) {
 	}
 }, 20, 3 );
 
+/**
+ * Safety-net: når email-metaen sættes/opdateres på en booking
+ * eller besked, kører vi upsert igen. save_post_* hooks fyrer nemlig
+ * under wp_insert_post — FØR booking-flow når at sætte post-meta —
+ * så den første upsert får tomme værdier. Denne hook fanger den
+ * "rigtige" state efter meta er skrevet.
+ */
+add_action( 'added_post_meta',   'studie247_customer_upsert_on_meta', 20, 4 );
+add_action( 'updated_post_meta', 'studie247_customer_upsert_on_meta', 20, 4 );
+function studie247_customer_upsert_on_meta( $meta_id, $post_id, $meta_key, $meta_value ) {
+	if ( '_s247_email' !== $meta_key ) { return; }
+	$pt = get_post_type( $post_id );
+	if ( 'booking' !== $pt && 'kontakt_besked' !== $pt ) { return; }
+	if ( get_post_meta( $post_id, '_s247_cust_id', true ) ) { return; } // allerede linket
+
+	$cid = studie247_customer_upsert( array(
+		'name'          => get_post_meta( $post_id, '_s247_name', true ),
+		'email'         => $meta_value,
+		'phone'         => get_post_meta( $post_id, '_s247_phone', true ),
+		'company'       => get_post_meta( $post_id, '_s247_company', true ),
+		'cvr'           => get_post_meta( $post_id, '_s247_cvr', true ),
+		'newsletter'    => get_post_meta( $post_id, '_s247_newsletter_optin', true ),
+		'newsletter_ts' => get_post_meta( $post_id, '_s247_newsletter_optin_timestamp', true ),
+	) );
+	if ( $cid ) {
+		update_post_meta( $post_id, '_s247_cust_id', $cid );
+	}
+}
+
 add_action( 'save_post_kontakt_besked', function ( $post_id, $post, $update ) {
 	if ( wp_is_post_revision( $post_id ) || 'auto-draft' === $post->post_status ) { return; }
 	$cid = studie247_customer_upsert( array(
