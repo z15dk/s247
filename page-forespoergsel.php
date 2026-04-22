@@ -4,7 +4,7 @@
  * prisforespørgsel. 5 trin, hver med et "kvittering"-feedback
  * der gør det legesygt at udfylde.
  *
- * Slug: /tilbud/
+ * Slug: /forespoergsel/
  *
  * @package Studie247
  */
@@ -83,7 +83,7 @@ if ( ! empty( $_POST['s247_tilbud_nonce'] ) && wp_verify_nonce( $_POST['s247_til
 			) );
 		}
 
-		wp_safe_redirect( home_url( '/tilbud/?sendt=1' ) );
+		wp_safe_redirect( home_url( '/forespoergsel/?sendt=1' ) );
 		exit;
 	}
 }
@@ -132,7 +132,7 @@ get_header();
 				</div>
 			<?php endif; ?>
 
-			<form method="post" action="<?php echo esc_url( home_url( '/tilbud/' ) ); ?>" class="tb-flow" data-tb-flow novalidate>
+			<form method="post" action="<?php echo esc_url( home_url( '/forespoergsel/' ) ); ?>" class="tb-flow" data-tb-flow novalidate>
 				<?php wp_nonce_field( 's247_tilbud', 's247_tilbud_nonce' ); ?>
 
 				<div class="tb-steps">
