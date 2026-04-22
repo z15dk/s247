@@ -41,9 +41,12 @@ get_header();
 			</div>
 		<?php else : ?>
 			<header class="ko-headwrap">
-				<span class="eyebrow eyebrow--accent eyebrow--no-line">Kontakt os</span>
+				<span class="tb-eyebrow">
+					<span class="tb-eyebrow__icon" aria-hidden="true"><?php echo studie247_icon( 'mail', 14 ); ?></span>
+					<span class="tb-eyebrow__text"><?php esc_html_e( 'Kontakt os', 'studie247' ); ?></span>
+				</span>
 				<h1 class="ko-head">Én ting <em>ad gangen</em></h1>
-				<p class="ko-lead">Besvar tre korte spørgsmål. Vi læser hver eneste besked selv.</p>
+				<p class="ko-lead">Besvar tre korte spørgsmål. Vi læser hver eneste besked selv — og vender tilbage inden for 24 timer.</p>
 			</header>
 
 			<?php
@@ -153,14 +156,25 @@ get_header();
 						<span class="ko-counter">Spørgsmål 01 / 03</span>
 						<h2 class="ko-q"><em>Hvad</em> kan vi hjælpe med?</h2>
 						<div class="ko-topics" role="radiogroup" aria-label="Emne">
-							<?php foreach ( array( 'Booking', 'Priser', 'Udstyrs-leje', 'Samarbejde', 'Andet' ) as $topic ) : ?>
+							<?php
+							$ko_topics = array(
+								array( 'icon' => 'calendar',     'label' => 'Booking' ),
+								array( 'icon' => 'circle-dot',   'label' => 'Priser' ),
+								array( 'icon' => 'camera',       'label' => 'Udstyrs-leje' ),
+								array( 'icon' => 'handshake',    'label' => 'Samarbejde' ),
+								array( 'icon' => 'help',         'label' => 'Andet' ),
+							);
+							foreach ( $ko_topics as $t ) : ?>
 								<button
 									type="button"
-									class="ko-topic<?php echo $form_topic === $topic ? ' is-selected' : ''; ?>"
-									data-ko-topic="<?php echo esc_attr( $topic ); ?>"
+									class="ko-topic<?php echo $form_topic === $t['label'] ? ' is-selected' : ''; ?>"
+									data-ko-topic="<?php echo esc_attr( $t['label'] ); ?>"
 									role="radio"
-									aria-checked="<?php echo $form_topic === $topic ? 'true' : 'false'; ?>"
-								><?php echo esc_html( $topic ); ?></button>
+									aria-checked="<?php echo $form_topic === $t['label'] ? 'true' : 'false'; ?>"
+								>
+									<span class="ko-topic__icon" aria-hidden="true"><?php echo studie247_icon( $t['icon'], 18 ); ?></span>
+									<span class="ko-topic__label"><?php echo esc_html( $t['label'] ); ?></span>
+								</button>
 							<?php endforeach; ?>
 						</div>
 						<input type="hidden" name="s247_topic" value="<?php echo esc_attr( $form_topic ); ?>" data-ko-topic-input>

@@ -5030,24 +5030,58 @@ a.dash-card:hover::before { transform: scaleY(1); }
 }
 
 .ko-topic {
-	padding: 10px 18px;
-	background: transparent;
-	border: 1px solid var(--color-border);
-	border-radius: 999px;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 20px 12px 14px;
+	background: rgba(255, 255, 255, 0.6);
+	border: 1.5px solid var(--color-border);
+	border-radius: 14px;
 	font-family: var(--font-sans);
 	font-weight: 600;
 	font-size: var(--fs-sm);
 	color: var(--color-ink);
 	cursor: pointer;
-	transition: all var(--dur-fast) var(--ease);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	transition:
+		transform 220ms var(--ease-smooth),
+		border-color 180ms var(--ease),
+		background 180ms var(--ease),
+		box-shadow 220ms var(--ease-smooth),
+		color 180ms var(--ease);
 }
-
-.ko-topic:hover { border-color: var(--color-ink); }
-
+.ko-topic__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 9px;
+	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+	color: var(--color-accent);
+	transition: transform 220ms var(--ease-smooth);
+}
+.ko-topic__icon .icon { width: 16px; height: 16px; stroke-width: 1.75; }
+.ko-topic:hover {
+	transform: translateY(-2px);
+	border-color: var(--color-accent);
+	box-shadow: 0 14px 30px -14px rgba(158, 43, 37, 0.28);
+}
+.ko-topic:hover .ko-topic__icon {
+	transform: scale(1.1) rotate(-4deg);
+}
 .ko-topic.is-selected {
 	background: var(--color-ink);
 	color: var(--color-ink-on-dark);
 	border-color: var(--color-ink);
+	box-shadow: 0 12px 32px -14px rgba(40, 40, 40, 0.5);
+	transform: translateY(-1px);
+}
+.ko-topic.is-selected .ko-topic__icon {
+	background: color-mix(in srgb, var(--color-accent) 25%, transparent);
+	color: var(--color-accent);
 }
 
 .ko-field {
@@ -5145,7 +5179,7 @@ a.dash-card:hover::before { transform: scaleY(1); }
 	padding: calc(clamp(var(--sp-12), 8vw, var(--sp-20)) + 50px) 0 var(--sp-16);
 }
 
-/* Gradient-blob bag headline */
+/* Driftende gradient-blobs bag indholdet */
 .ko-section::before {
 	content: "";
 	position: absolute;
@@ -5153,22 +5187,32 @@ a.dash-card:hover::before { transform: scaleY(1); }
 	right: -120px;
 	width: 520px;
 	height: 520px;
-	background: radial-gradient(circle at center, color-mix(in srgb, var(--color-accent) 18%, transparent) 0%, transparent 60%);
+	background: radial-gradient(circle at center, color-mix(in srgb, var(--color-accent) 22%, transparent) 0%, transparent 60%);
 	pointer-events: none;
 	filter: blur(20px);
 	z-index: 0;
+	animation: ko-drift-a 16s ease-in-out infinite alternate;
 }
 .ko-section::after {
 	content: "";
 	position: absolute;
 	bottom: -160px;
 	left: -100px;
-	width: 400px;
-	height: 400px;
-	background: radial-gradient(circle at center, color-mix(in srgb, var(--s247-black) 8%, transparent) 0%, transparent 60%);
+	width: 460px;
+	height: 460px;
+	background: radial-gradient(circle at center, color-mix(in srgb, #E89B6B 14%, transparent) 0%, transparent 60%);
 	pointer-events: none;
-	filter: blur(24px);
+	filter: blur(28px);
 	z-index: 0;
+	animation: ko-drift-b 22s ease-in-out infinite alternate;
+}
+@keyframes ko-drift-a {
+	0%   { transform: translate(0,0) scale(1); }
+	100% { transform: translate(-40px,30px) scale(1.08); }
+}
+@keyframes ko-drift-b {
+	0%   { transform: translate(0,0) scale(1); }
+	100% { transform: translate(30px,-40px) scale(1.05); }
 }
 .ko-section .wrap { position: relative; z-index: 1; }
 
@@ -5294,14 +5338,22 @@ a.dash-card:hover::before { transform: scaleY(1); }
 .ko-steps {
 	position: relative;
 	padding: clamp(var(--sp-6), 3vw, var(--sp-8));
-	background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.45));
-	backdrop-filter: blur(14px);
-	-webkit-backdrop-filter: blur(14px);
+	background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.5));
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
 	border: 1px solid color-mix(in srgb, var(--color-ink) 8%, transparent);
-	border-radius: clamp(18px, 2vw, 28px);
+	border-radius: clamp(20px, 2.2vw, 32px);
 	box-shadow:
 		0 1px 2px rgba(40, 40, 40, 0.04),
-		0 24px 48px -24px rgba(40, 40, 40, 0.15);
+		0 28px 56px -24px rgba(40, 40, 40, 0.18);
+	overflow: hidden;
+}
+.ko-steps::before {
+	content: "";
+	position: absolute;
+	top: -2px; left: -2px; right: -2px; height: 2px;
+	background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+	opacity: 0.6;
 }
 
 /* Submit-knap — bigger, shining */
