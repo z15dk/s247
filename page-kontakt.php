@@ -5,73 +5,26 @@
  * @package Studie247
  */
 
-$errors    = array();
 $submitted = isset( $_GET['sendt'] ) && '1' === $_GET['sendt'];
+$errors    = array();
+if ( ! empty( $_GET['err'] ) ) {
+	$err_map = array(
+		'besked'  => __( 'Skriv en besked.', 'studie247' ),
+		'navn'    => __( 'Udfyld dit navn.', 'studie247' ),
+		'email'   => __( 'Indtast en gyldig email.', 'studie247' ),
+		'consent' => __( 'Du skal acceptere privatlivspolitikken for at kunne sende beskeden.', 'studie247' ),
+		'nonce'   => __( 'Sikkerhedstoken udløb — prøv venligst igen.', 'studie247' ),
+	);
+	foreach ( explode( ',', sanitize_text_field( $_GET['err'] ) ) as $code ) {
+		if ( isset( $err_map[ $code ] ) ) { $errors[] = $err_map[ $code ]; }
+	}
+}
 
 $form_name    = '';
 $form_email   = '';
 $form_phone   = '';
 $form_topic   = '';
 $form_message = '';
-
-if ( ! empty( $_POST['s247_ko_nonce'] ) && wp_verify_nonce( $_POST['s247_ko_nonce'], 's247_kontakt_os' ) ) {
-	$form_topic   = sanitize_text_field( wp_unslash( $_POST['s247_topic']   ?? '' ) );
-	$form_message = sanitize_textarea_field( wp_unslash( $_POST['s247_message'] ?? '' ) );
-	$form_name    = sanitize_text_field( wp_unslash( $_POST['s247_name']    ?? '' ) );
-	$form_email   = sanitize_email(      wp_unslash( $_POST['s247_email']   ?? '' ) );
-	$form_phone   = sanitize_text_field( wp_unslash( $_POST['s247_phone']   ?? '' ) );
-
-	if ( ! $form_message || strlen( $form_message ) < 5 ) {
-		$errors[] = __( 'Skriv en besked.', 'studie247' );
-	}
-	if ( ! $form_name ) {
-		$errors[] = __( 'Udfyld dit navn.', 'studie247' );
-	}
-	if ( ! is_email( $form_email ) ) {
-		$errors[] = __( 'Indtast en gyldig email.', 'studie247' );
-	}
-	if ( empty( $_POST['s247_consent'] ) ) {
-		$errors[] = __( 'Du skal acceptere privatlivspolitikken for at kunne sende beskeden.', 'studie247' );
-	}
-
-	if ( empty( $errors ) ) {
-		// Persister besked som CPT så dashboardet/CRM kan hente den.
-		studie247_save_kontakt_besked( array(
-			'name'    => $form_name,
-			'email'   => $form_email,
-			'phone'   => $form_phone,
-			'topic'   => $form_topic,
-			'message' => $form_message,
-			'source'  => 'kontakt-os',
-		) );
-
-		$admin_to      = 'info@s247.dk';
-		$admin_subject = sprintf( '[Studie 247] Ny henvendelse fra %s', $form_name );
-		$admin_body    = "Navn: {$form_name}\nEmail: {$form_email}\nTelefon: {$form_phone}\n";
-		if ( $form_topic )   { $admin_body .= "Emne: {$form_topic}\n"; }
-		$admin_body   .= "\nBesked:\n{$form_message}\n";
-		@wp_mail( $admin_to, $admin_subject, $admin_body, array(
-			'Content-Type: text/plain; charset=UTF-8',
-			'Reply-To: ' . $form_name . ' <' . $form_email . '>',
-		) );
-
-		$mail = studie247_render_mail_template( 'contact', array(
-			'navn'   => $form_name,
-			'email'  => $form_email,
-			'side'   => $form_topic,
-			'besked' => nl2br( $form_message ),
-		) );
-		$is_html = studie247_mail_template_is_html( 'contact' );
-		@wp_mail( $form_email, $mail['subject'], $mail['body'], array(
-			'Content-Type: ' . ( $is_html ? 'text/html' : 'text/plain' ) . '; charset=UTF-8',
-			'From: Studie 247 <info@s247.dk>',
-			'Reply-To: info@s247.dk',
-		) );
-
-		wp_safe_redirect( add_query_arg( 'sendt', '1', wp_get_referer() ?: home_url( '/kontakt-os/' ) ) );
-		exit;
-	}
-}
 
 get_header();
 ?>
@@ -183,7 +136,8 @@ get_header();
 
 				<div class="ko-main">
 
-			<form method="post" action="" class="ko-flow" data-ko-flow novalidate>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="ko-flow" data-ko-flow novalidate>
+				<input type="hidden" name="action" value="s247_kontakt">
 				<?php wp_nonce_field( 's247_kontakt_os', 's247_ko_nonce' ); ?>
 
 				<?php if ( $errors ) : ?>

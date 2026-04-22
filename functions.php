@@ -43,6 +43,7 @@ require_once STUDIE247_DIR . '/inc/dashboard-permissions.php';
 require_once STUDIE247_DIR . '/inc/audit-log.php';
 require_once STUDIE247_DIR . '/inc/cookie-banner.php';
 require_once STUDIE247_DIR . '/inc/forespoergsel-handler.php';
+require_once STUDIE247_DIR . '/inc/kontakt-handler.php';
 require_once STUDIE247_DIR . '/inc/migrations.php';
 
 /**
