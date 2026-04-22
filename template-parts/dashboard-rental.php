@@ -11,6 +11,7 @@ if ( ! studie247_can_view_dash( 'rental' ) && ! current_user_can( 'manage_option
 }
 
 $fmt_dkk = function ( $n ) { return number_format( (int) $n, 0, ',', '.' ) . ' kr'; };
+$can_revenue = studie247_can_view_dash( 'revenue' ) || current_user_can( 'manage_options' );
 
 $duration_days = array(
 	'1 dag'  => 1, '2 dage' => 2, '3 dage' => 3, '4 dage' => 4,
@@ -309,7 +310,71 @@ if ( 'all' !== $filter ) {
 }
 
 $categories = get_terms( array( 'taxonomy' => 'udlejning_kategori', 'hide_empty' => false ) );
+
+// Afventende udlejnings-bookinger (pending med produkt_id)
+$pending_rentals = get_posts( array(
+	'post_type'      => 'booking',
+	'post_status'    => 'pending',
+	'posts_per_page' => -1,
+	'meta_query'     => array( array( 'key' => '_s247_produkt_id', 'compare' => 'EXISTS' ) ),
+	'orderby'        => 'date',
+	'order'          => 'DESC',
+) );
 ?>
+
+<?php if ( ! empty( $pending_rentals ) ) : ?>
+	<section class="sd-panel sd-rental-pending">
+		<header class="sd-panel__head">
+			<h2>⏳ <?php esc_html_e( 'Afventer godkendelse', 'studie247' ); ?> <span class="sd-badge sd-badge--accent"><?php echo count( $pending_rentals ); ?></span></h2>
+			<span class="sd-panel__hint"><?php esc_html_e( 'Nye udlejnings-forespørgsler — klik for at godkende/afvise.', 'studie247' ); ?></span>
+		</header>
+		<table class="sd-table sd-table--list">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Kunde', 'studie247' ); ?></th>
+					<th><?php esc_html_e( 'Produkt', 'studie247' ); ?></th>
+					<th><?php esc_html_e( 'Dato', 'studie247' ); ?></th>
+					<th><?php esc_html_e( 'Varighed', 'studie247' ); ?></th>
+					<?php if ( $can_revenue ?? false ) : ?><th class="sd-table__right"><?php esc_html_e( 'Pris', 'studie247' ); ?></th><?php endif; ?>
+					<th><?php esc_html_e( 'Modtaget', 'studie247' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $pending_rentals as $b ) :
+					$p_name    = get_post_meta( $b->ID, '_s247_name', true );
+					$p_email   = get_post_meta( $b->ID, '_s247_email', true );
+					$p_pid     = (int) get_post_meta( $b->ID, '_s247_produkt_id', true );
+					$p_prod    = $p_pid ? get_the_title( $p_pid ) : get_post_meta( $b->ID, '_s247_produkt', true );
+					$p_date    = get_post_meta( $b->ID, '_s247_date', true );
+					$p_dur     = get_post_meta( $b->ID, '_s247_duration', true );
+					$p_price   = (int) get_post_meta( $b->ID, '_s247_estimated_price', true );
+					$item_href = $p_pid ? home_url( '/dashboard/?view=rental&item=' . $p_pid . '&booking=' . $b->ID ) : '';
+				?>
+					<tr <?php if ( $item_href ) : ?>data-href="<?php echo esc_url( $item_href ); ?>" style="cursor:pointer;"<?php endif; ?>>
+						<td class="sd-table__name">
+							<?php if ( $item_href ) : ?>
+								<a href="<?php echo esc_url( $item_href ); ?>"><?php echo esc_html( $p_name ?: '—' ); ?></a>
+							<?php else : ?>
+								<?php echo esc_html( $p_name ?: '—' ); ?>
+							<?php endif; ?>
+							<?php if ( $p_email ) : ?><span class="sd-row-sub"><?php echo esc_html( $p_email ); ?></span><?php endif; ?>
+						</td>
+						<td><?php echo esc_html( $p_prod ?: '—' ); ?></td>
+						<td class="sd-muted"><?php echo esc_html( $p_date ? date_i18n( 'j. M Y', strtotime( $p_date ) ) : '—' ); ?></td>
+						<td class="sd-muted"><?php echo esc_html( $p_dur ?: '—' ); ?></td>
+						<?php if ( $can_revenue ?? false ) : ?><td class="sd-table__right sd-mono"><?php echo $p_price ? esc_html( number_format( $p_price, 0, ',', '.' ) . ' kr' ) : '—'; ?></td><?php endif; ?>
+						<td class="sd-muted"><?php echo esc_html( get_the_date( 'j. M H:i', $b ) ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+	</section>
+	<script>
+	document.querySelectorAll('.sd-rental-pending tbody tr[data-href]').forEach(function(r){
+		r.addEventListener('click', function(e){ if (e.target.closest('a,button')) return; window.location = r.dataset.href; });
+	});
+	</script>
+<?php endif; ?>
 
 <div class="sd-toolbar">
 	<div class="sd-filters">

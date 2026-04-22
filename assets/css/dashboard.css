@@ -479,6 +479,20 @@ a.sd-stat:hover {
 	font-weight: 700;
 }
 
+.sd-rental-pending {
+	margin-bottom: 24px;
+	border: 1px solid var(--sd-accent-soft);
+	background: linear-gradient(180deg, var(--sd-accent-soft), transparent 60%);
+}
+.sd-rental-pending .sd-panel__head h2 {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+.sd-rental-pending tbody tr:hover {
+	background: var(--sd-border-soft);
+}
+
 /* Liste (beskeder) */
 .sd-list {
 	list-style: none;
