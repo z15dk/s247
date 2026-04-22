@@ -9,84 +9,29 @@
  * @package Studie247
  */
 
-$errors    = array();
 $submitted = isset( $_GET['sendt'] ) && '1' === $_GET['sendt'];
+$errors    = array();
+if ( ! empty( $_GET['err'] ) ) {
+	$err_map = array(
+		'projekt' => __( 'Vælg hvilken type projekt.', 'studie247' ),
+		'navn'    => __( 'Udfyld dit navn.', 'studie247' ),
+		'email'   => __( 'Indtast en gyldig email.', 'studie247' ),
+		'consent' => __( 'Du skal acceptere privatlivspolitikken for at sende forespørgslen.', 'studie247' ),
+		'nonce'   => __( 'Sikkerhedstoken udløb — prøv venligst igen.', 'studie247' ),
+	);
+	foreach ( explode( ',', sanitize_text_field( $_GET['err'] ) ) as $code ) {
+		if ( isset( $err_map[ $code ] ) ) { $errors[] = $err_map[ $code ]; }
+	}
+}
 
-$form_project = '';  // Type projekt
-$form_mood    = '';  // Vibe / stemning
-$form_budget  = '';  // Budget-bracket
-$form_when    = '';  // Tidshorisont
+$form_project = '';
+$form_mood    = '';
+$form_budget  = '';
+$form_when    = '';
 $form_name    = '';
 $form_email   = '';
 $form_phone   = '';
 $form_details = '';
-
-if ( ! empty( $_POST['s247_tilbud_nonce'] ) && wp_verify_nonce( $_POST['s247_tilbud_nonce'], 's247_tilbud' ) ) {
-	$form_project = sanitize_text_field( wp_unslash( $_POST['project']  ?? '' ) );
-	$form_mood    = sanitize_text_field( wp_unslash( $_POST['mood']     ?? '' ) );
-	$form_budget  = sanitize_text_field( wp_unslash( $_POST['budget']   ?? '' ) );
-	$form_when    = sanitize_text_field( wp_unslash( $_POST['when']     ?? '' ) );
-	$form_name    = sanitize_text_field( wp_unslash( $_POST['name']     ?? '' ) );
-	$form_email   = sanitize_email(      wp_unslash( $_POST['email']    ?? '' ) );
-	$form_phone   = sanitize_text_field( wp_unslash( $_POST['phone']    ?? '' ) );
-	$form_details = sanitize_textarea_field( wp_unslash( $_POST['details'] ?? '' ) );
-
-	if ( ! $form_project ) { $errors[] = __( 'Vælg hvilken type projekt.', 'studie247' ); }
-	if ( ! $form_name )    { $errors[] = __( 'Udfyld dit navn.', 'studie247' ); }
-	if ( ! is_email( $form_email ) ) { $errors[] = __( 'Indtast en gyldig email.', 'studie247' ); }
-	if ( empty( $_POST['s247_consent'] ) ) {
-		$errors[] = __( 'Du skal acceptere privatlivspolitikken for at sende forespørgslen.', 'studie247' );
-	}
-
-	if ( empty( $errors ) ) {
-		$topic = sprintf( '%s · %s · %s', $form_project, $form_budget ?: 'uoplyst', $form_when ?: 'når som helst' );
-		$message = sprintf(
-			"Projekt: %s\nStemning: %s\nBudget: %s\nTidshorisont: %s\n\n%s",
-			$form_project,
-			$form_mood    ?: '—',
-			$form_budget  ?: '—',
-			$form_when    ?: '—',
-			$form_details ?: ''
-		);
-
-		if ( function_exists( 'studie247_save_kontakt_besked' ) ) {
-			studie247_save_kontakt_besked( array(
-				'name'    => $form_name,
-				'email'   => $form_email,
-				'phone'   => $form_phone,
-				'topic'   => 'Tilbud: ' . $topic,
-				'message' => $message,
-				'source'  => 'tilbud',
-			) );
-		}
-
-		$admin_to      = get_theme_mod( 's247_email', 'info@s247.dk' );
-		$admin_subject = sprintf( '[Studie 247] Tilbud ønsket: %s', $form_project );
-		$admin_body    = "TILBUDSFORESPØRGSEL\n\nNavn: {$form_name}\nEmail: {$form_email}\nTelefon: {$form_phone}\n\n{$message}";
-		@wp_mail( $admin_to, $admin_subject, $admin_body, array(
-			'Content-Type: text/plain; charset=UTF-8',
-			'Reply-To: ' . $form_name . ' <' . $form_email . '>',
-		) );
-
-		if ( function_exists( 'studie247_render_mail_template' ) ) {
-			$mail = studie247_render_mail_template( 'contact', array(
-				'navn'   => $form_name,
-				'email'  => $form_email,
-				'side'   => 'Tilbud',
-				'besked' => nl2br( $message ),
-			) );
-			$is_html = studie247_mail_template_is_html( 'contact' );
-			@wp_mail( $form_email, $mail['subject'], $mail['body'], array(
-				'Content-Type: ' . ( $is_html ? 'text/html' : 'text/plain' ) . '; charset=UTF-8',
-				'From: Studie 247 <' . $admin_to . '>',
-				'Reply-To: ' . $admin_to,
-			) );
-		}
-
-		wp_safe_redirect( home_url( '/forespoergsel/?sendt=1' ) );
-		exit;
-	}
-}
 
 get_header();
 ?>
@@ -132,7 +77,8 @@ get_header();
 				</div>
 			<?php endif; ?>
 
-			<form method="post" action="<?php echo esc_url( home_url( '/forespoergsel/' ) ); ?>" class="tb-flow" data-tb-flow novalidate>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="tb-flow" data-tb-flow novalidate>
+				<input type="hidden" name="action" value="s247_forespoergsel">
 				<?php wp_nonce_field( 's247_tilbud', 's247_tilbud_nonce' ); ?>
 
 				<div class="tb-steps">
