@@ -606,4 +606,42 @@
 		});
 	}
 
+	// ─── Rotator (udstyr i blog-sidebar) ──────────────────────
+	document.querySelectorAll('[data-rotator]').forEach((root) => {
+		const slides = Array.from(root.querySelectorAll('[data-rotator-slide]'));
+		const dots   = Array.from(root.querySelectorAll('[data-rotator-dot]'));
+		if (slides.length < 2) return;
+
+		const interval = Math.max(1500, parseInt(root.dataset.rotatorInterval || '5000', 10));
+		let idx = slides.findIndex((s) => s.classList.contains('is-active'));
+		if (idx < 0) idx = 0;
+
+		const show = (next) => {
+			slides[idx].classList.remove('is-active');
+			slides[idx].setAttribute('aria-hidden', 'true');
+			if (dots[idx]) dots[idx].classList.remove('is-active');
+			idx = (next + slides.length) % slides.length;
+			slides[idx].classList.add('is-active');
+			slides[idx].setAttribute('aria-hidden', 'false');
+			if (dots[idx]) dots[idx].classList.add('is-active');
+		};
+
+		let timer = setInterval(() => show(idx + 1), interval);
+		const stop  = () => { if (timer) { clearInterval(timer); timer = null; } };
+		const start = () => { if (!timer) timer = setInterval(() => show(idx + 1), interval); };
+
+		root.addEventListener('mouseenter', stop);
+		root.addEventListener('mouseleave', start);
+		document.addEventListener('visibilitychange', () => {
+			if (document.hidden) stop(); else start();
+		});
+
+		dots.forEach((dot, i) => {
+			dot.addEventListener('click', () => {
+				show(i);
+				stop(); start();
+			});
+		});
+	});
+
 })();

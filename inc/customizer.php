@@ -703,4 +703,146 @@ add_action( 'customize_register', function ( $wp_customize ) {
 			}
 		}
 	}
+
+	/* ============================================================
+	 * Blog
+	 * ============================================================ */
+	$wp_customize->add_section( 's247_blog', array(
+		'title'       => __( 'Blog', 'studie247' ),
+		'description' => __( 'Tilpas blog-sidens layout, sidebar og book-kortet.', 'studie247' ),
+		'priority'    => 165,
+	) );
+
+	$blog_fields = array(
+		// Sidebar — seneste artikler
+		's247_blog_latest_count' => array(
+			'label'   => __( 'Antal seneste artikler i sidebar', 'studie247' ),
+			'default' => 4,
+			'type'    => 'number',
+			'sanitize' => 'absint',
+		),
+		's247_blog_latest_title_a' => array(
+			'label'   => __( 'Sidebar-titel (første ord)', 'studie247' ),
+			'default' => 'Seneste',
+			'type'    => 'text',
+		),
+		's247_blog_latest_title_b' => array(
+			'label'   => __( 'Sidebar-titel (kursiv ord)', 'studie247' ),
+			'default' => 'artikler',
+			'type'    => 'text',
+		),
+
+		// Book-kort
+		's247_blog_book_eyebrow' => array(
+			'label'   => __( 'Book-kort: eyebrow', 'studie247' ),
+			'default' => 'Klar til at skabe?',
+			'type'    => 'text',
+		),
+		's247_blog_book_title_a' => array(
+			'label'   => __( 'Book-kort: titel (første ord)', 'studie247' ),
+			'default' => 'Book vores',
+			'type'    => 'text',
+		),
+		's247_blog_book_title_b' => array(
+			'label'   => __( 'Book-kort: titel (kursiv ord)', 'studie247' ),
+			'default' => 'studie',
+			'type'    => 'text',
+		),
+		's247_blog_book_cta' => array(
+			'label'   => __( 'Book-kort: CTA-tekst', 'studie247' ),
+			'default' => 'Se ledige tider',
+			'type'    => 'text',
+		),
+		's247_blog_book_url' => array(
+			'label'    => __( 'Book-kort: link', 'studie247' ),
+			'default'  => '/booking-studie/',
+			'type'     => 'url',
+			'sanitize' => 'esc_url_raw',
+		),
+
+		// Toggle — relateret-sektion
+		's247_blog_show_related' => array(
+			'label'    => __( 'Vis "Læs også" (3 relaterede) under artiklen', 'studie247' ),
+			'default'  => 1,
+			'type'     => 'checkbox',
+			'sanitize' => 'studie247_sanitize_checkbox',
+		),
+		's247_blog_related_title_a' => array(
+			'label'   => __( '"Læs også" — titel (første ord)', 'studie247' ),
+			'default' => 'Mere fra',
+			'type'    => 'text',
+		),
+		's247_blog_related_title_b' => array(
+			'label'   => __( '"Læs også" — titel (kursiv ord)', 'studie247' ),
+			'default' => 'studiet',
+			'type'    => 'text',
+		),
+
+		// Udstyr-rotator
+		's247_blog_rental_show' => array(
+			'label'    => __( 'Vis udstyr-rotator i sidebar', 'studie247' ),
+			'default'  => 1,
+			'type'     => 'checkbox',
+			'sanitize' => 'studie247_sanitize_checkbox',
+		),
+		's247_blog_rental_title_a' => array(
+			'label'   => __( 'Udstyr-rotator: titel (første ord)', 'studie247' ),
+			'default' => 'Lej',
+			'type'    => 'text',
+		),
+		's247_blog_rental_title_b' => array(
+			'label'   => __( 'Udstyr-rotator: titel (kursiv ord)', 'studie247' ),
+			'default' => 'udstyr',
+			'type'    => 'text',
+		),
+		's247_blog_rental_count' => array(
+			'label'    => __( 'Antal udstyr i rotation', 'studie247' ),
+			'default'  => 6,
+			'type'     => 'number',
+			'sanitize' => 'absint',
+		),
+		's247_blog_rental_interval' => array(
+			'label'    => __( 'Rotation-interval (millisekunder)', 'studie247' ),
+			'default'  => 5000,
+			'type'     => 'number',
+			'sanitize' => 'absint',
+		),
+		's247_blog_rental_cta' => array(
+			'label'   => __( 'Udstyr-rotator: CTA-tekst', 'studie247' ),
+			'default' => 'Lej dette',
+			'type'    => 'text',
+		),
+	);
+
+	foreach ( $blog_fields as $key => $cfg ) {
+		$sanitize = $cfg['sanitize'] ?? 'sanitize_text_field';
+		$wp_customize->add_setting( $key, array(
+			'default'           => $cfg['default'],
+			'sanitize_callback' => $sanitize,
+			'transport'         => 'refresh',
+		) );
+		$wp_customize->add_control( $key, array(
+			'label'   => $cfg['label'],
+			'section' => 's247_blog',
+			'type'    => $cfg['type'],
+		) );
+	}
+
+	// Book-kort billede (image control).
+	$wp_customize->add_setting( 's247_blog_book_image', array(
+		'default'           => '',
+		'sanitize_callback' => 'esc_url_raw',
+		'transport'         => 'refresh',
+	) );
+	$wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 's247_blog_book_image', array(
+		'label'       => __( 'Book-kort billede', 'studie247' ),
+		'description' => __( 'Lad stå tomt for at bruge featured-billedet fra /booking-studie/.', 'studie247' ),
+		'section'     => 's247_blog',
+	) ) );
 } );
+
+if ( ! function_exists( 'studie247_sanitize_checkbox' ) ) {
+	function studie247_sanitize_checkbox( $input ) {
+		return ! empty( $input ) ? 1 : 0;
+	}
+}
