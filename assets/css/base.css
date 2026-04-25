@@ -129,6 +129,29 @@ em, i {
 	color: var(--color-accent);
 }
 
+/* Article body — skaler overskrifter ned så de ikke arver
+   editorial section-head-størrelser inde i WP-indhold. */
+.page-content h2,
+.page-content h3,
+.page-content h4,
+.page-content h5,
+.page-content h6 {
+	max-width: 32ch;
+	margin-top: var(--sp-10);
+	margin-bottom: var(--sp-3);
+	line-height: 1.2;
+}
+.page-content h2 { font-size: clamp(1.5rem, 1.2rem + 0.9vw, 2rem); }
+.page-content h3 { font-size: clamp(1.25rem, 1.05rem + 0.6vw, 1.5rem); }
+.page-content h4 { font-size: var(--fs-md); }
+.page-content h5,
+.page-content h6 { font-size: var(--fs-base); }
+.page-content > *:first-child { margin-top: 0; }
+.page-content p,
+.page-content ul,
+.page-content ol,
+.page-content blockquote { margin-bottom: var(--sp-4); }
+
 /* Lists */
 ul, ol {
 	padding-left: 1.25em;

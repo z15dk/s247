@@ -17,7 +17,7 @@ $categories   = get_the_category();
 <article <?php post_class( 'single-post' ); ?>>
 
 	<section class="section section--tight">
-		<div class="wrap wrap--tight">
+		<div class="wrap">
 			<nav class="breadcrumb" aria-label="<?php esc_attr_e( 'Brødkrumme', 'studie247' ); ?>" style="margin-bottom:var(--sp-6);">
 				<ol>
 					<li><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Forside', 'studie247' ); ?></a></li>
@@ -111,30 +111,48 @@ $categories   = get_the_category();
 	</section>
 
 	<?php
-	// Relaterede indlæg — samme kategori, eller seneste hvis ingen.
-	$cat_ids = wp_list_pluck( $categories, 'term_id' );
-	$related = new WP_Query( array(
-		'post_type'           => 'post',
-		'posts_per_page'      => 3,
-		'post__not_in'        => array( $post_id ),
-		'ignore_sticky_posts' => true,
-		'no_found_rows'       => true,
-		'category__in'        => ! empty( $cat_ids ) ? $cat_ids : array(),
-		'orderby'             => 'date',
-		'order'               => 'DESC',
-	) );
-	if ( ! $related->have_posts() ) {
-		wp_reset_postdata();
-		$related = new WP_Query( array(
+	// Relaterede indlæg — altid op til 3: først samme kategori,
+	// derefter top op med seneste indlæg hvis kategorien har for få.
+	$cat_ids      = wp_list_pluck( $categories, 'term_id' );
+	$related_ids  = array();
+
+	if ( ! empty( $cat_ids ) ) {
+		$related_ids = get_posts( array(
 			'post_type'           => 'post',
 			'posts_per_page'      => 3,
 			'post__not_in'        => array( $post_id ),
 			'ignore_sticky_posts' => true,
-			'no_found_rows'       => true,
+			'category__in'        => $cat_ids,
+			'orderby'             => 'date',
+			'order'               => 'DESC',
+			'fields'              => 'ids',
 		) );
 	}
+
+	if ( count( $related_ids ) < 3 ) {
+		$exclude = array_merge( array( $post_id ), $related_ids );
+		$fillers = get_posts( array(
+			'post_type'           => 'post',
+			'posts_per_page'      => 3 - count( $related_ids ),
+			'post__not_in'        => $exclude,
+			'ignore_sticky_posts' => true,
+			'orderby'             => 'date',
+			'order'               => 'DESC',
+			'fields'              => 'ids',
+		) );
+		$related_ids = array_merge( $related_ids, $fillers );
+	}
+
+	$related = $related_ids ? new WP_Query( array(
+		'post_type'           => 'post',
+		'post__in'            => $related_ids,
+		'orderby'             => 'post__in',
+		'posts_per_page'      => 3,
+		'ignore_sticky_posts' => true,
+		'no_found_rows'       => true,
+	) ) : null;
 	?>
-	<?php if ( $related->have_posts() ) : ?>
+	<?php if ( $related && $related->have_posts() ) : ?>
 		<section class="section">
 			<div class="wrap">
 				<header class="section-head">
