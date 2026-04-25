@@ -33,6 +33,8 @@ require_once STUDIE247_DIR . '/inc/admin-style.php';
 require_once STUDIE247_DIR . '/inc/udlejning-import.php';
 require_once STUDIE247_DIR . '/inc/booking-inspection.php';
 require_once STUDIE247_DIR . '/inc/booking-approval.php';
+require_once STUDIE247_DIR . '/inc/booking-auto-approve.php';
+require_once STUDIE247_DIR . '/inc/booking-ics.php';
 require_once STUDIE247_DIR . '/inc/product-uid.php';
 require_once STUDIE247_DIR . '/inc/mail.php';
 require_once STUDIE247_DIR . '/inc/mail-templates.php';

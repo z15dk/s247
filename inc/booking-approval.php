@@ -285,15 +285,28 @@ function studie247_send_booking_confirmation( $booking_id, $action ) {
 	$is_html   = false;
 
 	if ( 'approved' === $action ) {
+		$cal = function_exists( 'studie247_booking_calendar_urls' )
+			? studie247_booking_calendar_urls( $booking_id )
+			: array();
+		$after_hours  = (int) get_post_meta( $booking_id, '_s247_after_hours', true );
+		$after_hours_fee = (int) get_post_meta( $booking_id, '_s247_after_hours_fee', true );
+		$aftenpris_rate  = defined( 'STUDIE247_AFTER_HOURS_RATE' ) ? (int) STUDIE247_AFTER_HOURS_RATE : 200;
 		$mail    = studie247_render_mail_template( 'booking_approved', array(
-			'navn'       => $name,
-			'email'      => $email,
-			'produkt'    => $prod,
-			'dato'       => $date_dk,
-			'start'      => $start,
-			'varighed'   => $dur,
-			'virksomhed' => get_post_meta( $booking_id, '_s247_company', true ),
-			'cvr'        => get_post_meta( $booking_id, '_s247_cvr', true ),
+			'navn'            => $name,
+			'email'           => $email,
+			'produkt'         => $prod,
+			'dato'            => $date_dk,
+			'start'           => $start,
+			'varighed'        => $dur,
+			'virksomhed'      => get_post_meta( $booking_id, '_s247_company', true ),
+			'cvr'             => get_post_meta( $booking_id, '_s247_cvr', true ),
+			'kalender_ics'    => $cal['ics']     ?? '',
+			'kalender_google' => $cal['google']  ?? '',
+			'kalender_outlook'=> $cal['outlook'] ?? '',
+			'aftenpris_timer'   => $after_hours > 0 ? (string) $after_hours : '',
+			'aftenpris_tillaeg' => $after_hours_fee > 0 && function_exists( 'studie247_format_dkk' )
+				? studie247_format_dkk( $after_hours_fee ) : '',
+			'aftenpris_sats'    => (string) $aftenpris_rate,
 		) );
 		$subject = $mail['subject'];
 		$body    = $mail['body'];

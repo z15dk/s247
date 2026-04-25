@@ -274,42 +274,87 @@
 
 		const formatDKK = (n) => Math.round(n).toLocaleString('da-DK') + ' kr';
 
+		// Aftenpris-tillæg: 200 kr pr. påbegyndt time i tidsrummet 20:00–08:00.
+		const AFTER_HOURS_RATE = 200;
+		const AFTER_HOURS_EVENING = 20;
+		const AFTER_HOURS_MORNING = 8;
+		const studioPriceHours = { '6 timer': 6, '12 timer': 12 };
+		const sumLateEl  = document.querySelector('[data-sum-late]');
+		const sumLateRow = document.querySelector('[data-sum-late-row]');
+
+		const countAfterHours = (startH, durH) => {
+			let c = 0;
+			for (let i = 0; i < durH; i++) {
+				const hod = (startH + i) % 24;
+				if (hod >= AFTER_HOURS_EVENING || hod < AFTER_HOURS_MORNING) c++;
+			}
+			return c;
+		};
+
 		const updatePrice = () => {
 			if (!sumPrice) return;
-			let total = 0;
+			let base = 0;
+			let lateFee = 0;
+			let lateHours = 0;
 			if (isProductMode) {
 				const row = rentalTable[durIn.value];
 				if (row) {
-					const base = row.base === 'uge' ? priceWeek : priceDay;
-					if (base) total = base * row.mult;
+					const basePrice = row.base === 'uge' ? priceWeek : priceDay;
+					if (basePrice) base = basePrice * row.mult;
 				}
 			} else {
-				// Studie: direkte opslag i pris-tabel.
 				if (durIn.value && studioPrices[durIn.value]) {
-					total = studioPrices[durIn.value];
+					base = studioPrices[durIn.value];
+				}
+				const startH = timeIn && timeIn.value ? parseInt(timeIn.value.slice(0, 2), 10) : null;
+				const durH   = studioPriceHours[durIn.value] || 0;
+				if (startH !== null && durH > 0) {
+					lateHours = countAfterHours(startH, durH);
+					lateFee   = lateHours * AFTER_HOURS_RATE;
 				}
 			}
-			if (!total) { sumPrice.textContent = '—'; delete sumPrice.dataset.filled; return; }
-			sumPrice.textContent = formatDKK(total);
-			sumPrice.dataset.filled = '1';
+			const total = base + lateFee;
+			if (!total) { sumPrice.textContent = '—'; delete sumPrice.dataset.filled; }
+			else { sumPrice.textContent = formatDKK(total); sumPrice.dataset.filled = '1'; }
+
+			if (sumLateEl && sumLateRow) {
+				if (lateHours > 0) {
+					sumLateEl.textContent = `${lateHours} t × ${AFTER_HOURS_RATE} kr`;
+					sumLateRow.removeAttribute('hidden');
+				} else {
+					sumLateEl.textContent = '—';
+					sumLateRow.setAttribute('hidden', '');
+				}
+			}
 		};
 
 		/**
 		 * Disabler varigheds-knapper der ville overlappe med eksisterende
 		 * bookinger på den valgte dato (kun studie-mode).
 		 */
+		const addDays = (iso, n) => {
+			const d = new Date(iso + 'T00:00:00');
+			d.setDate(d.getDate() + n);
+			return d.toISOString().slice(0, 10);
+		};
+
 		const applyDurationConstraints = () => {
 			if (isProductMode) return;
 			const iso = dateIn.value;
 			const startH = timeIn.value ? parseInt(timeIn.value.slice(0, 2), 10) : null;
-			const blocked = (iso && bookedMap[iso]) || [];
 			bookPicker.querySelectorAll('.book2__dur').forEach((btn) => {
 				const dur  = btn.dataset.duration;
 				const need = studioHours[dur] || 0;
 				let wouldOverlap = false;
-				if (startH !== null && need > 0) {
-					for (let h = startH; h < startH + need && h <= 20; h++) {
-						if (blocked.includes(h)) { wouldOverlap = true; break; }
+				if (startH !== null && need > 0 && iso) {
+					// Tjek hver påtænkt time-slot mod den korrekte dato (wrapper midnat).
+					for (let i = 0; i < need; i++) {
+						const abs = startH + i;
+						const dayOff = Math.floor(abs / 24);
+						const hod    = abs % 24;
+						const target = dayOff === 0 ? iso : addDays(iso, dayOff);
+						const blocked = bookedMap[target] || [];
+						if (blocked.includes(hod)) { wouldOverlap = true; break; }
 					}
 				}
 				btn.classList.toggle('is-disabled', wouldOverlap);
@@ -400,6 +445,7 @@
 				if (timeIn) timeIn.value = t.dataset.time;
 				if (sumTime) { sumTime.textContent = t.dataset.time; sumTime.dataset.filled = '1'; }
 				applyDurationConstraints();
+				updatePrice();
 				checkReady();
 			});
 		});

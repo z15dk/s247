@@ -41,11 +41,42 @@ $studio_price_table = array(
 	'6 timer'  => 1500,
 	'12 timer' => 3000,
 );
-// Studie-varighed → antal timer i kalenderen (bruges til overlap-tjek).
-$studio_duration_hours = array(
+// Faktiske timer brugt til pris + customer-facing varighed.
+$studio_duration_price_hours = array(
 	'6 timer'  => 6,
-	'12 timer' => 13, // hele dagen 08-20
+	'12 timer' => 12,
 );
+// Buffer mellem bookinger: 1 times klargøring.
+if ( ! defined( 'STUDIE247_BOOKING_BUFFER_HOURS' ) ) { define( 'STUDIE247_BOOKING_BUFFER_HOURS', 1 ); }
+// Blokerede timer i kalender/overlap-tjek = faktisk varighed + buffer.
+$studio_duration_hours = array(
+	'6 timer'  => 6  + STUDIE247_BOOKING_BUFFER_HOURS,
+	'12 timer' => 12 + STUDIE247_BOOKING_BUFFER_HOURS,
+);
+// Aftenpris-tillæg: 200 kr pr. påbegyndt time i tidsrummet 20:00–08:00.
+if ( ! defined( 'STUDIE247_AFTER_HOURS_RATE' ) )       { define( 'STUDIE247_AFTER_HOURS_RATE', 200 ); }
+if ( ! defined( 'STUDIE247_AFTER_HOURS_EVENING' ) )    { define( 'STUDIE247_AFTER_HOURS_EVENING', 20 ); }
+if ( ! defined( 'STUDIE247_AFTER_HOURS_MORNING' ) )    { define( 'STUDIE247_AFTER_HOURS_MORNING', 8 ); }
+
+/**
+ * Tæl antal timer i en booking der falder i aftentillægs-zonen (20:00–08:00).
+ * Hver hele time [h, h+1) tælles som 1 hvis starttimen er ≥ 20 eller < 8.
+ * Understøtter bookinger der krydser midnat.
+ */
+function studie247_studio_after_hours( $start_hhmm, $duration_hours ) {
+	$start_hhmm     = (string) $start_hhmm;
+	$duration_hours = (int) $duration_hours;
+	if ( ! $start_hhmm || $duration_hours <= 0 ) { return 0; }
+	$start_h = (int) substr( $start_hhmm, 0, 2 );
+	$count   = 0;
+	for ( $i = 0; $i < $duration_hours; $i++ ) {
+		$hod = ( $start_h + $i ) % 24;
+		if ( $hod >= STUDIE247_AFTER_HOURS_EVENING || $hod < STUDIE247_AFTER_HOURS_MORNING ) {
+			$count++;
+		}
+	}
+	return $count;
+}
 
 // Pris-multiplikatorer for udlejning.
 $rental_price_table = array(
@@ -128,30 +159,49 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 
 	// Server-side overlap-check for studie-bookinger. Defense in depth:
 	// JS'en forhindrer også valget, men hvis nogen omgår UI'en må vi ikke
-	// acceptere overlappende studie-bookinger.
+	// acceptere overlappende studie-bookinger. Tjekker på tværs af midnat:
+	// både bookinger fra samme dato og dagen før (som kan strække sig over).
 	if ( empty( $errors ) && ! $form_prod && $form_date && $form_start && isset( $studio_duration_hours[ $form_dur ] ) ) {
-		$need  = (int) $studio_duration_hours[ $form_dur ];
-		$sh    = (int) substr( $form_start, 0, 2 );
-		$want  = range( $sh, min( $sh + $need - 1, 20 ) );
+		$need = (int) $studio_duration_hours[ $form_dur ];
+		$sh   = (int) substr( $form_start, 0, 2 );
 
+		// Byg "ønskede" slots som (dato|time) strings.
+		$want_slots = array();
+		for ( $i = 0; $i < $need; $i++ ) {
+			$abs     = $sh + $i;
+			$day_off = intdiv( $abs, 24 );
+			$hod     = $abs % 24;
+			$target  = 0 === $day_off ? $form_date : gmdate( 'Y-m-d', strtotime( $form_date . " +{$day_off} day" ) );
+			$want_slots[] = $target . '|' . $hod;
+		}
+
+		// Hent bookinger fra både form-datoen og dagen før (dækker bookinger
+		// der starter kl 22-23 dagen før og strækker sig ind i den nye tid).
+		$prev_date = gmdate( 'Y-m-d', strtotime( $form_date . ' -1 day' ) );
 		$existing = get_posts( array(
 			'post_type'      => 'booking',
 			'post_status'    => array( 'publish', 'pending' ),
 			'posts_per_page' => -1,
 			'meta_query'     => array(
-				array( 'key' => '_s247_date', 'value' => $form_date ),
+				array( 'key' => '_s247_date', 'value' => array( $prev_date, $form_date ), 'compare' => 'IN' ),
 			),
 		) );
 		foreach ( $existing as $b ) {
-			// Kun studie-bookinger blokerer hinanden — produkt-bookinger
-			// har separat kapacitet.
 			if ( get_post_meta( $b->ID, '_s247_produkt', true ) ) { continue; }
+			$b_date  = get_post_meta( $b->ID, '_s247_date', true );
 			$b_start = (int) substr( get_post_meta( $b->ID, '_s247_start', true ), 0, 2 );
 			$b_dur   = get_post_meta( $b->ID, '_s247_duration', true );
 			$b_need  = isset( $studio_duration_hours[ $b_dur ] ) ? (int) $studio_duration_hours[ $b_dur ] : 0;
 			if ( ! $b_need ) { continue; }
-			$taken = range( $b_start, min( $b_start + $b_need - 1, 20 ) );
-			if ( array_intersect( $want, $taken ) ) {
+			$clash = false;
+			for ( $i = 0; $i < $b_need; $i++ ) {
+				$abs     = $b_start + $i;
+				$day_off = intdiv( $abs, 24 );
+				$hod     = $abs % 24;
+				$target  = 0 === $day_off ? $b_date : gmdate( 'Y-m-d', strtotime( $b_date . " +{$day_off} day" ) );
+				if ( in_array( $target . '|' . $hod, $want_slots, true ) ) { $clash = true; break; }
+			}
+			if ( $clash ) {
 				$errors[] = __( 'Tidspunktet overlapper med en eksisterende booking. Vælg et andet tidspunkt eller varighed.', 'studie247' );
 				break;
 			}
@@ -177,13 +227,21 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		// Beregn estimeret pris — enten for udstyrs-udlejning eller studie-booking.
 		$estimated_price     = 0;
 		$estimated_price_fmt = '';
+		$base_price          = 0;
+		$after_hours         = 0;     // antal timer efter 20:00
+		$after_hours_fee     = 0;     // samlet tillæg i DKK
 		if ( $prod_id ) {
 			$pd = studie247_price_to_int( get_post_meta( $prod_id, '_s247_pris_dag', true ) );
 			$pu = studie247_price_to_int( get_post_meta( $prod_id, '_s247_pris_uge', true ) );
 			if ( ! $pu && $pd ) { $pu = $pd * 7; }
 			$estimated_price = studie247_calc_rental_price( $pd, $pu, $form_dur );
+			$base_price      = $estimated_price;
 		} elseif ( isset( $studio_price_table[ $form_dur ] ) ) {
-			$estimated_price = (int) $studio_price_table[ $form_dur ];
+			$base_price = (int) $studio_price_table[ $form_dur ];
+			$dur_h      = isset( $studio_duration_price_hours[ $form_dur ] ) ? (int) $studio_duration_price_hours[ $form_dur ] : 0;
+			$after_hours = studie247_studio_after_hours( $form_start, $dur_h );
+			$after_hours_fee = $after_hours * STUDIE247_AFTER_HOURS_RATE;
+			$estimated_price = $base_price + $after_hours_fee;
 		}
 		if ( $estimated_price ) {
 			$estimated_price_fmt = studie247_format_dkk( $estimated_price );
@@ -211,6 +269,11 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			if ( $prod_id )  { update_post_meta( $booking_id, '_s247_produkt_id', $prod_id ); }
 			if ( $form_type ){ update_post_meta( $booking_id, '_s247_type',       $form_type ); }
 			if ( $estimated_price ) { update_post_meta( $booking_id, '_s247_estimated_price', $estimated_price ); }
+			if ( $base_price )      { update_post_meta( $booking_id, '_s247_base_price', $base_price ); }
+			if ( $after_hours > 0 ) {
+				update_post_meta( $booking_id, '_s247_after_hours',     $after_hours );
+				update_post_meta( $booking_id, '_s247_after_hours_fee', $after_hours_fee );
+			}
 			if ( $form_use_type )     { update_post_meta( $booking_id, '_s247_use_type',      $form_use_type ); }
 			if ( $form_edit_type )    { update_post_meta( $booking_id, '_s247_edit_type',     $form_edit_type ); }
 			if ( $form_podcast_type ) { update_post_meta( $booking_id, '_s247_podcast_type',  $form_podcast_type ); }
@@ -218,6 +281,11 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			if ( $form_video_count )  { update_post_meta( $booking_id, '_s247_video_count',   $form_video_count ); }
 			if ( $form_video_duration ) { update_post_meta( $booking_id, '_s247_video_duration', $form_video_duration ); }
 			if ( $form_format )       { update_post_meta( $booking_id, '_s247_format',        $form_format ); }
+
+			// Auto-godkend bookinger fra foruddefinerede e-mails (intern brug).
+			if ( function_exists( 'studie247_maybe_auto_approve_booking' ) ) {
+				studie247_maybe_auto_approve_booking( $booking_id, $form_email );
+			}
 		}
 
 		// Menneske-læsbare labels til mails.
@@ -271,7 +339,13 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 		if ( $form_type )   { $admin_body .= "Type: {$form_type}\n"; }
 		if ( $prod_label )  { $admin_body .= "Produkt: {$prod_label}\n"; }
 		$admin_body   .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
-		if ( $estimated_price_fmt ) { $admin_body .= "Estimeret pris: {$estimated_price_fmt}\n"; }
+		if ( $estimated_price_fmt ) {
+			$admin_body .= "Estimeret pris: {$estimated_price_fmt}\n";
+			if ( $after_hours > 0 ) {
+				$admin_body .= sprintf( "  (inkl. aftenpris-tillæg: %d t × %d kr = %s)\n",
+					$after_hours, STUDIE247_AFTER_HOURS_RATE, studie247_format_dkk( $after_hours_fee ) );
+			}
+		}
 		if ( $purpose_lines ) { $admin_body .= "\n" . $purpose_lines; }
 		if ( $form_notes ) { $admin_body .= "\nNoter:\n{$form_notes}\n"; }
 		@wp_mail( $admin_to, $admin_subject, $admin_body, array(
@@ -292,6 +366,10 @@ if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_
 			'start'          => $form_start,
 			'varighed'       => $form_dur,
 			'pris'           => $estimated_price_fmt,
+			'pris_base'      => $base_price ? studie247_format_dkk( $base_price ) : '',
+			'aftenpris_timer'  => $after_hours > 0 ? (string) $after_hours : '',
+			'aftenpris_tillaeg' => $after_hours_fee ? studie247_format_dkk( $after_hours_fee ) : '',
+			'aftenpris_sats'    => (string) STUDIE247_AFTER_HOURS_RATE,
 			'noter'          => $form_notes,
 			'formaal'        => isset( $use_type_labels[ $form_use_type ] )       ? $use_type_labels[ $form_use_type ]             : '',
 			'oensker'        => isset( $edit_type_labels[ $form_edit_type ] )     ? $edit_type_labels[ $form_edit_type ]           : '',
@@ -345,19 +423,19 @@ foreach ( $booking_posts as $b ) {
 	if ( ! $d || ! $s ) { continue; }
 	$start_h = (int) substr( $s, 0, 2 );
 
-	// Bestem hvor mange timer der er blokeret (max 1 dag).
-	$hours = 6;
-	switch ( $dur ) {
-		case '6 timer':  $hours = 6;  break;
-		case '12 timer': $hours = 13; break; // hele dagen (08-20)
-	}
+	// Bestem hvor mange timer der er blokeret — inkl. 1 times buffer til
+	// klargøring efter bookingen slutter.
+	$hours = isset( $studio_duration_hours[ $dur ] ) ? (int) $studio_duration_hours[ $dur ] : ( 6 + STUDIE247_BOOKING_BUFFER_HOURS );
 
-	if ( ! isset( $booked_map[ $d ] ) ) {
-		$booked_map[ $d ] = array();
-	}
-	for ( $h = $start_h; $h < $start_h + $hours && $h <= 20; $h++ ) {
-		if ( ! in_array( $h, $booked_map[ $d ], true ) ) {
-			$booked_map[ $d ][] = $h;
+	// Fordel blokerede timer over flere datoer hvis bookingen krydser midnat.
+	for ( $i = 0; $i < $hours; $i++ ) {
+		$abs     = $start_h + $i;
+		$day_off = intdiv( $abs, 24 );
+		$hod     = $abs % 24;
+		$target  = 0 === $day_off ? $d : gmdate( 'Y-m-d', strtotime( $d . " +{$day_off} day" ) );
+		if ( ! isset( $booked_map[ $target ] ) ) { $booked_map[ $target ] = array(); }
+		if ( ! in_array( $hod, $booked_map[ $target ], true ) ) {
+			$booked_map[ $target ][] = $hod;
 		}
 	}
 }
@@ -406,8 +484,8 @@ if ( $is_product ) {
 	$booked_map = array();
 }
 
-// Beregn fuldt bookede dage (alle 13 slots 08-20 er taget).
-$all_slots = range( 8, 20 );
+// Beregn fuldt bookede dage (alle 24 slots 00-23 er taget).
+$all_slots = range( 0, 23 );
 foreach ( $booked_map as $day => $hours_arr ) {
 	sort( $hours_arr );
 	if ( count( array_intersect( $all_slots, $hours_arr ) ) >= count( $all_slots ) ) {
@@ -524,7 +602,7 @@ get_header();
 						<p class="book2__picked" data-book-picked></p>
 						<?php if ( ! $is_product ) : ?>
 							<div class="book2__time-grid">
-								<?php for ( $h = 8; $h <= 20; $h++ ) :
+								<?php for ( $h = 0; $h <= 23; $h++ ) :
 									$val = sprintf( '%02d:00', $h ); ?>
 									<button type="button" class="book2__time" data-time="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( $val ); ?></button>
 								<?php endfor; ?>
@@ -571,8 +649,16 @@ get_header();
 								<div><dt><?php esc_html_e( 'Tid', 'studie247' ); ?></dt><dd data-sum-time>—</dd></div>
 							<?php endif; ?>
 							<div><dt><?php esc_html_e( 'Varighed', 'studie247' ); ?></dt><dd data-sum-duration>—</dd></div>
+							<?php if ( ! $is_product ) : ?>
+								<div data-sum-late-row hidden><dt><?php esc_html_e( 'Aftenpris-tillæg (efter 20:00)', 'studie247' ); ?></dt><dd data-sum-late>—</dd></div>
+							<?php endif; ?>
 							<div class="book2__sum-total"><dt><?php esc_html_e( 'Estimeret pris', 'studie247' ); ?></dt><dd data-sum-price>—</dd></div>
 						</dl>
+						<?php if ( ! $is_product ) : ?>
+							<p style="margin:10px 0 0;font-size:12px;color:#666;line-height:1.45;">
+								<?php printf( esc_html__( 'Timer i tidsrummet kl. 20:00–08:00 koster +%1$d kr pr. påbegyndt time (aftenpris-tillæg). Der er altid %2$d times klargøringsbuffer efter en booking slutter.', 'studie247' ), (int) STUDIE247_AFTER_HOURS_RATE, (int) STUDIE247_BOOKING_BUFFER_HOURS ); ?>
+							</p>
+						<?php endif; ?>
 					</div>
 
 					<form method="post" action="" class="book2__form" data-book-form novalidate>
