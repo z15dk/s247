@@ -6006,7 +6006,7 @@ a.dash-card:hover::before { transform: scaleY(1); }
 	background: var(--color-surface, #FBF5EC);
 	border: 1px solid rgba(40, 40, 40, 0.08);
 	border-radius: var(--radius-lg);
-	padding: var(--sp-7) var(--sp-8);
+	padding: var(--sp-8) var(--sp-10);
 }
 
 .blog-sidebar-block__title {
@@ -6114,7 +6114,7 @@ a.dash-card:hover::before { transform: scaleY(1); }
 .blog-book-card__content {
 	position: relative;
 	z-index: 1;
-	padding: var(--sp-8) var(--sp-9);
+	padding: var(--sp-8) var(--sp-10);
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;
@@ -6149,7 +6149,7 @@ a.dash-card:hover::before { transform: scaleY(1); }
    ============================================================ */
 
 .single-post__head-section {
-	padding-top: 50px;
+	padding-top: 60px;
 	padding-bottom: var(--sp-8);
 }
 .single-post__body-section {
@@ -6211,7 +6211,7 @@ a.dash-card:hover::before { transform: scaleY(1); }
 	background: var(--color-surface, #FBF5EC);
 	border: 1px solid rgba(40, 40, 40, 0.08);
 	border-radius: var(--radius-lg);
-	padding: var(--sp-7) var(--sp-8);
+	padding: var(--sp-8) var(--sp-10);
 }
 .blog-rental-rotator__head {
 	margin-bottom: var(--sp-5);
