@@ -6149,6 +6149,7 @@ a.dash-card:hover::before { transform: scaleY(1); }
    ============================================================ */
 
 .single-post__head-section {
+	padding-top: 50px;
 	padding-bottom: var(--sp-8);
 }
 .single-post__body-section {

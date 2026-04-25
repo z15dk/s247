@@ -79,14 +79,6 @@ $related_b     = get_theme_mod( 's247_blog_related_title_b', __( 'studiet', 'stu
 
 	<section class="section section--tight single-post__head-section">
 		<div class="wrap wrap--wide">
-			<nav class="breadcrumb single-post__crumb" aria-label="<?php esc_attr_e( 'Brødkrumme', 'studie247' ); ?>">
-				<ol>
-					<li><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Forside', 'studie247' ); ?></a></li>
-					<li><a href="<?php echo esc_url( $blog_url ); ?>"><?php esc_html_e( 'Blog', 'studie247' ); ?></a></li>
-					<li><?php the_title(); ?></li>
-				</ol>
-			</nav>
-
 			<header class="single-post__head">
 				<?php if ( ! empty( $categories ) ) : ?>
 					<span class="eyebrow"><?php echo esc_html( $categories[0]->name ); ?></span>
