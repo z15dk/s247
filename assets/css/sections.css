@@ -1034,6 +1034,19 @@
 	.site-footer__grid { grid-template-columns: 1fr; }
 }
 
+.site-footer__logo .logo {
+	font-size: 1.125rem;
+}
+.site-footer__logo .logo__num {
+	font-size: 1.4em;
+}
+.site-footer__logo img {
+	height: 40px !important;
+	width: auto !important;
+	max-width: 200px;
+	display: block;
+}
+
 .site-footer__col h3 {
 	font-size: var(--fs-micro);
 	text-transform: uppercase;

@@ -20,7 +20,9 @@
 
 		<div class="site-footer__grid">
 			<div class="site-footer__col">
-				<?php studie247_logo( 'main-bone', array( 'class' => 'logo--on-dark site-footer__logo', 'height' => 56 ) ); ?>
+				<div class="site-footer__logo">
+					<?php studie247_logo( 'main-bone', array( 'class' => 'logo--on-dark', 'height' => 40 ) ); ?>
+				</div>
 				<p style="max-width: 34ch; color: var(--s247-bone-60); font-size: var(--fs-sm); margin-top: var(--sp-5); line-height: var(--lh-base);">
 					<?php echo esc_html( get_theme_mod( 's247_footer_about', __( 'Dit studie — døgnet rundt. Simpelt. Professionelt. Menneskeligt.', 'studie247' ) ) ); ?>
 				</p>
