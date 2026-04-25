@@ -157,6 +157,71 @@ if ( $detail ) :
 			<button type="submit" class="sd-btn sd-btn--lg"><?php esc_html_e( 'Gem interne ændringer', 'studie247' ); ?></button>
 		</div>
 	</form>
+
+	<?php
+	/* ───── Tråd: tidligere svar + ny svar-formular ───── */
+	$replies       = function_exists( 'studie247_thread_replies' ) ? studie247_thread_replies( $detail->ID ) : array();
+	$thread_id_str = function_exists( 'studie247_thread_id' ) ? studie247_thread_id( $detail->ID ) : '';
+	?>
+	<section class="sd-detail sd-thread" style="margin-top:24px;">
+		<header class="sd-panel__head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+			<h2><?php esc_html_e( 'Tråd', 'studie247' ); ?> (<?php echo count( $replies ); ?>)</h2>
+			<?php if ( $thread_id_str ) : ?>
+				<code style="font-size:11px;color:#666;"><?php echo esc_html( $thread_id_str ); ?></code>
+			<?php endif; ?>
+		</header>
+
+		<?php if ( isset( $_GET['reply_ok'] ) ) : ?>
+			<div class="notice" style="background:#e7f5ec;border-left:4px solid #0a7c2f;padding:10px 14px;margin:12px 0;">
+				<?php esc_html_e( 'Svar sendt.', 'studie247' ); ?>
+			</div>
+		<?php elseif ( isset( $_GET['reply_err'] ) ) :
+			$err = sanitize_text_field( wp_unslash( $_GET['reply_err'] ) ); ?>
+			<div class="notice" style="background:#fbe7e7;border-left:4px solid #9E2B25;padding:10px 14px;margin:12px 0;">
+				<?php if ( 'empty' === $err ) :
+					esc_html_e( 'Svaret er tomt — skriv en besked før du sender.', 'studie247' );
+				else :
+					printf( esc_html__( 'Kunne ikke sende: %s', 'studie247' ), esc_html( wp_unslash( $_GET['reply_msg'] ?? '' ) ) );
+				endif; ?>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( $replies ) : ?>
+			<ol class="sd-thread-list" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;">
+				<?php foreach ( $replies as $r ) :
+					$dir   = get_post_meta( $r->ID, '_s247_direction', true );
+					$rname = get_post_meta( $r->ID, '_s247_name', true );
+					$rmail = get_post_meta( $r->ID, '_s247_email', true );
+					$rhtml = get_post_meta( $r->ID, '_s247_body_html', true );
+					$is_in = 'inbound' === $dir;
+					$bg    = $is_in ? '#FBF5EC' : '#e7f0fb';
+					$label = $is_in ? __( 'Fra kunden', 'studie247' ) : __( 'Fra os', 'studie247' ); ?>
+					<li style="background:<?php echo esc_attr( $bg ); ?>;border:1px solid rgba(40,40,40,0.08);border-radius:10px;padding:14px 18px;">
+						<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#666;margin-bottom:8px;">
+							<strong><?php echo esc_html( $label ); ?> · <?php echo esc_html( $rname ?: '—' ); ?><?php if ( $rmail ) : ?> &lt;<?php echo esc_html( $rmail ); ?>&gt;<?php endif; ?></strong>
+							<span><?php echo esc_html( mysql2date( 'j. M Y H:i', $r->post_date ) ); ?></span>
+						</div>
+						<div style="font-size:14px;line-height:1.6;">
+							<?php if ( $rhtml ) { echo wp_kses_post( $rhtml ); } else { echo nl2br( esc_html( $r->post_content ) ); } ?>
+						</div>
+					</li>
+				<?php endforeach; ?>
+			</ol>
+		<?php else : ?>
+			<p style="color:#666;font-size:13px;margin:8px 0 0;"><em><?php esc_html_e( 'Ingen svar endnu. Kundens svar dukker op her automatisk når de besvarer mailen.', 'studie247' ); ?></em></p>
+		<?php endif; ?>
+
+		<form method="post" action="<?php echo esc_url( home_url( '/dashboard/' ) ); ?>" style="margin-top:16px;">
+			<?php wp_nonce_field( 's247_dash_reply_' . $detail->ID ); ?>
+			<input type="hidden" name="s247_dash_reply" value="<?php echo (int) $detail->ID; ?>">
+			<label style="display:block;font-weight:600;font-size:13px;margin-bottom:6px;"><?php esc_html_e( 'Svar til kunden', 'studie247' ); ?></label>
+			<textarea name="s247_reply_body" rows="6" class="sd-textarea" placeholder="<?php esc_attr_e( 'Skriv dit svar …', 'studie247' ); ?>" style="width:100%;" required></textarea>
+			<p style="color:#666;font-size:12px;margin:6px 0 10px;">
+				<?php esc_html_e( 'HTML tilladt (fed, link osv.). Mailen sendes med tråd-ID så kundens svar automatisk lander her.', 'studie247' ); ?>
+			</p>
+			<button type="submit" class="sd-btn sd-btn--lg">📧 <?php esc_html_e( 'Send svar', 'studie247' ); ?></button>
+		</form>
+	</section>
 <?php
 	return;
 endif;

@@ -27,10 +27,35 @@ $form_topic   = '';
 $form_message = '';
 
 get_header();
+
+$k_hero_video = get_theme_mod( 's247_kontakt_hero_video' ) ?: get_theme_mod( 's247_studiet_video' ) ?: get_theme_mod( 's247_hero_video' );
+$k_hero_image = get_theme_mod( 's247_kontakt_hero_image' ) ?: get_theme_mod( 's247_studiet_poster' ) ?: get_theme_mod( 's247_hero_image' );
 ?>
 
+<?php if ( ! $submitted && ( $k_hero_video || $k_hero_image ) ) : ?>
+<section class="studiet-hero">
+	<div class="studiet-hero__media" aria-hidden="true">
+		<?php if ( $k_hero_video ) : ?>
+			<video autoplay muted loop playsinline poster="<?php echo esc_url( $k_hero_image ); ?>">
+				<source src="<?php echo esc_url( $k_hero_video ); ?>" type="video/mp4">
+			</video>
+		<?php else : ?>
+			<img src="<?php echo esc_url( $k_hero_image ); ?>" alt="" loading="eager" fetchpriority="high">
+		<?php endif; ?>
+		<div class="studiet-hero__overlay"></div>
+	</div>
+	<div class="wrap wrap--wide studiet-hero__content">
+		<span class="eyebrow eyebrow--on-dark"><?php esc_html_e( 'Kontakt os', 'studie247' ); ?></span>
+		<h1 class="studiet-hero__title">
+			<?php esc_html_e( 'Én ting', 'studie247' ); ?> <em><?php esc_html_e( 'ad gangen', 'studie247' ); ?></em>
+		</h1>
+		<p class="studiet-hero__lead"><?php esc_html_e( 'Besvar tre korte spørgsmål. Vi læser hver eneste besked selv — og vender tilbage når vi er færdige med vores kreative session.', 'studie247' ); ?></p>
+	</div>
+</section>
+<?php endif; ?>
+
 <section class="ko-section">
-	<div class="wrap wrap--tight">
+	<div class="wrap wrap--wide">
 
 		<?php if ( $submitted ) : ?>
 			<div class="ko-success">
@@ -40,34 +65,15 @@ get_header();
 				<a class="btn btn--ghost" href="<?php echo esc_url( home_url( '/' ) ); ?>">Tilbage til forsiden <?php echo studie247_icon( 'arrow-right', 16 ); ?></a>
 			</div>
 		<?php else : ?>
-			<header class="ko-headwrap">
-				<span class="tb-eyebrow">
-					<span class="tb-eyebrow__icon" aria-hidden="true"><?php echo studie247_icon( 'mail', 14 ); ?></span>
-					<span class="tb-eyebrow__text"><?php esc_html_e( 'Kontakt os', 'studie247' ); ?></span>
-				</span>
-				<h1 class="ko-head">Én ting <em>ad gangen</em></h1>
-				<p class="ko-lead">Besvar tre korte spørgsmål. Vi læser hver eneste besked selv — og vender tilbage inden for 24 timer.</p>
-			</header>
-
-			<?php
-			$k_hero_video = get_theme_mod( 's247_kontakt_hero_video' );
-			$k_hero_image = get_theme_mod( 's247_kontakt_hero_image' );
-			if ( $k_hero_video || $k_hero_image ) : ?>
-				<div class="ko-hero" aria-hidden="true">
-					<?php if ( $k_hero_video ) : ?>
-						<video autoplay muted loop playsinline <?php echo $k_hero_image ? 'poster="' . esc_url( $k_hero_image ) . '"' : ''; ?>>
-							<source src="<?php echo esc_url( $k_hero_video ); ?>" type="video/mp4">
-						</video>
-					<?php elseif ( $k_hero_image ) : ?>
-						<img src="<?php echo esc_url( $k_hero_image ); ?>" alt="" loading="eager">
-					<?php endif; ?>
-					<span class="ko-hero__grain"></span>
-					<span class="ko-hero__fade"></span>
-					<div class="ko-hero__caption">
-						<span class="ko-hero__dot"></span>
-						<span><?php esc_html_e( 'Vi er i studiet lige nu', 'studie247' ); ?></span>
-					</div>
-				</div>
+			<?php if ( ! $k_hero_video && ! $k_hero_image ) : ?>
+				<header class="ko-headwrap">
+					<span class="tb-eyebrow">
+						<span class="tb-eyebrow__icon" aria-hidden="true"><?php echo studie247_icon( 'mail', 14 ); ?></span>
+						<span class="tb-eyebrow__text"><?php esc_html_e( 'Kontakt os', 'studie247' ); ?></span>
+					</span>
+					<h1 class="ko-head"><?php esc_html_e( 'Én ting', 'studie247' ); ?> <em><?php esc_html_e( 'ad gangen', 'studie247' ); ?></em></h1>
+					<p class="ko-lead"><?php esc_html_e( 'Besvar tre korte spørgsmål. Vi læser hver eneste besked selv — og vender tilbage når vi er færdige med vores kreative session.', 'studie247' ); ?></p>
+				</header>
 			<?php endif; ?>
 
 			<div class="ko-layout">
@@ -215,6 +221,10 @@ get_header();
 							<input type="tel" name="s247_phone" value="<?php echo esc_attr( $form_phone ); ?>" placeholder="+45 …">
 						</label>
 						<p class="ko-note">Vi foretrækker mail, men ringer gerne hvis det er nemmere.</p>
+						<label class="book-consent">
+							<input type="checkbox" name="s247_newsletter_optin" value="1">
+							<span><?php esc_html_e( 'Ja tak — send mig gerne nyheder, tips og tilbud fra Studie 247 (du kan altid afmelde i bunden af hver mail).', 'studie247' ); ?></span>
+						</label>
 						<?php studie247_consent_field(); ?>
 						<div class="ko-actions">
 							<button type="button" class="btn btn--ghost" data-ko-prev="2">← Tilbage</button>

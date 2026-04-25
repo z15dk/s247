@@ -11,6 +11,84 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Hvis body'en ligner dobbelt-escaped HTML (indeholder "&lt;" men
+ * ingen rigtige HTML-tags), decode entities så vi ikke gemmer tekst
+ * der senere sendes som synlig `&lt;` i mails.
+ */
+function studie247_mail_unescape_if_needed( $body ) {
+	$body = (string) $body;
+	if ( '' === $body ) { return $body; }
+	$looks_escaped = ( false !== strpos( $body, '&lt;' ) );
+	$has_real_tags = (bool) preg_match( '/<[a-z][a-z0-9]*(\s[^>]*)?>/i', $body );
+	if ( $looks_escaped && ! $has_real_tags ) {
+		$body = html_entity_decode( $body, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+	}
+	return $body;
+}
+
+/**
+ * Default HTML for contact-form kvittering — brand-designet med
+ * et let legende tone-of-voice (kaffe-pause-twist).
+ */
+function studie247_default_contact_html() {
+	return <<<'HTML'
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F4E9DD;padding:32px 16px;font-family:'Helvetica Neue',Arial,sans-serif;color:#282828;">
+<tr><td align="center">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FBF5EC;border:1px solid rgba(40,40,40,0.1);border-radius:14px;overflow:hidden;">
+    <tr>
+      <td style="background:#282828;padding:28px 32px;text-align:left;">
+        <span style="color:#F4E9DD;font-size:13px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;">Studie 247</span>
+        <h1 style="margin:6px 0 0;color:#F4E9DD;font-size:32px;line-height:1.1;font-family:Georgia,serif;font-weight:400;">
+          Beskeden er <em style="color:#E89B6B;">landet.</em>
+        </h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:32px 32px 6px;">
+        <p style="margin:0 0 14px;font-size:16px;line-height:1.55;">Hej <strong>{navn}</strong>,</p>
+        <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#404040;">Tak for at du skrev til os. Vi vender tilbage hurtigst muligt — typisk inden for <strong>24 timer</strong> på hverdage.</p>
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#404040;">I mellemtiden: hent en kop kaffe ☕ — vi er på sagen.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 32px 20px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F4E9DD;border-radius:10px;">
+          <tr><td style="padding:18px 22px;">
+            <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#9E2B25;font-weight:700;margin-bottom:10px;">Din henvendelse</div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.7;">
+              <tr><td style="color:#666;padding:4px 0;width:120px;vertical-align:top;">Emne</td><td style="color:#282828;font-weight:600;">{side}</td></tr>
+              <tr><td style="color:#666;padding:8px 0 4px;vertical-align:top;border-top:1px dashed rgba(40,40,40,0.15);">Besked</td><td style="color:#282828;padding-top:8px;border-top:1px dashed rgba(40,40,40,0.15);">{besked}</td></tr>
+            </table>
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 32px 24px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="font-size:13px;line-height:1.6;color:#666;font-style:italic;border-left:3px solid #E89B6B;padding:6px 0 6px 14px;">
+              P.S. Vi bider ikke. Men vi kan godt lide at være skarpe.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="background:#282828;padding:22px 32px;text-align:center;">
+        <p style="margin:0;color:#F4E9DD;font-size:13px;line-height:1.6;">
+          Studie 247 · <a href="mailto:info@s247.dk" style="color:#E89B6B;text-decoration:none;">info@s247.dk</a><br>
+          <a href="https://s247.dk/" style="color:#F4E9DD;text-decoration:underline;opacity:0.75;">s247.dk</a>
+        </p>
+      </td>
+    </tr>
+  </table>
+</td></tr>
+</table>
+HTML;
+}
+
+/**
  * Default HTML for booking_received — brand-designet mail med
  * bone-baggrund, rød accent og serif-overskrifter. Inline-styles
  * for bred mail-klient-kompatibilitet (Outlook, Gmail, Apple Mail).
@@ -44,6 +122,7 @@ function studie247_default_booking_received_html() {
               <tr><td style="color:#666;padding:4px 0;">Dato</td><td style="color:#282828;font-weight:600;">{dato}</td></tr>
               <tr><td style="color:#666;padding:4px 0;">Start</td><td style="color:#282828;font-weight:600;">{start}</td></tr>
               <tr><td style="color:#666;padding:4px 0;">Varighed</td><td style="color:#282828;font-weight:600;">{varighed}</td></tr>
+              <tr><td style="color:#666;padding:4px 0;font-size:12px;font-style:italic;">Heraf aftenpris ({aftenpris_timer} t × {aftenpris_sats} kr)</td><td style="color:#666;font-size:12px;font-style:italic;">+{aftenpris_tillaeg}</td></tr>
               <tr><td style="color:#666;padding:4px 0;border-top:1px dashed rgba(40,40,40,0.15);">Estimeret pris</td><td style="color:#9E2B25;font-weight:700;font-size:18px;border-top:1px dashed rgba(40,40,40,0.15);padding-top:8px;">{pris}</td></tr>
             </table>
           </td></tr>
@@ -117,7 +196,7 @@ function studie247_mail_templates_config() {
 			'label'       => __( 'Kontakt-form — kvittering', 'studie247' ),
 			'description' => __( 'Sendes til kunden efter udfyldt kontakt-formular.', 'studie247' ),
 			'subject'     => 'Tak for din henvendelse — Studie 247',
-			'body'        => "<p>Hej {navn},</p>\n<p>Tak for at du kontaktede os. Vi vender tilbage til dig hurtigst muligt — typisk inden for 24 timer på hverdage.</p>\n<p>Du valgte: <strong>{side}</strong></p>\n<p>Din besked:<br>{besked}</p>\n<p>— Studie 247<br><a href=\"mailto:info@s247.dk\">info@s247.dk</a></p>",
+			'body'        => studie247_default_contact_html(),
 			'placeholders' => array(
 				'navn'    => 'Kundens navn',
 				'email'   => 'Kundens email',
@@ -156,16 +235,22 @@ function studie247_mail_templates_config() {
 			'label'       => __( 'Booking godkendt', 'studie247' ),
 			'description' => __( 'Sendes når admin trykker "Godkend" i wp-admin.', 'studie247' ),
 			'subject'     => 'Din booking er godkendt — Studie 247',
-			'body'        => "<p>Hej {navn},</p>\n<p>Din booking er godkendt. Vi glæder os til at se dig.</p>\n<p>Produkt: {produkt}<br>Dato: {dato}<br>Start: {start}<br>Varighed: {varighed}</p>\n<p>Har du spørgsmål inden da, så ring eller skriv.</p>\n<p>— Studie 247<br><a href=\"mailto:info@s247.dk\">info@s247.dk</a></p>",
+			'body'        => "<p>Hej {navn},</p>\n<p>Din booking er godkendt. Vi glæder os til at se dig.</p>\n<p>Produkt: {produkt}<br>Dato: {dato}<br>Start: {start}<br>Varighed: {varighed}</p>\n<p><em>Inkl. aftenpris-tillæg: {aftenpris_timer} t × {aftenpris_sats} kr = {aftenpris_tillaeg}</em></p>\n<p><strong>Tilføj til din kalender:</strong><br><a href=\"{kalender_google}\">Google Calendar</a> &nbsp;·&nbsp; <a href=\"{kalender_outlook}\">Outlook</a> &nbsp;·&nbsp; <a href=\"{kalender_ics}\">Apple / Andre (.ics)</a></p>\n<p>Har du spørgsmål inden da, så ring eller skriv.</p>\n<p>— Studie 247<br><a href=\"mailto:info@s247.dk\">info@s247.dk</a></p>",
 			'placeholders' => array(
-				'navn'       => 'Kundens navn',
-				'email'      => 'Kundens email',
-				'produkt'    => 'Produkt-navn (tomt for studie-booking)',
-				'dato'       => 'Dato på dansk',
-				'start'      => 'Start-tidspunkt',
-				'varighed'   => 'Varighed',
-				'virksomhed' => 'Virksomhedsnavn (valgfrit)',
-				'cvr'        => 'CVR-nummer (valgfrit)',
+				'navn'            => 'Kundens navn',
+				'email'           => 'Kundens email',
+				'produkt'         => 'Produkt-navn (tomt for studie-booking)',
+				'dato'            => 'Dato på dansk',
+				'start'           => 'Start-tidspunkt',
+				'varighed'        => 'Varighed',
+				'virksomhed'      => 'Virksomhedsnavn (valgfrit)',
+				'cvr'             => 'CVR-nummer (valgfrit)',
+				'kalender_ics'    => 'Link til .ics-download (Apple/Andre kalendere)',
+				'kalender_google' => 'Link til "Tilføj til Google Calendar"',
+				'kalender_outlook'=> 'Link til "Tilføj til Outlook"',
+				'aftenpris_timer'   => 'Antal timer efter kl 20:00 (tomt = ingen tillæg)',
+				'aftenpris_tillaeg' => 'Samlet aftenpris-tillæg i kr',
+				'aftenpris_sats'    => 'Sats (kr pr. påbegyndt time efter 20:00)',
 			),
 		),
 		'user_welcome' => array(
@@ -245,10 +330,19 @@ function studie247_render_mail_template( $key, $vars ) {
 	}
 	$body = implode( "\n", $kept );
 
-	// Erstat placeholders.
+	// Erstat placeholders. Understøtter både {x} og {{x}} samt URL-encoded
+	// varianter (TinyMCE kan pakke {x} som %7Bx%7D når det ligger i en href).
 	foreach ( $vars as $k => $v ) {
-		$subject = str_replace( '{' . $k . '}', (string) $v, $subject );
-		$body    = str_replace( '{' . $k . '}', (string) $v, $body );
+		$search = array(
+			'{{' . $k . '}}',
+			'{' . $k . '}',
+			'%7B%7B' . $k . '%7D%7D',
+			'%7b%7b' . $k . '%7d%7d',
+			'%7B' . $k . '%7D',
+			'%7b' . $k . '%7d',
+		);
+		$subject = str_replace( $search, (string) $v, $subject );
+		$body    = str_replace( $search, (string) $v, $body );
 	}
 
 	// Ryd tomme <p></p> og kollaps 3+ blanke linjer → 2.
@@ -290,7 +384,7 @@ function studie247_mail_templates_page() {
 		foreach ( $config as $key => $_cfg ) {
 			$all[ $key ] = array(
 				'subject' => sanitize_text_field( $in[ $key ]['subject'] ?? '' ),
-				'body'    => wp_kses_post( $in[ $key ]['body'] ?? '' ),
+				'body'    => wp_kses_post( studie247_mail_unescape_if_needed( $in[ $key ]['body'] ?? '' ) ),
 			);
 		}
 		update_option( 'studie247_mail_templates', $all );

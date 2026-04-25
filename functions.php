@@ -48,6 +48,8 @@ require_once STUDIE247_DIR . '/inc/cookie-auto-detect.php';
 require_once STUDIE247_DIR . '/inc/analytics.php';
 require_once STUDIE247_DIR . '/inc/forespoergsel-handler.php';
 require_once STUDIE247_DIR . '/inc/kontakt-handler.php';
+require_once STUDIE247_DIR . '/inc/kontakt-threading.php';
+require_once STUDIE247_DIR . '/inc/kontakt-inbound.php';
 require_once STUDIE247_DIR . '/inc/migrations.php';
 
 /**

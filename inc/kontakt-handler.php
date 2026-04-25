@@ -31,6 +31,7 @@ function studie247_handle_kontakt() {
 	$form_name    = sanitize_text_field(     wp_unslash( $_POST['s247_name']    ?? '' ) );
 	$form_email   = sanitize_email(          wp_unslash( $_POST['s247_email']   ?? '' ) );
 	$form_phone   = sanitize_text_field(     wp_unslash( $_POST['s247_phone']   ?? '' ) );
+	$form_newsletter = ! empty( $_POST['s247_newsletter_optin'] ) ? '1' : '0';
 
 	$errors = array();
 	if ( ! $form_message || strlen( $form_message ) < 5 ) { $errors[] = 'besked'; }
@@ -44,7 +45,7 @@ function studie247_handle_kontakt() {
 	}
 
 	if ( function_exists( 'studie247_save_kontakt_besked' ) ) {
-		studie247_save_kontakt_besked( array(
+		$besked_id = studie247_save_kontakt_besked( array(
 			'name'    => $form_name,
 			'email'   => $form_email,
 			'phone'   => $form_phone,
@@ -52,6 +53,12 @@ function studie247_handle_kontakt() {
 			'message' => $form_message,
 			'source'  => 'kontakt',
 		) );
+		if ( $besked_id ) {
+			update_post_meta( $besked_id, '_s247_newsletter_optin', $form_newsletter );
+			if ( '1' === $form_newsletter ) {
+				update_post_meta( $besked_id, '_s247_newsletter_optin_timestamp', current_time( 'mysql' ) );
+			}
+		}
 	}
 
 	$admin_to      = get_theme_mod( 's247_email', 'info@s247.dk' );
@@ -73,11 +80,20 @@ function studie247_handle_kontakt() {
 		) );
 		$is_html = function_exists( 'studie247_mail_template_is_html' )
 			? studie247_mail_template_is_html( 'contact' ) : true;
-		@wp_mail( $form_email, $mail['subject'], $mail['body'], array(
-			'Content-Type: ' . ( $is_html ? 'text/html' : 'text/plain' ) . '; charset=UTF-8',
-			'From: Studie 247 <' . $admin_to . '>',
-			'Reply-To: ' . $admin_to,
-		) );
+		$send = function () use ( $form_email, $mail, $is_html, $admin_to ) {
+			@wp_mail( $form_email, $mail['subject'], $mail['body'], array(
+				'Content-Type: ' . ( $is_html ? 'text/html' : 'text/plain' ) . '; charset=UTF-8',
+				'From: Studie 247 <' . $admin_to . '>',
+				'Reply-To: ' . $admin_to,
+			) );
+		};
+		// Kør afsendelsen med tråd-kontekst hvis besked'en blev gemt, så
+		// subject får [#S247-ID-token] og Message-ID matcher tråd'en.
+		if ( ! empty( $besked_id ) && function_exists( 'studie247_with_thread' ) ) {
+			studie247_with_thread( $besked_id, $send );
+		} else {
+			$send();
+		}
 	}
 
 	wp_safe_redirect( add_query_arg( 'sendt', '1', $redirect ) );
