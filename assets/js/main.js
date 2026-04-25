@@ -613,32 +613,40 @@
 		if (slides.length < 2) return;
 
 		const interval = Math.max(1500, parseInt(root.dataset.rotatorInterval || '5000', 10));
+		const desktopMQ = window.matchMedia('(min-width: 1100px)');
 		let idx = slides.findIndex((s) => s.classList.contains('is-active'));
 		if (idx < 0) idx = 0;
 
-		const show = (next) => {
-			slides[idx].classList.remove('is-active');
-			slides[idx].setAttribute('aria-hidden', 'true');
-			if (dots[idx]) dots[idx].classList.remove('is-active');
-			idx = (next + slides.length) % slides.length;
-			slides[idx].classList.add('is-active');
-			slides[idx].setAttribute('aria-hidden', 'false');
-			if (dots[idx]) dots[idx].classList.add('is-active');
+		const setActive = (newIdx) => {
+			idx = ((newIdx % slides.length) + slides.length) % slides.length;
+			const desktop  = desktopMQ.matches;
+			const visible  = new Set([ idx ]);
+			if (desktop && slides.length > 1) visible.add((idx + 1) % slides.length);
+
+			slides.forEach((s, i) => {
+				const on = visible.has(i);
+				s.classList.toggle('is-active', on);
+				s.setAttribute('aria-hidden', on ? 'false' : 'true');
+			});
+			dots.forEach((d, i) => d.classList.toggle('is-active', i === idx));
 		};
 
-		let timer = setInterval(() => show(idx + 1), interval);
+		setActive(idx);
+
+		let timer = setInterval(() => setActive(idx + 1), interval);
 		const stop  = () => { if (timer) { clearInterval(timer); timer = null; } };
-		const start = () => { if (!timer) timer = setInterval(() => show(idx + 1), interval); };
+		const start = () => { if (!timer) timer = setInterval(() => setActive(idx + 1), interval); };
 
 		root.addEventListener('mouseenter', stop);
 		root.addEventListener('mouseleave', start);
 		document.addEventListener('visibilitychange', () => {
 			if (document.hidden) stop(); else start();
 		});
+		desktopMQ.addEventListener('change', () => setActive(idx));
 
 		dots.forEach((dot, i) => {
 			dot.addEventListener('click', () => {
-				show(i);
+				setActive(i);
 				stop(); start();
 			});
 		});
