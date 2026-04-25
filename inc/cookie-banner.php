@@ -125,6 +125,9 @@ function studie247_cookies_scan() {
 		foreach ( $custom as $c ) { $detected[] = $c; }
 	}
 
+	// Tillad andre moduler (fx cookie-auto-detect) at flette cookies ind.
+	$detected = apply_filters( 's247_cookies_scan_merge', $detected );
+
 	// De-dup på (name, provider).
 	$out = array();
 	foreach ( $detected as $c ) {
