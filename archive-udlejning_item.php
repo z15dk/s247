@@ -60,7 +60,7 @@ $total_cats  = is_array( $categories ) ? count( $categories ) : 0;
 				</div>
 				<div>
 					<dt><?php esc_html_e( 'Levering', 'studie247' ); ?></dt>
-					<dd class="shop-hero__stats-small"><?php esc_html_e( 'Gratis', 'studie247' ); ?> <span><?php esc_html_e( 'over 1.500 kr', 'studie247' ); ?></span></dd>
+					<dd class="shop-hero__stats-small"><?php esc_html_e( 'Muligt', 'studie247' ); ?> <span><?php esc_html_e( 'ved køb over 2.000 kr', 'studie247' ); ?></span></dd>
 				</div>
 			</dl>
 		</div>
