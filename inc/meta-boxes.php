@@ -253,6 +253,166 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 	wp_enqueue_media();
 } );
 
+/** ───────── Service: Eksempler (op til 6) ───────── */
+add_action( 'add_meta_boxes', function () {
+	add_meta_box(
+		's247_service_examples',
+		__( 'Eksempler — sælg servicen med tidligere arbejde', 'studie247' ),
+		'studie247_render_service_examples_meta',
+		'service',
+		'normal',
+		'default'
+	);
+} );
+
+function studie247_render_service_examples_meta( $post ) {
+	wp_nonce_field( 's247_service_examples_meta', 's247_service_examples_nonce' );
+
+	$types = array(
+		''        => __( '— Vælg type —', 'studie247' ),
+		'video'   => __( 'Video', 'studie247' ),
+		'audio'   => __( 'Lyd / Podcast', 'studie247' ),
+		'image'   => __( 'Billede', 'studie247' ),
+		'case'    => __( 'Tekst-case', 'studie247' ),
+	);
+
+	$max = 6;
+	?>
+	<p class="description" style="margin:0 0 12px;">
+		<?php esc_html_e( 'Tomme rækker vises ikke på siden. Udfyld kun de slots du har eksempler til.', 'studie247' ); ?>
+	</p>
+	<?php for ( $i = 1; $i <= $max; $i++ ) :
+		$type   = get_post_meta( $post->ID, "_s247_ex_{$i}_type",   true );
+		$title  = get_post_meta( $post->ID, "_s247_ex_{$i}_title",  true );
+		$desc   = get_post_meta( $post->ID, "_s247_ex_{$i}_desc",   true );
+		$client = get_post_meta( $post->ID, "_s247_ex_{$i}_client", true );
+		$url    = get_post_meta( $post->ID, "_s247_ex_{$i}_url",    true );
+		$cta    = get_post_meta( $post->ID, "_s247_ex_{$i}_cta",    true );
+		$img_id = (int) get_post_meta( $post->ID, "_s247_ex_{$i}_img", true );
+		$img    = $img_id ? wp_get_attachment_image_url( $img_id, 's247-card' ) : '';
+		$has_data = ( $type || $title || $desc || $client || $url || $img_id );
+	?>
+		<details class="s247-ex-row" data-idx="<?php echo (int) $i; ?>" <?php echo $has_data ? 'open' : ''; ?> style="margin:8px 0;border:1px solid #d0d4d9;border-radius:6px;padding:10px;background:#fafbfc;">
+			<summary style="cursor:pointer;font-weight:600;outline:none;">
+				<?php
+				if ( $title ) {
+					echo esc_html( sprintf( __( 'Eksempel %1$d — %2$s', 'studie247' ), $i, $title ) );
+				} else {
+					echo esc_html( sprintf( __( 'Eksempel %d (tom)', 'studie247' ), $i ) );
+				}
+				?>
+			</summary>
+			<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+				<p style="margin:0;">
+					<label><strong><?php esc_html_e( 'Type', 'studie247' ); ?></strong></label><br>
+					<select name="s247_ex_<?php echo $i; ?>_type" style="width:100%">
+						<?php foreach ( $types as $k => $v ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $type, $k ); ?>><?php echo esc_html( $v ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</p>
+				<p style="margin:0;">
+					<label><strong><?php esc_html_e( 'Kunde / virksomhed (valgfri)', 'studie247' ); ?></strong></label><br>
+					<input type="text" name="s247_ex_<?php echo $i; ?>_client" value="<?php echo esc_attr( $client ); ?>" style="width:100%" placeholder="Fx Nordea, DR, …">
+				</p>
+				<p style="grid-column:1 / -1;margin:0;">
+					<label><strong><?php esc_html_e( 'Titel', 'studie247' ); ?></strong></label><br>
+					<input type="text" name="s247_ex_<?php echo $i; ?>_title" value="<?php echo esc_attr( $title ); ?>" style="width:100%" placeholder="Fx 'Erhvervspodcast: Nordea Insight'">
+				</p>
+				<p style="grid-column:1 / -1;margin:0;">
+					<label><strong><?php esc_html_e( 'Kort beskrivelse (1-2 linjer)', 'studie247' ); ?></strong></label><br>
+					<textarea name="s247_ex_<?php echo $i; ?>_desc" rows="2" style="width:100%"><?php echo esc_textarea( $desc ); ?></textarea>
+				</p>
+				<p style="margin:0;">
+					<label><strong><?php esc_html_e( 'Media-URL (video/lyd)', 'studie247' ); ?></strong></label><br>
+					<span class="description"><?php esc_html_e( 'YouTube/Vimeo/Spotify/SoundCloud-URL — bruges som hovedmedia hvis udfyldt.', 'studie247' ); ?></span>
+					<input type="url" name="s247_ex_<?php echo $i; ?>_url" value="<?php echo esc_attr( $url ); ?>" style="width:100%" placeholder="https://…">
+				</p>
+				<p style="margin:0;">
+					<label><strong><?php esc_html_e( 'CTA-tekst (valgfri)', 'studie247' ); ?></strong></label><br>
+					<input type="text" name="s247_ex_<?php echo $i; ?>_cta" value="<?php echo esc_attr( $cta ); ?>" style="width:100%" placeholder="Fx 'Lyt på Spotify' eller 'Se case'">
+				</p>
+				<p style="grid-column:1 / -1;margin:0;">
+					<label><strong><?php esc_html_e( 'Billede (eller poster til video)', 'studie247' ); ?></strong></label><br>
+					<span class="s247-ex-preview" style="display:<?php echo $img ? 'inline-block' : 'none'; ?>;margin:6px 0;vertical-align:middle;">
+						<img src="<?php echo esc_url( $img ); ?>" style="max-width:200px;height:auto;border:1px solid #ccd0d4;border-radius:4px;">
+					</span>
+					<input type="hidden" class="s247-ex-input" name="s247_ex_<?php echo $i; ?>_img" value="<?php echo esc_attr( $img_id ); ?>">
+					<button type="button" class="button s247-ex-pick"><?php echo esc_html( $img_id ? __( 'Skift billede', 'studie247' ) : __( 'Vælg billede', 'studie247' ) ); ?></button>
+					<button type="button" class="button-link s247-ex-clear" style="color:#b32d2e;<?php echo $img_id ? '' : 'display:none;'; ?>"><?php esc_html_e( 'Fjern', 'studie247' ); ?></button>
+				</p>
+			</div>
+		</details>
+	<?php endfor; ?>
+	<script>
+	(function($){
+		$(function(){
+			$('.s247-ex-pick').on('click', function(e){
+				e.preventDefault();
+				var $row = $(this).closest('.s247-ex-row');
+				var frame = wp.media({
+					title: '<?php echo esc_js( __( 'Vælg eksempel-billede', 'studie247' ) ); ?>',
+					button: { text: '<?php echo esc_js( __( 'Brug dette billede', 'studie247' ) ); ?>' },
+					library: { type: 'image' },
+					multiple: false
+				});
+				frame.on('select', function(){
+					var att = frame.state().get('selection').first().toJSON();
+					var url = (att.sizes && att.sizes['s247-card']) ? att.sizes['s247-card'].url : att.url;
+					$row.find('.s247-ex-input').val(att.id);
+					$row.find('.s247-ex-preview').html('<img src="'+url+'" style="max-width:200px;height:auto;border:1px solid #ccd0d4;border-radius:4px;">').show();
+					$row.find('.s247-ex-clear').show();
+					$row.find('.s247-ex-pick').text('<?php echo esc_js( __( 'Skift billede', 'studie247' ) ); ?>');
+				});
+				frame.open();
+			});
+			$('.s247-ex-clear').on('click', function(e){
+				e.preventDefault();
+				var $row = $(this).closest('.s247-ex-row');
+				$row.find('.s247-ex-input').val('');
+				$row.find('.s247-ex-preview').hide().empty();
+				$(this).hide();
+				$row.find('.s247-ex-pick').text('<?php echo esc_js( __( 'Vælg billede', 'studie247' ) ); ?>');
+			});
+		});
+	})(jQuery);
+	</script>
+	<?php
+}
+
+add_action( 'save_post_service', function ( $post_id ) {
+	if ( ! isset( $_POST['s247_service_examples_nonce'] ) || ! wp_verify_nonce( $_POST['s247_service_examples_nonce'], 's247_service_examples_meta' ) ) {
+		return;
+	}
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+	for ( $i = 1; $i <= 6; $i++ ) {
+		$text_fields = array( 'type', 'title', 'desc', 'client', 'cta' );
+		foreach ( $text_fields as $f ) {
+			$key  = "s247_ex_{$i}_{$f}";
+			$meta = "_{$key}";
+			if ( isset( $_POST[ $key ] ) ) {
+				update_post_meta( $post_id, $meta, sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) );
+			}
+		}
+		if ( isset( $_POST[ "s247_ex_{$i}_url" ] ) ) {
+			update_post_meta( $post_id, "_s247_ex_{$i}_url", esc_url_raw( wp_unslash( $_POST[ "s247_ex_{$i}_url" ] ) ) );
+		}
+		if ( isset( $_POST[ "s247_ex_{$i}_img" ] ) ) {
+			$img = absint( $_POST[ "s247_ex_{$i}_img" ] );
+			if ( $img ) {
+				update_post_meta( $post_id, "_s247_ex_{$i}_img", $img );
+			} else {
+				delete_post_meta( $post_id, "_s247_ex_{$i}_img" );
+			}
+		}
+	}
+} );
+
 /** ───────── Testimonial ───────── */
 add_action( 'add_meta_boxes', function () {
 	add_meta_box(

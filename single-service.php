@@ -26,6 +26,28 @@ for ( $g = 1; $g <= 5; $g++ ) {
 	$gid = (int) get_post_meta( get_the_ID(), "_s247_gallery_{$g}", true );
 	if ( $gid ) { $gallery_ids[] = $gid; }
 }
+
+// Saml eksempler — kun de udfyldte rækker.
+$examples = array();
+for ( $e = 1; $e <= 6; $e++ ) {
+	$ex_title = get_post_meta( get_the_ID(), "_s247_ex_{$e}_title", true );
+	$ex_desc  = get_post_meta( get_the_ID(), "_s247_ex_{$e}_desc",  true );
+	$ex_img   = (int) get_post_meta( get_the_ID(), "_s247_ex_{$e}_img", true );
+	$ex_url   = get_post_meta( get_the_ID(), "_s247_ex_{$e}_url",   true );
+	// Vis kun hvis der er noget meningsfuldt indhold.
+	if ( ! ( $ex_title || $ex_desc || $ex_img || $ex_url ) ) {
+		continue;
+	}
+	$examples[] = array(
+		'type'   => get_post_meta( get_the_ID(), "_s247_ex_{$e}_type",   true ),
+		'title'  => $ex_title,
+		'desc'   => $ex_desc,
+		'client' => get_post_meta( get_the_ID(), "_s247_ex_{$e}_client", true ),
+		'url'    => $ex_url,
+		'cta'    => get_post_meta( get_the_ID(), "_s247_ex_{$e}_cta",    true ),
+		'img_id' => $ex_img,
+	);
+}
 ?>
 
 <section class="service-hero">
@@ -128,6 +150,81 @@ for ( $g = 1; $g <= 5; $g++ ) {
 		</div>
 	</div>
 </section>
+
+<?php if ( ! empty( $examples ) ) :
+	$type_labels = array(
+		'video' => __( 'Video', 'studie247' ),
+		'audio' => __( 'Lyd', 'studie247' ),
+		'image' => __( 'Foto', 'studie247' ),
+		'case'  => __( 'Case', 'studie247' ),
+	);
+	$type_icons = array(
+		'video' => 'play',
+		'audio' => 'mic',
+		'image' => 'camera',
+		'case'  => 'sparkle',
+	);
+	?>
+<section class="section service-examples">
+	<div class="wrap wrap--wide">
+		<header class="section-head">
+			<span class="eyebrow"><?php esc_html_e( 'Sådan ser det ud i praksis', 'studie247' ); ?></span>
+			<h2 class="section-head__title">
+				<?php esc_html_e( 'Eksempler', 'studie247' ); ?> <em><?php esc_html_e( 'fra studiet', 'studie247' ); ?></em>
+			</h2>
+		</header>
+		<div class="service-examples__grid">
+			<?php foreach ( $examples as $ex ) :
+				$type_label = $type_labels[ $ex['type'] ] ?? '';
+				$type_icon  = $type_icons[ $ex['type'] ] ?? '';
+				$img_url    = $ex['img_id'] ? wp_get_attachment_image_url( $ex['img_id'], 's247-card' ) : '';
+				$has_link   = ! empty( $ex['url'] );
+				$tag        = $has_link ? 'a' : 'article';
+				$attrs      = $has_link
+					? sprintf( ' href="%s" target="_blank" rel="noopener"', esc_url( $ex['url'] ) )
+					: '';
+			?>
+				<<?php echo $tag; ?> class="service-example service-example--<?php echo esc_attr( $ex['type'] ?: 'case' ); ?>"<?php echo $attrs; // phpcs:ignore ?>>
+					<div class="service-example__media">
+						<?php if ( $img_url ) : ?>
+							<img src="<?php echo esc_url( $img_url ); ?>" alt="<?php echo esc_attr( $ex['title'] ); ?>" loading="lazy">
+						<?php else : ?>
+							<div class="service-example__media-fallback"></div>
+						<?php endif; ?>
+						<?php if ( $type_icon && in_array( $ex['type'], array( 'video', 'audio' ), true ) ) : ?>
+							<span class="service-example__play" aria-hidden="true">
+								<?php echo studie247_icon( $type_icon === 'mic' ? 'play' : 'play', 28 ); ?>
+							</span>
+						<?php endif; ?>
+						<?php if ( $type_label ) : ?>
+							<span class="service-example__tag"><?php echo esc_html( $type_label ); ?></span>
+						<?php endif; ?>
+					</div>
+					<div class="service-example__body">
+						<?php if ( $ex['client'] ) : ?>
+							<span class="service-example__client"><?php echo esc_html( $ex['client'] ); ?></span>
+						<?php endif; ?>
+						<?php if ( $ex['title'] ) : ?>
+							<h3 class="service-example__title"><?php echo esc_html( $ex['title'] ); ?></h3>
+						<?php endif; ?>
+						<?php if ( $ex['desc'] ) : ?>
+							<p class="service-example__desc"><?php echo esc_html( $ex['desc'] ); ?></p>
+						<?php endif; ?>
+						<?php if ( $has_link ) :
+							$cta = $ex['cta'] ?: __( 'Se eksempel', 'studie247' );
+						?>
+							<span class="service-example__cta">
+								<?php echo esc_html( $cta ); ?>
+								<?php echo studie247_icon( 'arrow-right', 16 ); ?>
+							</span>
+						<?php endif; ?>
+					</div>
+				</<?php echo $tag; ?>>
+			<?php endforeach; ?>
+		</div>
+	</div>
+</section>
+<?php endif; ?>
 
 <?php get_template_part( 'template-parts/section', 'cta' ); ?>
 
