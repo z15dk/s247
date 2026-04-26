@@ -196,17 +196,15 @@ function studie247_render_service_example( $ex, $variant = 'card' ) {
 					echo '</div></aside>';
 					$teaser_html = ob_get_clean();
 
-					// Indsæt midt i artiklen (efter ca. halvdelen af afsnittene).
+					// Indsæt efter 2. afsnit (eller efter indholdet hvis artiklen er kort).
 					$parts = explode( '</p>', $_content );
 					$total = count( $parts );
-					if ( $total >= 4 ) {
-						$insert = max( 1, (int) floor( $total / 2 ) );
-						$parts[ $insert ] .= '</p>' . $teaser_html;
+					if ( $total >= 3 ) {
+						// $parts[1] er slutningen af 2. afsnit; tilføj teaser efter dens </p>.
+						$parts[1] .= '</p>' . $teaser_html;
 						$_content = implode( '</p>', $parts );
-						// Fjern den ekstra '</p>' vi tilføjede til sidste tomme part.
 						$_content = preg_replace( '#</p>$#', '', $_content );
 					} else {
-						// Kort artikel — læg teaseren efter indholdet.
 						$_content .= $teaser_html;
 					}
 				}
