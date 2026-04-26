@@ -253,6 +253,118 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 	wp_enqueue_media();
 } );
 
+/** ───────── Service: Pakke-priser (op til 4) ───────── */
+add_action( 'add_meta_boxes', function () {
+	add_meta_box(
+		's247_service_packages',
+		__( 'Pakke-priser', 'studie247' ),
+		'studie247_render_service_packages_meta',
+		'service',
+		'normal',
+		'default'
+	);
+} );
+
+function studie247_render_service_packages_meta( $post ) {
+	wp_nonce_field( 's247_service_packages_meta', 's247_service_packages_nonce' );
+	$max = 4;
+	?>
+	<p class="description" style="margin:0 0 12px;">
+		<?php esc_html_e( 'Tomme rækker vises ikke. Udfyld kun de pakker du tilbyder. Marker én som "fremhævet" for at give den ekstra visuel vægt.', 'studie247' ); ?>
+	</p>
+	<?php for ( $i = 1; $i <= $max; $i++ ) :
+		$name     = get_post_meta( $post->ID, "_s247_pkg_{$i}_name",     true );
+		$price    = get_post_meta( $post->ID, "_s247_pkg_{$i}_price",    true );
+		$price_sub= get_post_meta( $post->ID, "_s247_pkg_{$i}_price_sub", true );
+		$desc     = get_post_meta( $post->ID, "_s247_pkg_{$i}_desc",     true );
+		$included = get_post_meta( $post->ID, "_s247_pkg_{$i}_included", true );
+		$featured = get_post_meta( $post->ID, "_s247_pkg_{$i}_featured", true );
+		$cta      = get_post_meta( $post->ID, "_s247_pkg_{$i}_cta",      true );
+		$cta_url  = get_post_meta( $post->ID, "_s247_pkg_{$i}_cta_url",  true );
+		$has_data = ( $name || $price || $desc || $included );
+	?>
+		<details class="s247-pkg-row" data-idx="<?php echo (int) $i; ?>" <?php echo $has_data ? 'open' : ''; ?> style="margin:8px 0;border:1px solid #d0d4d9;border-radius:6px;padding:10px;background:#fafbfc;">
+			<summary style="cursor:pointer;font-weight:600;outline:none;">
+				<?php
+				if ( $name ) {
+					echo esc_html( sprintf( __( 'Pakke %1$d — %2$s', 'studie247' ), $i, $name ) );
+					if ( $price ) echo ' <span style="color:#888;font-weight:400;">(' . esc_html( $price ) . ')</span>';
+					if ( $featured ) echo ' <span style="background:#b32d2e;color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;margin-left:6px;">FREMHÆVET</span>';
+				} else {
+					echo esc_html( sprintf( __( 'Pakke %d (tom)', 'studie247' ), $i ) );
+				}
+				?>
+			</summary>
+			<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+				<p style="margin:0;">
+					<label><strong><?php esc_html_e( 'Pakke-navn', 'studie247' ); ?></strong></label><br>
+					<input type="text" name="s247_pkg_<?php echo $i; ?>_name" value="<?php echo esc_attr( $name ); ?>" style="width:100%" placeholder="Fx Basis, Pro, Premium">
+				</p>
+				<p style="margin:0;">
+					<label><strong><?php esc_html_e( 'Pris', 'studie247' ); ?></strong></label><br>
+					<input type="text" name="s247_pkg_<?php echo $i; ?>_price" value="<?php echo esc_attr( $price ); ?>" style="width:100%" placeholder="Fx 2.000 kr eller fra 2.000 kr">
+				</p>
+				<p style="grid-column:1 / -1;margin:0;">
+					<label><strong><?php esc_html_e( 'Pris-undertekst (valgfri)', 'studie247' ); ?></strong></label><br>
+					<input type="text" name="s247_pkg_<?php echo $i; ?>_price_sub" value="<?php echo esc_attr( $price_sub ); ?>" style="width:100%" placeholder="Fx 'pr. session', 'pr. måned', 'ekskl. moms'">
+				</p>
+				<p style="grid-column:1 / -1;margin:0;">
+					<label><strong><?php esc_html_e( 'Kort beskrivelse (1 linje)', 'studie247' ); ?></strong></label><br>
+					<input type="text" name="s247_pkg_<?php echo $i; ?>_desc" value="<?php echo esc_attr( $desc ); ?>" style="width:100%" placeholder="Fx 'Perfekt til at komme i gang'">
+				</p>
+				<p style="grid-column:1 / -1;margin:0;">
+					<label><strong><?php esc_html_e( 'Inkluderet (én pr. linje)', 'studie247' ); ?></strong></label><br>
+					<textarea name="s247_pkg_<?php echo $i; ?>_included" rows="6" style="width:100%" placeholder="2 timers studie&#10;1 redigeret afsnit&#10;Levering inden for 5 dage"><?php echo esc_textarea( $included ); ?></textarea>
+				</p>
+				<p style="margin:0;">
+					<label><strong><?php esc_html_e( 'CTA-tekst', 'studie247' ); ?></strong></label><br>
+					<input type="text" name="s247_pkg_<?php echo $i; ?>_cta" value="<?php echo esc_attr( $cta ); ?>" style="width:100%" placeholder="Fx 'Vælg denne pakke'">
+				</p>
+				<p style="margin:0;">
+					<label><strong><?php esc_html_e( 'CTA-link (valgfri)', 'studie247' ); ?></strong></label><br>
+					<span class="description"><?php esc_html_e( 'Hvis tom: linker til /booking-studie/?service=…&pakke=N', 'studie247' ); ?></span>
+					<input type="url" name="s247_pkg_<?php echo $i; ?>_cta_url" value="<?php echo esc_attr( $cta_url ); ?>" style="width:100%" placeholder="https://…">
+				</p>
+				<p style="grid-column:1 / -1;margin:0;">
+					<label>
+						<input type="checkbox" name="s247_pkg_<?php echo $i; ?>_featured" value="1" <?php checked( $featured, '1' ); ?>>
+						<strong><?php esc_html_e( 'Fremhæv denne pakke (giver den ekstra visuel vægt)', 'studie247' ); ?></strong>
+					</label>
+				</p>
+			</div>
+		</details>
+	<?php endfor; ?>
+	<?php
+}
+
+add_action( 'save_post_service', function ( $post_id ) {
+	if ( ! isset( $_POST['s247_service_packages_nonce'] ) || ! wp_verify_nonce( $_POST['s247_service_packages_nonce'], 's247_service_packages_meta' ) ) {
+		return;
+	}
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+	for ( $i = 1; $i <= 4; $i++ ) {
+		$text_fields = array( 'name', 'price', 'price_sub', 'desc', 'cta' );
+		foreach ( $text_fields as $f ) {
+			$key = "s247_pkg_{$i}_{$f}";
+			if ( isset( $_POST[ $key ] ) ) {
+				update_post_meta( $post_id, '_' . $key, sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) );
+			}
+		}
+		if ( isset( $_POST[ "s247_pkg_{$i}_included" ] ) ) {
+			update_post_meta( $post_id, "_s247_pkg_{$i}_included", sanitize_textarea_field( wp_unslash( $_POST[ "s247_pkg_{$i}_included" ] ) ) );
+		}
+		if ( isset( $_POST[ "s247_pkg_{$i}_cta_url" ] ) ) {
+			update_post_meta( $post_id, "_s247_pkg_{$i}_cta_url", esc_url_raw( wp_unslash( $_POST[ "s247_pkg_{$i}_cta_url" ] ) ) );
+		}
+		update_post_meta( $post_id, "_s247_pkg_{$i}_featured", ! empty( $_POST[ "s247_pkg_{$i}_featured" ] ) ? '1' : '0' );
+	}
+} );
+
 /** ───────── Service: Eksempler (op til 6) ───────── */
 add_action( 'add_meta_boxes', function () {
 	add_meta_box(

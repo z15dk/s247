@@ -27,6 +27,30 @@ for ( $g = 1; $g <= 5; $g++ ) {
 	if ( $gid ) { $gallery_ids[] = $gid; }
 }
 
+// Saml pakke-priser — kun de udfyldte rækker.
+$packages = array();
+for ( $p = 1; $p <= 4; $p++ ) {
+	$pname  = get_post_meta( get_the_ID(), "_s247_pkg_{$p}_name",  true );
+	$pprice = get_post_meta( get_the_ID(), "_s247_pkg_{$p}_price", true );
+	$pdesc  = get_post_meta( get_the_ID(), "_s247_pkg_{$p}_desc",  true );
+	$pinc   = get_post_meta( get_the_ID(), "_s247_pkg_{$p}_included", true );
+	if ( ! ( $pname || $pprice || $pdesc || $pinc ) ) {
+		continue;
+	}
+	$packages[] = array(
+		'slot'      => $p,
+		'name'      => $pname,
+		'price'     => $pprice,
+		'price_sub' => get_post_meta( get_the_ID(), "_s247_pkg_{$p}_price_sub", true ),
+		'desc'      => $pdesc,
+		'included'  => array_filter( array_map( 'trim', preg_split( "/\r\n|\r|\n/", $pinc ?: '' ) ) ),
+		'featured'  => '1' === get_post_meta( get_the_ID(), "_s247_pkg_{$p}_featured", true ),
+		'cta'       => get_post_meta( get_the_ID(), "_s247_pkg_{$p}_cta", true ) ?: __( 'Vælg denne pakke', 'studie247' ),
+		'cta_url'   => get_post_meta( get_the_ID(), "_s247_pkg_{$p}_cta_url", true )
+			?: home_url( '/booking-studie/?service=' . get_post_field( 'post_name' ) . '&pakke=' . $p ),
+	);
+}
+
 // Saml eksempler — kun de udfyldte rækker. Slot 1+2 vises som inline
 // teaser i artiklen; slot 3-6 i grid'et nederst.
 $examples = array();
@@ -240,6 +264,58 @@ function studie247_render_service_example( $ex, $variant = 'card' ) {
 		</div>
 	</div>
 </section>
+
+<?php if ( ! empty( $packages ) ) : ?>
+<section class="section service-packages">
+	<div class="wrap wrap--wide">
+		<header class="section-head">
+			<span class="eyebrow"><?php esc_html_e( 'Pakker', 'studie247' ); ?></span>
+			<h2 class="section-head__title">
+				<?php esc_html_e( 'Vælg den', 'studie247' ); ?> <em><?php esc_html_e( 'der passer dig', 'studie247' ); ?></em>
+			</h2>
+		</header>
+		<div class="service-packages__grid service-packages__grid--<?php echo (int) count( $packages ); ?>">
+			<?php foreach ( $packages as $pkg ) :
+				$cls = 'service-package' . ( $pkg['featured'] ? ' service-package--featured' : '' );
+			?>
+				<article class="<?php echo esc_attr( $cls ); ?>">
+					<?php if ( $pkg['featured'] ) : ?>
+						<span class="service-package__badge"><?php esc_html_e( 'Mest valgte', 'studie247' ); ?></span>
+					<?php endif; ?>
+					<?php if ( $pkg['name'] ) : ?>
+						<h3 class="service-package__name"><?php echo esc_html( $pkg['name'] ); ?></h3>
+					<?php endif; ?>
+					<?php if ( $pkg['desc'] ) : ?>
+						<p class="service-package__desc"><?php echo esc_html( $pkg['desc'] ); ?></p>
+					<?php endif; ?>
+					<?php if ( $pkg['price'] ) : ?>
+						<div class="service-package__price-block">
+							<span class="service-package__price"><?php echo esc_html( $pkg['price'] ); ?></span>
+							<?php if ( $pkg['price_sub'] ) : ?>
+								<span class="service-package__price-sub"><?php echo esc_html( $pkg['price_sub'] ); ?></span>
+							<?php endif; ?>
+						</div>
+					<?php endif; ?>
+					<?php if ( ! empty( $pkg['included'] ) ) : ?>
+						<ul class="service-package__list">
+							<?php foreach ( $pkg['included'] as $line ) : ?>
+								<li>
+									<span class="service-package__check"><?php echo studie247_icon( 'check', 16 ); ?></span>
+									<span><?php echo esc_html( $line ); ?></span>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+					<a class="btn <?php echo $pkg['featured'] ? 'btn--primary' : 'btn--ghost'; ?> service-package__cta" href="<?php echo esc_url( $pkg['cta_url'] ); ?>">
+						<?php echo esc_html( $pkg['cta'] ); ?>
+						<?php echo studie247_icon( 'arrow-right', 16 ); ?>
+					</a>
+				</article>
+			<?php endforeach; ?>
+		</div>
+	</div>
+</section>
+<?php endif; ?>
 
 <?php if ( ! empty( $grid_examples ) ) : ?>
 <section class="section service-examples">
