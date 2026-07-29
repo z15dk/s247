@@ -11,21 +11,20 @@
 	<div class="wrap wrap--wide">
 		<div class="site-footer__top" data-reveal>
 			<p class="site-footer__big">
-				<?php esc_html_e( 'Optag.', 'studie247' ); ?>
-				<em><?php esc_html_e( 'Skab.', 'studie247' ); ?></em>
-				<?php esc_html_e( 'Udgiv', 'studie247' ); ?>
-				<em style="font-family:var(--font-serif);font-style:italic;color:var(--color-accent);">247.</em>
+				<?php echo esc_html( get_theme_mod( 's247_footer_tagline_a', __( 'Optag.', 'studie247' ) ) ); ?>
+				<em><?php echo esc_html( get_theme_mod( 's247_footer_tagline_b', __( 'Skab.', 'studie247' ) ) ); ?></em>
+				<?php echo esc_html( get_theme_mod( 's247_footer_tagline_c', __( 'Udgiv', 'studie247' ) ) ); ?>
+				<em style="font-family:var(--font-serif);font-style:italic;color:var(--color-accent);"><?php echo esc_html( get_theme_mod( 's247_footer_tagline_d', '247.' ) ); ?></em>
 			</p>
 		</div>
 
 		<div class="site-footer__grid">
 			<div class="site-footer__col">
-				<div class="logo logo--on-dark">
-					<span class="logo__word">STUDIE</span>
-					<span class="logo__num">247</span>
+				<div class="site-footer__logo">
+					<?php studie247_logo( 'main-bone', array( 'class' => 'logo--on-dark', 'height' => 40 ) ); ?>
 				</div>
 				<p style="max-width: 34ch; color: var(--s247-bone-60); font-size: var(--fs-sm); margin-top: var(--sp-5); line-height: var(--lh-base);">
-					<?php esc_html_e( 'Dit studie — døgnet rundt. Simpelt. Professionelt. Menneskeligt.', 'studie247' ); ?>
+					<?php echo esc_html( get_theme_mod( 's247_footer_about', __( 'Dit studie — døgnet rundt. Simpelt. Professionelt. Menneskeligt.', 'studie247' ) ) ); ?>
 				</p>
 			</div>
 
@@ -34,7 +33,6 @@
 				<ul>
 					<li><a href="<?php echo esc_url( home_url( '/services/' ) ); ?>"><?php esc_html_e( 'Services', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/studiet/' ) ); ?>"><?php esc_html_e( 'Studiet', 'studie247' ); ?></a></li>
-					<li><a href="<?php echo esc_url( home_url( '/priser/' ) ); ?>"><?php esc_html_e( 'Priser', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/udlejning/' ) ); ?>"><?php esc_html_e( 'Udlejning', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/om/' ) ); ?>"><?php esc_html_e( 'Om', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>"><?php esc_html_e( 'Kontakt', 'studie247' ); ?></a></li>
@@ -43,29 +41,38 @@
 
 			<div class="site-footer__col">
 				<h3><?php esc_html_e( 'Kontakt', 'studie247' ); ?></h3>
+				<?php
+				$ft_phone_display = get_theme_mod( 's247_phone', '+45 00 00 00 00' );
+				$ft_phone_link    = '+' . preg_replace( '/\D/', '', $ft_phone_display );
+				$ft_email         = get_theme_mod( 's247_email', 'hej@s247.dk' );
+				?>
 				<ul>
-					<li><a href="mailto:hej@studie247.dk">hej@studie247.dk</a></li>
-					<li><a href="tel:+4500000000">+45 00 00 00 00</a></li>
-					<li style="color:var(--s247-bone-60);"><?php esc_html_e( 'Aarhus', 'studie247' ); ?></li>
-					<li style="color:var(--s247-bone-60);"><?php esc_html_e( 'CVR: 00000000', 'studie247' ); ?></li>
+					<li><a href="mailto:<?php echo esc_attr( $ft_email ); ?>"><?php echo esc_html( $ft_email ); ?></a></li>
+					<li><a href="tel:<?php echo esc_attr( $ft_phone_link ); ?>"><?php echo esc_html( $ft_phone_display ); ?></a></li>
+					<li style="color:var(--s247-bone-60);">
+						<?php echo esc_html( get_theme_mod( 's247_footer_address', __( 'Amager', 'studie247' ) ) ); ?>
+						<span class="site-footer__heart" aria-hidden="true">♥</span>
+					</li>
+					<li style="color:var(--s247-bone-60);"><?php echo esc_html( get_theme_mod( 's247_footer_cvr', __( 'CVR: 00000000', 'studie247' ) ) ); ?></li>
 				</ul>
 			</div>
 
 			<div class="site-footer__col">
 				<h3><?php esc_html_e( 'Book', 'studie247' ); ?></h3>
 				<ul>
-					<li><a href="<?php echo esc_url( home_url( '/book/' ) ); ?>"><?php esc_html_e( 'Book studie', 'studie247' ); ?></a></li>
-					<li><a href="<?php echo esc_url( home_url( '/priser/' ) ); ?>"><?php esc_html_e( 'Se priser', 'studie247' ); ?></a></li>
+					<li><a href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>"><?php esc_html_e( 'Book studie', 'studie247' ); ?></a></li>
+					<li><a href="<?php echo esc_url( home_url( '/udlejning/' ) ); ?>"><?php esc_html_e( 'Lej udstyr', 'studie247' ); ?></a></li>
 					<li><a href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>"><?php esc_html_e( 'Få et tilbud', 'studie247' ); ?></a></li>
 				</ul>
 			</div>
 		</div>
 
 		<div class="site-footer__bottom">
-			<span>&copy; <?php echo esc_html( date( 'Y' ) ); ?> Studie 247</span>
+			<span>&copy; <?php echo esc_html( date( 'Y' ) ); ?> <?php echo esc_html( get_theme_mod( 's247_footer_company', 'Studie 247' ) ); ?></span>
 			<ul>
 				<li><a href="<?php echo esc_url( home_url( '/privatlivspolitik/' ) ); ?>"><?php esc_html_e( 'Privatliv', 'studie247' ); ?></a></li>
 				<li><a href="<?php echo esc_url( home_url( '/cookies/' ) ); ?>"><?php esc_html_e( 'Cookies', 'studie247' ); ?></a></li>
+				<li><a href="#" data-open-cookie-settings><?php esc_html_e( 'Cookie-indstillinger', 'studie247' ); ?></a></li>
 				<li><a href="<?php echo esc_url( home_url( '/handelsbetingelser/' ) ); ?>"><?php esc_html_e( 'Vilkår', 'studie247' ); ?></a></li>
 			</ul>
 		</div>

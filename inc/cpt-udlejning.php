@@ -25,7 +25,7 @@ add_action( 'init', function () {
 		'menu_icon'    => 'dashicons-camera',
 		'menu_position' => 8,
 		'rewrite'      => array( 'slug' => 'udlejning', 'with_front' => false ),
-		'supports'     => array( 'title', 'editor', 'excerpt', 'thumbnail' ),
+		'supports'     => array( 'title', 'editor', 'excerpt', 'thumbnail', 'custom-fields' ),
 	) );
 
 	// Kategorier til udstyr (kamera, lys, lyd, grip, osv.)

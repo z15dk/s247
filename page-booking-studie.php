@@ -1,0 +1,798 @@
+<?php
+/**
+ * Booking-studie — kalender-grid for studie-bookinger (max 1 dag).
+ *
+ * @package Studie247
+ */
+
+$errors    = array();
+$submitted = isset( $_GET['sendt'] ) && '1' === $_GET['sendt'];
+
+$form_name    = '';
+$form_email   = '';
+$form_phone   = '';
+$form_company = '';
+$form_cvr     = '';
+$form_date    = '';
+$form_start   = '';
+$form_dur     = '';
+$form_notes   = '';
+$form_prod  = isset( $_GET['produkt'] ) ? sanitize_title( wp_unslash( $_GET['produkt'] ) ) : '';
+$form_type  = isset( $_GET['type'] ) ? sanitize_text_field( wp_unslash( $_GET['type'] ) ) : '';
+
+// Pre-seed formål-dropdown fra URL (fx /booking-studie/?use_type=podcast).
+$form_use_type = isset( $_GET['use_type'] ) ? sanitize_text_field( wp_unslash( $_GET['use_type'] ) ) : '';
+
+// Find produkt hvis slug er sat.
+$product = null;
+if ( $form_prod ) {
+	$product = get_page_by_path( $form_prod, OBJECT, 'udlejning_item' );
+}
+
+// Produkt-mode: varighed angives i dage/uger, ikke timer, og produkt-
+// forespørgsler deler ikke samme kalender-kapacitet som studie-booking.
+$is_product = (bool) $product;
+$duration_options = $is_product
+	? array( '1 dag', '2 dage', '3 dage', '4 dage', '1 uge', '2 uger' )
+	: array( '6 timer', '12 timer' );
+
+// Studie-pris-tabel: varighed → pris i DKK.
+$studio_price_table = array(
+	'6 timer'  => 1500,
+	'12 timer' => 3000,
+);
+// Faktiske timer brugt til pris + customer-facing varighed.
+$studio_duration_price_hours = array(
+	'6 timer'  => 6,
+	'12 timer' => 12,
+);
+// Buffer mellem bookinger: 1 times klargøring.
+if ( ! defined( 'STUDIE247_BOOKING_BUFFER_HOURS' ) ) { define( 'STUDIE247_BOOKING_BUFFER_HOURS', 1 ); }
+// Blokerede timer i kalender/overlap-tjek = faktisk varighed + buffer.
+$studio_duration_hours = array(
+	'6 timer'  => 6  + STUDIE247_BOOKING_BUFFER_HOURS,
+	'12 timer' => 12 + STUDIE247_BOOKING_BUFFER_HOURS,
+);
+// Aftenpris-tillæg: 200 kr pr. påbegyndt time i tidsrummet 20:00–08:00.
+if ( ! defined( 'STUDIE247_AFTER_HOURS_RATE' ) )       { define( 'STUDIE247_AFTER_HOURS_RATE', 200 ); }
+if ( ! defined( 'STUDIE247_AFTER_HOURS_EVENING' ) )    { define( 'STUDIE247_AFTER_HOURS_EVENING', 20 ); }
+if ( ! defined( 'STUDIE247_AFTER_HOURS_MORNING' ) )    { define( 'STUDIE247_AFTER_HOURS_MORNING', 8 ); }
+
+/**
+ * Tæl antal timer i en booking der falder i aftentillægs-zonen (20:00–08:00).
+ * Hver hele time [h, h+1) tælles som 1 hvis starttimen er ≥ 20 eller < 8.
+ * Understøtter bookinger der krydser midnat.
+ */
+function studie247_studio_after_hours( $start_hhmm, $duration_hours ) {
+	$start_hhmm     = (string) $start_hhmm;
+	$duration_hours = (int) $duration_hours;
+	if ( ! $start_hhmm || $duration_hours <= 0 ) { return 0; }
+	$start_h = (int) substr( $start_hhmm, 0, 2 );
+	$count   = 0;
+	for ( $i = 0; $i < $duration_hours; $i++ ) {
+		$hod = ( $start_h + $i ) % 24;
+		if ( $hod >= STUDIE247_AFTER_HOURS_EVENING || $hod < STUDIE247_AFTER_HOURS_MORNING ) {
+			$count++;
+		}
+	}
+	return $count;
+}
+
+// Pris-multiplikatorer for udlejning.
+$rental_price_table = array(
+	'1 dag'  => array( 'base' => 'dag', 'mult' => 1.0 ),
+	'2 dage' => array( 'base' => 'dag', 'mult' => 2.0 ),
+	'3 dage' => array( 'base' => 'dag', 'mult' => 3.0 ),
+	'4 dage' => array( 'base' => 'dag', 'mult' => 3.5 ),
+	'1 uge'  => array( 'base' => 'uge', 'mult' => 1.0 ),
+	'2 uger' => array( 'base' => 'uge', 'mult' => 1.5 ),
+);
+
+// Parser fx "1.499 kr" → 1499 (ignorerer alle ikke-tal-tegn).
+function studie247_price_to_int( $price_str ) {
+	return (int) preg_replace( '/[^\d]/', '', (string) $price_str );
+}
+
+function studie247_format_dkk( $amount ) {
+	return number_format( (float) $amount, 0, ',', '.' ) . ' kr';
+}
+
+$product_price_day  = 0;
+$product_price_week = 0;
+if ( $is_product ) {
+	$product_price_day  = studie247_price_to_int( get_post_meta( $product->ID, '_s247_pris_dag', true ) );
+	$product_price_week = studie247_price_to_int( get_post_meta( $product->ID, '_s247_pris_uge', true ) );
+	// Hvis der ikke er sat en uge-pris, brug 7× dag-prisen som fallback.
+	if ( ! $product_price_week && $product_price_day ) {
+		$product_price_week = $product_price_day * 7;
+	}
+}
+
+/**
+ * Bereg lejepris ud fra produkt + varighed.
+ * Returnerer heltal i DKK eller 0 hvis ikke beregnelig.
+ */
+function studie247_calc_rental_price( $price_day, $price_week, $duration ) {
+	$table = array(
+		'1 dag'  => array( 'base' => 'dag', 'mult' => 1.0 ),
+		'2 dage' => array( 'base' => 'dag', 'mult' => 2.0 ),
+		'3 dage' => array( 'base' => 'dag', 'mult' => 3.0 ),
+		'4 dage' => array( 'base' => 'dag', 'mult' => 3.5 ),
+		'1 uge'  => array( 'base' => 'uge', 'mult' => 1.0 ),
+		'2 uger' => array( 'base' => 'uge', 'mult' => 1.5 ),
+	);
+	if ( ! isset( $table[ $duration ] ) ) { return 0; }
+	$base_price = 'uge' === $table[ $duration ]['base'] ? (int) $price_week : (int) $price_day;
+	if ( ! $base_price ) { return 0; }
+	return (int) round( $base_price * $table[ $duration ]['mult'] );
+}
+
+// POST handler.
+if ( ! empty( $_POST['s247_book_nonce'] ) && wp_verify_nonce( $_POST['s247_book_nonce'], 's247_book' ) ) {
+	$form_name  = sanitize_text_field( wp_unslash( $_POST['s247_name']  ?? '' ) );
+	$form_email = sanitize_email(      wp_unslash( $_POST['s247_email'] ?? '' ) );
+	$form_phone   = sanitize_text_field( wp_unslash( $_POST['s247_phone']   ?? '' ) );
+	$form_company = sanitize_text_field( wp_unslash( $_POST['s247_company'] ?? '' ) );
+	$form_cvr     = preg_replace( '/\D/', '', (string) wp_unslash( $_POST['s247_cvr'] ?? '' ) );
+	$form_newsletter = ! empty( $_POST['s247_newsletter'] ) ? '1' : '0';
+	$form_date  = sanitize_text_field( wp_unslash( $_POST['s247_date']  ?? '' ) );
+	$form_start = sanitize_text_field( wp_unslash( $_POST['s247_start'] ?? '' ) );
+	$form_dur   = sanitize_text_field( wp_unslash( $_POST['s247_duration'] ?? '' ) );
+	$form_notes = sanitize_textarea_field( wp_unslash( $_POST['s247_notes'] ?? '' ) );
+	$form_prod  = sanitize_title(      wp_unslash( $_POST['s247_produkt'] ?? '' ) );
+	$form_type  = sanitize_text_field( wp_unslash( $_POST['s247_type']  ?? '' ) );
+
+	$form_use_type      = sanitize_text_field( wp_unslash( $_POST['s247_use_type']      ?? $form_use_type ) );
+	$form_edit_type     = sanitize_text_field( wp_unslash( $_POST['s247_edit_type']     ?? '' ) );
+	$form_podcast_type  = sanitize_text_field( wp_unslash( $_POST['s247_podcast_type']  ?? '' ) );
+	$form_tilkoeb       = sanitize_text_field( wp_unslash( $_POST['s247_tilkoeb']       ?? '' ) );
+	$form_video_count   = (int)                  ( $_POST['s247_video_count']    ?? 0 );
+	$form_video_duration= (int)                  ( $_POST['s247_video_duration'] ?? 0 );
+	$form_format        = sanitize_text_field( wp_unslash( $_POST['s247_format']        ?? '' ) );
+
+	if ( ! $form_name )              { $errors[] = __( 'Udfyld dit navn.', 'studie247' ); }
+	if ( ! is_email( $form_email ) ) { $errors[] = __( 'Indtast en gyldig email.', 'studie247' ); }
+	if ( ! $form_date )              { $errors[] = __( 'Vælg en dato.', 'studie247' ); }
+	if ( ! $form_start )             { $errors[] = __( 'Vælg et start-tidspunkt.', 'studie247' ); }
+	if ( ! $form_dur )               { $errors[] = __( 'Vælg varighed.', 'studie247' ); }
+	if ( empty( $_POST['s247_consent'] ) ) { $errors[] = __( 'Du skal acceptere privatlivspolitikken for at kunne sende booking.', 'studie247' ); }
+
+	// Server-side overlap-check for studie-bookinger. Defense in depth:
+	// JS'en forhindrer også valget, men hvis nogen omgår UI'en må vi ikke
+	// acceptere overlappende studie-bookinger. Tjekker på tværs af midnat:
+	// både bookinger fra samme dato og dagen før (som kan strække sig over).
+	if ( empty( $errors ) && ! $form_prod && $form_date && $form_start && isset( $studio_duration_hours[ $form_dur ] ) ) {
+		$need = (int) $studio_duration_hours[ $form_dur ];
+		$sh   = (int) substr( $form_start, 0, 2 );
+
+		// Byg "ønskede" slots som (dato|time) strings.
+		$want_slots = array();
+		for ( $i = 0; $i < $need; $i++ ) {
+			$abs     = $sh + $i;
+			$day_off = intdiv( $abs, 24 );
+			$hod     = $abs % 24;
+			$target  = 0 === $day_off ? $form_date : gmdate( 'Y-m-d', strtotime( $form_date . " +{$day_off} day" ) );
+			$want_slots[] = $target . '|' . $hod;
+		}
+
+		// Hent bookinger fra både form-datoen og dagen før (dækker bookinger
+		// der starter kl 22-23 dagen før og strækker sig ind i den nye tid).
+		$prev_date = gmdate( 'Y-m-d', strtotime( $form_date . ' -1 day' ) );
+		$existing = get_posts( array(
+			'post_type'      => 'booking',
+			'post_status'    => array( 'publish', 'pending' ),
+			'posts_per_page' => -1,
+			'meta_query'     => array(
+				array( 'key' => '_s247_date', 'value' => array( $prev_date, $form_date ), 'compare' => 'IN' ),
+			),
+		) );
+		foreach ( $existing as $b ) {
+			if ( get_post_meta( $b->ID, '_s247_produkt', true ) ) { continue; }
+			$b_date  = get_post_meta( $b->ID, '_s247_date', true );
+			$b_start = (int) substr( get_post_meta( $b->ID, '_s247_start', true ), 0, 2 );
+			$b_dur   = get_post_meta( $b->ID, '_s247_duration', true );
+			$b_need  = isset( $studio_duration_hours[ $b_dur ] ) ? (int) $studio_duration_hours[ $b_dur ] : 0;
+			if ( ! $b_need ) { continue; }
+			$clash = false;
+			for ( $i = 0; $i < $b_need; $i++ ) {
+				$abs     = $b_start + $i;
+				$day_off = intdiv( $abs, 24 );
+				$hod     = $abs % 24;
+				$target  = 0 === $day_off ? $b_date : gmdate( 'Y-m-d', strtotime( $b_date . " +{$day_off} day" ) );
+				if ( in_array( $target . '|' . $hod, $want_slots, true ) ) { $clash = true; break; }
+			}
+			if ( $clash ) {
+				$errors[] = __( 'Tidspunktet overlapper med en eksisterende booking. Vælg et andet tidspunkt eller varighed.', 'studie247' );
+				break;
+			}
+		}
+	}
+
+	if ( empty( $errors ) ) {
+		$prod_label = '';
+		$prod_id    = 0;
+		if ( $form_prod ) {
+			$p = get_page_by_path( $form_prod, OBJECT, 'udlejning_item' );
+			if ( $p ) { $prod_label = $p->post_title; $prod_id = $p->ID; }
+			else      { $prod_label = $form_prod; }
+		}
+		$date_dk = $form_date ? date_i18n( 'l j. F Y', strtotime( $form_date ) ) : $form_date;
+
+		// Gem som booking-post (afventer godkendelse).
+		$booking_id = wp_insert_post( array(
+			'post_type'   => 'booking',
+			'post_status' => 'pending',
+			'post_title'  => sprintf( '%s — %s %s', $form_name, $form_date, $form_start ),
+		) );
+		// Beregn estimeret pris — enten for udstyrs-udlejning eller studie-booking.
+		$estimated_price     = 0;
+		$estimated_price_fmt = '';
+		$base_price          = 0;
+		$after_hours         = 0;     // antal timer efter 20:00
+		$after_hours_fee     = 0;     // samlet tillæg i DKK
+		if ( $prod_id ) {
+			$pd = studie247_price_to_int( get_post_meta( $prod_id, '_s247_pris_dag', true ) );
+			$pu = studie247_price_to_int( get_post_meta( $prod_id, '_s247_pris_uge', true ) );
+			if ( ! $pu && $pd ) { $pu = $pd * 7; }
+			$estimated_price = studie247_calc_rental_price( $pd, $pu, $form_dur );
+			$base_price      = $estimated_price;
+		} elseif ( isset( $studio_price_table[ $form_dur ] ) ) {
+			$base_price = (int) $studio_price_table[ $form_dur ];
+			$dur_h      = isset( $studio_duration_price_hours[ $form_dur ] ) ? (int) $studio_duration_price_hours[ $form_dur ] : 0;
+			$after_hours = studie247_studio_after_hours( $form_start, $dur_h );
+			$after_hours_fee = $after_hours * STUDIE247_AFTER_HOURS_RATE;
+			$estimated_price = $base_price + $after_hours_fee;
+		}
+		if ( $estimated_price ) {
+			$estimated_price_fmt = studie247_format_dkk( $estimated_price );
+		}
+
+		if ( $booking_id && ! is_wp_error( $booking_id ) ) {
+			update_post_meta( $booking_id, '_s247_date',     $form_date );
+			update_post_meta( $booking_id, '_s247_start',    $form_start );
+			update_post_meta( $booking_id, '_s247_duration', $form_dur );
+			update_post_meta( $booking_id, '_s247_name',     $form_name );
+			update_post_meta( $booking_id, '_s247_email',    $form_email );
+			update_post_meta( $booking_id, '_s247_phone',    $form_phone );
+			if ( $form_company ) { update_post_meta( $booking_id, '_s247_company', $form_company ); }
+			if ( $form_cvr )     { update_post_meta( $booking_id, '_s247_cvr',     $form_cvr ); }
+			update_post_meta( $booking_id, '_s247_newsletter_optin', $form_newsletter );
+			if ( '1' === $form_newsletter ) {
+				update_post_meta( $booking_id, '_s247_newsletter_optin_timestamp', current_time( 'mysql' ) );
+			}
+			// GDPR: gem samtykke-tidsstempel + IP + user-agent som bevis for consent.
+			update_post_meta( $booking_id, '_s247_consent_timestamp', current_time( 'mysql' ) );
+			update_post_meta( $booking_id, '_s247_consent_ip', isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '' );
+			update_post_meta( $booking_id, '_s247_consent_ua', isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 255 ) : '' );
+			update_post_meta( $booking_id, '_s247_notes',    $form_notes );
+			update_post_meta( $booking_id, '_s247_produkt',  $form_prod );
+			if ( $prod_id )  { update_post_meta( $booking_id, '_s247_produkt_id', $prod_id ); }
+			if ( $form_type ){ update_post_meta( $booking_id, '_s247_type',       $form_type ); }
+			if ( $estimated_price ) { update_post_meta( $booking_id, '_s247_estimated_price', $estimated_price ); }
+			if ( $base_price )      { update_post_meta( $booking_id, '_s247_base_price', $base_price ); }
+			if ( $after_hours > 0 ) {
+				update_post_meta( $booking_id, '_s247_after_hours',     $after_hours );
+				update_post_meta( $booking_id, '_s247_after_hours_fee', $after_hours_fee );
+			}
+			if ( $form_use_type )     { update_post_meta( $booking_id, '_s247_use_type',      $form_use_type ); }
+			if ( $form_edit_type )    { update_post_meta( $booking_id, '_s247_edit_type',     $form_edit_type ); }
+			if ( $form_podcast_type ) { update_post_meta( $booking_id, '_s247_podcast_type',  $form_podcast_type ); }
+			if ( $form_tilkoeb )      { update_post_meta( $booking_id, '_s247_tilkoeb',       $form_tilkoeb ); }
+			if ( $form_video_count )  { update_post_meta( $booking_id, '_s247_video_count',   $form_video_count ); }
+			if ( $form_video_duration ) { update_post_meta( $booking_id, '_s247_video_duration', $form_video_duration ); }
+			if ( $form_format )       { update_post_meta( $booking_id, '_s247_format',        $form_format ); }
+
+			// Auto-godkend bookinger fra foruddefinerede e-mails (intern brug).
+			if ( function_exists( 'studie247_maybe_auto_approve_booking' ) ) {
+				studie247_maybe_auto_approve_booking( $booking_id, $form_email );
+			}
+		}
+
+		// Menneske-læsbare labels til mails.
+		$use_type_labels = array(
+			'podcast'            => 'Podcast',
+			'kursusvideo'        => 'Kursusvideo',
+			'undervisningsvideo' => 'Undervisningsvideo',
+			'some-content'       => 'SoMe Content',
+			'annonce-video'      => 'Annonce-video',
+		);
+		$edit_type_labels = array(
+			'redigering' => 'Redigering',
+			'kun-filer'  => 'Kun filerne',
+		);
+		$podcast_type_labels = array(
+			'lyd'   => 'Lyd-podcast',
+			'video' => 'Video-podcast',
+		);
+		$tilkoeb_labels = array(
+			'jingle-standard'      => 'Musikjingle — standard',
+			'jingle-skraeddersyet' => 'Musikjingle — skræddersyet',
+		);
+		$purpose_lines = '';
+		if ( $form_use_type && isset( $use_type_labels[ $form_use_type ] ) ) {
+			$purpose_lines .= "Formål: " . $use_type_labels[ $form_use_type ] . "\n";
+		}
+		if ( $form_edit_type && isset( $edit_type_labels[ $form_edit_type ] ) ) {
+			$purpose_lines .= "Ønsker: " . $edit_type_labels[ $form_edit_type ] . "\n";
+		}
+		if ( $form_podcast_type && isset( $podcast_type_labels[ $form_podcast_type ] ) ) {
+			$purpose_lines .= "Podcast-type: " . $podcast_type_labels[ $form_podcast_type ] . "\n";
+		}
+		if ( $form_tilkoeb && isset( $tilkoeb_labels[ $form_tilkoeb ] ) ) {
+			$purpose_lines .= "Tilkøb: " . $tilkoeb_labels[ $form_tilkoeb ] . "\n";
+		}
+		if ( $form_video_count ) {
+			$purpose_lines .= "Antal videoer: {$form_video_count}\n";
+		}
+		if ( $form_video_duration ) {
+			$purpose_lines .= "Varighed pr. video: {$form_video_duration} min\n";
+		}
+		if ( $form_format ) {
+			$purpose_lines .= "Format: {$form_format}\n";
+		}
+
+		$admin_to      = 'info@s247.dk';
+		$admin_subject = sprintf( '[Studie 247] Ny booking fra %s — %s', $form_name, $date_dk );
+		$admin_body    = "Navn: {$form_name}\nEmail: {$form_email}\nTelefon: {$form_phone}\n";
+		if ( $form_company ) { $admin_body .= "Virksomhed: {$form_company}\n"; }
+		if ( $form_cvr )     { $admin_body .= "CVR: {$form_cvr}\n"; }
+		if ( $form_type )   { $admin_body .= "Type: {$form_type}\n"; }
+		if ( $prod_label )  { $admin_body .= "Produkt: {$prod_label}\n"; }
+		$admin_body   .= "Dato: {$date_dk}\nStart: {$form_start}\nVarighed: {$form_dur}\n";
+		if ( $estimated_price_fmt ) {
+			$admin_body .= "Estimeret pris: {$estimated_price_fmt}\n";
+			if ( $after_hours > 0 ) {
+				$admin_body .= sprintf( "  (inkl. aftenpris-tillæg: %d t × %d kr = %s)\n",
+					$after_hours, STUDIE247_AFTER_HOURS_RATE, studie247_format_dkk( $after_hours_fee ) );
+			}
+		}
+		if ( $purpose_lines ) { $admin_body .= "\n" . $purpose_lines; }
+		if ( $form_notes ) { $admin_body .= "\nNoter:\n{$form_notes}\n"; }
+		@wp_mail( $admin_to, $admin_subject, $admin_body, array(
+			'Content-Type: text/plain; charset=UTF-8',
+			'Reply-To: ' . $form_name . ' <' . $form_email . '>',
+		) );
+
+		$booking_label = $prod_label ? $prod_label : 'studiet';
+		$mail = studie247_render_mail_template( 'booking_received', array(
+			'navn'           => $form_name,
+			'email'          => $form_email,
+			'telefon'        => $form_phone,
+			'virksomhed'     => $form_company,
+			'cvr'            => $form_cvr,
+			'booking_label'  => $booking_label,
+			'produkt'        => $prod_label,
+			'dato'           => $date_dk,
+			'start'          => $form_start,
+			'varighed'       => $form_dur,
+			'pris'           => $estimated_price_fmt,
+			'pris_base'      => $base_price ? studie247_format_dkk( $base_price ) : '',
+			'aftenpris_timer'  => $after_hours > 0 ? (string) $after_hours : '',
+			'aftenpris_tillaeg' => $after_hours_fee ? studie247_format_dkk( $after_hours_fee ) : '',
+			'aftenpris_sats'    => (string) STUDIE247_AFTER_HOURS_RATE,
+			'noter'          => $form_notes,
+			'formaal'        => isset( $use_type_labels[ $form_use_type ] )       ? $use_type_labels[ $form_use_type ]             : '',
+			'oensker'        => isset( $edit_type_labels[ $form_edit_type ] )     ? $edit_type_labels[ $form_edit_type ]           : '',
+			'podcast_type'   => isset( $podcast_type_labels[ $form_podcast_type ] ) ? $podcast_type_labels[ $form_podcast_type ]   : '',
+			'tilkoeb'        => isset( $tilkoeb_labels[ $form_tilkoeb ] )         ? $tilkoeb_labels[ $form_tilkoeb ]               : '',
+			'antal_videoer'  => $form_video_count    ? (string) $form_video_count    : '',
+			'video_varighed' => $form_video_duration ? $form_video_duration . ' min' : '',
+			'format'         => $form_format,
+		) );
+		$is_html = studie247_mail_template_is_html( 'booking_received' );
+		@wp_mail( $form_email, $mail['subject'], $mail['body'], array(
+			'Content-Type: ' . ( $is_html ? 'text/html' : 'text/plain' ) . '; charset=UTF-8',
+			'From: Studie 247 <info@s247.dk>',
+			'Reply-To: info@s247.dk',
+		) );
+
+		$redirect = add_query_arg( 'sendt', '1', wp_get_referer() ?: home_url( '/booking-studie/' ) );
+		if ( $form_prod ) { $redirect = add_query_arg( 'produkt', $form_prod, $redirect ); }
+		wp_safe_redirect( $redirect );
+		exit;
+	}
+}
+
+// Hent alle fremtidige bookinger og byg blokerings-map.
+$today_key = date( 'Y-m-d' );
+$booked_map = array(); // 'YYYY-MM-DD' => array( 8, 9, 10 ... ) = blokerede timer (int)
+$fully_booked = array(); // dage hvor alle slots er taget
+
+$booking_posts = get_posts( array(
+	'post_type'      => 'booking',
+	'post_status'    => array( 'publish', 'pending' ),
+	'posts_per_page' => -1,
+	'meta_query'     => array(
+		array(
+			'key'     => '_s247_date',
+			'value'   => $today_key,
+			'compare' => '>=',
+			'type'    => 'DATE',
+		),
+	),
+) );
+
+foreach ( $booking_posts as $b ) {
+	// Produkt-bookinger blokerer ikke studie-timer (og omvendt) — de
+	// bruger samme booking-CPT men forskellig kapacitet.
+	if ( get_post_meta( $b->ID, '_s247_produkt', true ) ) { continue; }
+
+	$d   = get_post_meta( $b->ID, '_s247_date', true );
+	$s   = get_post_meta( $b->ID, '_s247_start', true );
+	$dur = get_post_meta( $b->ID, '_s247_duration', true );
+	if ( ! $d || ! $s ) { continue; }
+	$start_h = (int) substr( $s, 0, 2 );
+
+	// Bestem hvor mange timer der er blokeret — inkl. 1 times buffer til
+	// klargøring efter bookingen slutter.
+	$hours = isset( $studio_duration_hours[ $dur ] ) ? (int) $studio_duration_hours[ $dur ] : ( 6 + STUDIE247_BOOKING_BUFFER_HOURS );
+
+	// Fordel blokerede timer over flere datoer hvis bookingen krydser midnat.
+	for ( $i = 0; $i < $hours; $i++ ) {
+		$abs     = $start_h + $i;
+		$day_off = intdiv( $abs, 24 );
+		$hod     = $abs % 24;
+		$target  = 0 === $day_off ? $d : gmdate( 'Y-m-d', strtotime( $d . " +{$day_off} day" ) );
+		if ( ! isset( $booked_map[ $target ] ) ) { $booked_map[ $target ] = array(); }
+		if ( ! in_array( $hod, $booked_map[ $target ], true ) ) {
+			$booked_map[ $target ][] = $hod;
+		}
+	}
+}
+
+// For produkt-mode: find dage hvor alle lager-enheder af produktet er
+// udlejet via GODKENDTE (publish) lejeforespørgsler. Afventende (pending)
+// forespørgsler blokerer IKKE — admin skal først godkende.
+if ( $is_product ) {
+	$antal = (int) get_post_meta( $product->ID, '_s247_antal', true );
+	if ( $antal < 1 ) { $antal = 1; }
+
+	$duration_days = array(
+		'1 dag'  => 1, '2 dage' => 2, '3 dage' => 3, '4 dage' => 4,
+		'1 uge'  => 7, '2 uger' => 14,
+	);
+
+	$rental_bookings = get_posts( array(
+		'post_type'      => 'booking',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'meta_query'     => array(
+			array( 'key' => '_s247_produkt_id', 'value' => $product->ID, 'compare' => '=' ),
+			array( 'key' => '_s247_date',       'value' => $today_key,   'compare' => '>=', 'type' => 'DATE' ),
+		),
+	) );
+
+	$rental_day_count = array(); // 'YYYY-MM-DD' => antal reservationer
+	foreach ( $rental_bookings as $rb ) {
+		$start_date = get_post_meta( $rb->ID, '_s247_date', true );
+		$rb_dur     = get_post_meta( $rb->ID, '_s247_duration', true );
+		$days       = isset( $duration_days[ $rb_dur ] ) ? $duration_days[ $rb_dur ] : 1;
+		if ( ! $start_date ) { continue; }
+		$cursor = strtotime( $start_date );
+		for ( $i = 0; $i < $days; $i++ ) {
+			$k = date( 'Y-m-d', $cursor );
+			$rental_day_count[ $k ] = ( $rental_day_count[ $k ] ?? 0 ) + 1;
+			$cursor = strtotime( '+1 day', $cursor );
+		}
+	}
+	// Fyldt op = alle lager-enheder taget den dag.
+	$fully_booked = array();
+	foreach ( $rental_day_count as $day => $count ) {
+		if ( $count >= $antal ) { $fully_booked[] = $day; }
+	}
+	// Produkt-mode bruger ikke per-time blokering.
+	$booked_map = array();
+}
+
+// Beregn fuldt bookede dage (alle 24 slots 00-23 er taget).
+$all_slots = range( 0, 23 );
+foreach ( $booked_map as $day => $hours_arr ) {
+	sort( $hours_arr );
+	if ( count( array_intersect( $all_slots, $hours_arr ) ) >= count( $all_slots ) ) {
+		$fully_booked[] = $day;
+	}
+}
+
+// Kalender — udregn måned.
+$ym = isset( $_GET['ym'] ) ? sanitize_text_field( wp_unslash( $_GET['ym'] ) ) : date( 'Y-m' );
+if ( ! preg_match( '/^\d{4}-\d{2}$/', $ym ) ) { $ym = date( 'Y-m' ); }
+$first_ts    = strtotime( $ym . '-01' );
+$month_label = date_i18n( 'F Y', $first_ts );
+$days_in_mo  = (int) date( 't', $first_ts );
+$first_wday  = (int) date( 'N', $first_ts ); // 1 (man) .. 7 (søn)
+$prev_ym     = date( 'Y-m', strtotime( '-1 month', $first_ts ) );
+$next_ym     = date( 'Y-m', strtotime( '+1 month', $first_ts ) );
+$today       = date( 'Y-m-d' );
+$today_ts    = strtotime( $today );
+
+get_header();
+?>
+
+<section class="book2">
+	<div class="wrap wrap--wide">
+		<header class="book2__head">
+			<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Book', 'studie247' ); ?></span>
+			<h1 class="section-head__title">
+				<?php esc_html_e( 'Reservér', 'studie247' ); ?>
+				<em><?php echo $product ? esc_html( $product->post_title ) : esc_html__( 'studiet', 'studie247' ); ?></em>
+			</h1>
+			<p class="book2__lead">
+				<?php esc_html_e( 'Vælg dag i kalenderen, tidspunkt og varighed. Vi bekræfter inden for 24 timer.', 'studie247' ); ?>
+			</p>
+		</header>
+
+		<?php if ( $submitted ) : ?>
+			<div class="book-success">
+				<span class="eyebrow eyebrow--accent eyebrow--no-line"><?php esc_html_e( 'Modtaget', 'studie247' ); ?></span>
+				<h2 class="book-success__title"><?php esc_html_e( 'Tak — vi har din booking', 'studie247' ); ?></h2>
+				<p><?php esc_html_e( 'Bekræftelse er sendt til din mail. Vi vender tilbage hurtigst muligt.', 'studie247' ); ?></p>
+				<div style="display:flex;gap:var(--sp-3);flex-wrap:wrap;margin-top:var(--sp-5);">
+					<a class="btn btn--ghost" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Til forsiden', 'studie247' ); ?> <?php echo studie247_icon( 'arrow-right', 16 ); ?></a>
+				</div>
+			</div>
+		<?php else : ?>
+			<div class="book2__layout">
+				<!-- Venstre: kalender + valg -->
+				<div class="book2__picker"
+				data-book-picker
+				data-book-mode="<?php echo $is_product ? 'product' : 'studio'; ?>"
+				data-booked="<?php echo esc_attr( wp_json_encode( $booked_map ) ); ?>"
+				data-price-day="<?php echo esc_attr( $product_price_day ); ?>"
+				data-price-week="<?php echo esc_attr( $product_price_week ); ?>"
+				data-studio-prices="<?php echo esc_attr( wp_json_encode( $studio_price_table ) ); ?>"
+				data-studio-hours="<?php echo esc_attr( wp_json_encode( $studio_duration_hours ) ); ?>"
+			>
+					<div class="book2__calendar">
+						<div class="book2__cal-head">
+							<a class="book2__cal-nav" href="<?php echo esc_url( add_query_arg( 'ym', $prev_ym ) ); ?>" aria-label="<?php esc_attr_e( 'Forrige måned', 'studie247' ); ?>">‹</a>
+							<span class="book2__cal-title"><?php echo esc_html( ucfirst( $month_label ) ); ?></span>
+							<a class="book2__cal-nav" href="<?php echo esc_url( add_query_arg( 'ym', $next_ym ) ); ?>" aria-label="<?php esc_attr_e( 'Næste måned', 'studie247' ); ?>">›</a>
+						</div>
+						<div class="book2__cal-weeknames">
+							<span>Man</span><span>Tir</span><span>Ons</span><span>Tor</span><span>Fre</span><span>Lør</span><span>Søn</span>
+						</div>
+						<div class="book2__cal-days">
+							<?php
+							// Tomme celler før månedens start.
+							for ( $e = 1; $e < $first_wday; $e++ ) {
+								echo '<span class="book2__day book2__day--empty"></span>';
+							}
+							for ( $d = 1; $d <= $days_in_mo; $d++ ) {
+								$date = sprintf( '%s-%02d', $ym, $d );
+								$ts   = strtotime( $date );
+								$wday = (int) date( 'N', $ts );
+								$cls  = 'book2__day';
+								if ( $ts < $today_ts ) {
+									$cls .= ' book2__day--past';
+								}
+								if ( 7 === $wday || 6 === $wday ) {
+									$cls .= ' book2__day--weekend';
+								}
+								if ( $date === $today ) {
+									$cls .= ' book2__day--today';
+								}
+								$is_full = in_array( $date, $fully_booked, true );
+								if ( $is_full ) {
+									$cls .= ' book2__day--booked';
+								}
+								$disabled = ( $ts < $today_ts || $is_full );
+								$attrs    = $disabled ? 'aria-disabled="true"' : 'data-date="' . esc_attr( $date ) . '"';
+								printf(
+									'<button type="button" class="%s" %s>%d</button>',
+									esc_attr( $cls ),
+									$attrs,
+									$d
+								);
+							}
+							?>
+						</div>
+						<p class="book2__cal-legend">
+							<span><span class="book2__legend-dot book2__legend-dot--today"></span> I dag</span>
+							<span><span class="book2__legend-dot book2__legend-dot--on"></span> Valgt</span>
+							<span><span class="book2__legend-dot book2__legend-dot--booked"></span> Optaget</span>
+							<span><span class="book2__legend-dot book2__legend-dot--past"></span> Lukket</span>
+						</p>
+					</div>
+
+					<div class="book2__slots" data-book-slots hidden>
+						<h3 class="book2__section-title">
+							<span class="book2__step-num">02</span>
+							<?php echo $is_product ? esc_html__( 'Vælg lejeperiode', 'studie247' ) : esc_html__( 'Vælg tidspunkt', 'studie247' ); ?>
+						</h3>
+						<p class="book2__picked" data-book-picked></p>
+						<?php if ( ! $is_product ) : ?>
+							<div class="book2__time-grid">
+								<?php for ( $h = 0; $h <= 23; $h++ ) :
+									$val = sprintf( '%02d:00', $h ); ?>
+									<button type="button" class="book2__time" data-time="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( $val ); ?></button>
+								<?php endfor; ?>
+							</div>
+						<?php endif; ?>
+						<div class="book2__duration">
+							<span class="book2__dur-label"><?php echo $is_product ? esc_html__( 'Varighed', 'studie247' ) : esc_html__( 'Varighed', 'studie247' ); ?></span>
+							<div class="book2__dur-grid">
+								<?php foreach ( $duration_options as $opt ) : ?>
+									<button type="button" class="book2__dur" data-duration="<?php echo esc_attr( $opt ); ?>"><?php echo esc_html( $opt ); ?></button>
+								<?php endforeach; ?>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Højre: opsummering + oplysninger -->
+				<aside class="book2__side" data-book-side>
+					<?php if ( $product ) :
+						$pris_dag = get_post_meta( $product->ID, '_s247_pris_dag', true );
+						$cats     = get_the_terms( $product->ID, 'udlejning_kategori' );
+					?>
+						<div class="book2__product">
+							<?php if ( has_post_thumbnail( $product->ID ) ) : ?>
+								<div class="book2__product-media"><?php echo get_the_post_thumbnail( $product->ID, 's247-square', array( 'loading' => 'lazy' ) ); ?></div>
+							<?php endif; ?>
+							<div class="book2__product-body">
+								<?php if ( $cats && ! is_wp_error( $cats ) ) : ?>
+									<span class="product-card__cat"><?php echo esc_html( $cats[0]->name ); ?></span>
+								<?php endif; ?>
+								<h2 class="book2__product-title"><?php echo esc_html( $product->post_title ); ?></h2>
+								<?php if ( $pris_dag ) : ?>
+									<span class="product-card__price-num"><?php echo esc_html( $pris_dag ); ?><span class="product-card__price-unit"> / dag</span></span>
+								<?php endif; ?>
+							</div>
+						</div>
+					<?php endif; ?>
+
+					<div class="book2__summary">
+						<h3 class="book2__section-title"><span class="book2__step-num">01</span> <?php echo $is_product ? esc_html__( 'Din forespørgsel', 'studie247' ) : esc_html__( 'Din booking', 'studie247' ); ?></h3>
+						<dl class="book2__sum-list">
+							<div><dt><?php echo $is_product ? esc_html__( 'Start-dato', 'studie247' ) : esc_html__( 'Dato', 'studie247' ); ?></dt><dd data-sum-date>—</dd></div>
+							<?php if ( ! $is_product ) : ?>
+								<div><dt><?php esc_html_e( 'Tid', 'studie247' ); ?></dt><dd data-sum-time>—</dd></div>
+							<?php endif; ?>
+							<div><dt><?php esc_html_e( 'Varighed', 'studie247' ); ?></dt><dd data-sum-duration>—</dd></div>
+							<?php if ( ! $is_product ) : ?>
+								<div data-sum-late-row hidden><dt><?php esc_html_e( 'Aftenpris-tillæg (efter 20:00)', 'studie247' ); ?></dt><dd data-sum-late>—</dd></div>
+							<?php endif; ?>
+							<div class="book2__sum-total"><dt><?php esc_html_e( 'Estimeret pris', 'studie247' ); ?></dt><dd data-sum-price>—</dd></div>
+						</dl>
+						<?php if ( ! $is_product ) : ?>
+							<p style="margin:10px 0 0;font-size:12px;color:#666;line-height:1.45;">
+								<?php printf( esc_html__( 'Timer i tidsrummet kl. 20:00–08:00 koster +%1$d kr pr. påbegyndt time (aftenpris-tillæg). Der er altid %2$d times klargøringsbuffer efter en booking slutter.', 'studie247' ), (int) STUDIE247_AFTER_HOURS_RATE, (int) STUDIE247_BOOKING_BUFFER_HOURS ); ?>
+							</p>
+						<?php endif; ?>
+					</div>
+
+					<form method="post" action="" class="book2__form" data-book-form novalidate>
+						<?php wp_nonce_field( 's247_book', 's247_book_nonce' ); ?>
+						<input type="hidden" name="s247_produkt"  value="<?php echo esc_attr( $form_prod ); ?>">
+						<input type="hidden" name="s247_type"     value="<?php echo esc_attr( $form_type ); ?>">
+						<input type="hidden" name="s247_date"     value="" data-field-date>
+						<input type="hidden" name="s247_start"    value="<?php echo $is_product ? '10:00' : ''; ?>" data-field-time>
+						<input type="hidden" name="s247_duration" value="" data-field-duration>
+
+						<?php if ( ! $is_product ) : ?>
+							<h3 class="book2__section-title"><span class="book2__step-num">03</span> <?php esc_html_e( 'Formål', 'studie247' ); ?></h3>
+
+							<label class="book-field">
+								<span class="book-field__label"><?php esc_html_e( 'Hvad skal studiet bruges til?', 'studie247' ); ?></span>
+								<select name="s247_use_type" data-use-type required>
+									<option value=""><?php esc_html_e( '— Vælg —', 'studie247' ); ?></option>
+									<option value="podcast"            <?php selected( $form_use_type, 'podcast' ); ?>><?php esc_html_e( 'Podcast', 'studie247' ); ?></option>
+									<option value="kursusvideo"        <?php selected( $form_use_type, 'kursusvideo' ); ?>><?php esc_html_e( 'Kursusvideo', 'studie247' ); ?></option>
+									<option value="undervisningsvideo" <?php selected( $form_use_type, 'undervisningsvideo' ); ?>><?php esc_html_e( 'Undervisningsvideo', 'studie247' ); ?></option>
+									<option value="some-content"       <?php selected( $form_use_type, 'some-content' ); ?>><?php esc_html_e( 'SoMe Content', 'studie247' ); ?></option>
+									<option value="annonce-video"      <?php selected( $form_use_type, 'annonce-video' ); ?>><?php esc_html_e( 'Annonce-video', 'studie247' ); ?></option>
+								</select>
+							</label>
+
+							<div class="book-options" data-use-options hidden>
+								<fieldset class="book-choice">
+									<legend><?php esc_html_e( 'Ønsker du', 'studie247' ); ?></legend>
+									<label class="book-choice__opt"><input type="radio" name="s247_edit_type" value="redigering" data-edit-type> <?php esc_html_e( 'Redigering', 'studie247' ); ?></label>
+									<label class="book-choice__opt"><input type="radio" name="s247_edit_type" value="kun-filer" data-edit-type> <?php esc_html_e( 'Kun filerne', 'studie247' ); ?></label>
+								</fieldset>
+
+								<fieldset class="book-choice" data-panel="podcast" hidden>
+									<legend><?php esc_html_e( 'Podcast-type', 'studie247' ); ?></legend>
+									<label class="book-choice__opt"><input type="radio" name="s247_podcast_type" value="lyd"> <?php esc_html_e( 'Lyd-podcast', 'studie247' ); ?></label>
+									<label class="book-choice__opt"><input type="radio" name="s247_podcast_type" value="video"> <?php esc_html_e( 'Video-podcast', 'studie247' ); ?></label>
+								</fieldset>
+
+								<fieldset class="book-choice" data-panel="podcast-editing" hidden>
+									<legend><?php esc_html_e( 'Tilkøb', 'studie247' ); ?></legend>
+									<label class="book-choice__opt"><input type="radio" name="s247_tilkoeb" value="" checked> <?php esc_html_e( 'Ingen', 'studie247' ); ?></label>
+									<label class="book-choice__opt"><input type="radio" name="s247_tilkoeb" value="jingle-standard"> <?php esc_html_e( 'Musikjingle — standard', 'studie247' ); ?></label>
+									<label class="book-choice__opt"><input type="radio" name="s247_tilkoeb" value="jingle-skraeddersyet"> <?php esc_html_e( 'Musikjingle — skræddersyet', 'studie247' ); ?></label>
+								</fieldset>
+
+								<fieldset class="book-choice book-choice--sliders" data-panel="video-editing" hidden>
+									<legend><?php esc_html_e( 'Produktions-detaljer', 'studie247' ); ?></legend>
+									<label class="book-slider">
+										<span class="book-slider__label">
+											<?php esc_html_e( 'Antal videoer', 'studie247' ); ?>
+											<output data-video-count-out>1</output>
+										</span>
+										<input type="range" name="s247_video_count" min="1" max="20" step="1" value="1" data-video-count>
+									</label>
+									<label class="book-slider">
+										<span class="book-slider__label">
+											<?php esc_html_e( 'Ca. varighed pr. video', 'studie247' ); ?>
+											<output data-video-duration-out>5 min</output>
+										</span>
+										<input type="range" name="s247_video_duration" min="1" max="30" step="1" value="5" data-video-duration>
+									</label>
+								</fieldset>
+
+								<fieldset class="book-choice" data-panel="some-format" hidden>
+									<legend><?php esc_html_e( 'Format', 'studie247' ); ?></legend>
+									<label class="book-choice__opt"><input type="radio" name="s247_format" value="16:9"> 16:9</label>
+									<label class="book-choice__opt"><input type="radio" name="s247_format" value="9:16"> 9:16</label>
+									<label class="book-choice__opt"><input type="radio" name="s247_format" value="4:5"> 4:5</label>
+									<label class="book-choice__opt"><input type="radio" name="s247_format" value="1:1"> 1:1</label>
+								</fieldset>
+							</div>
+						<?php endif; ?>
+
+						<h3 class="book2__section-title"><span class="book2__step-num"><?php echo $is_product ? '03' : '04'; ?></span> <?php esc_html_e( 'Dine oplysninger', 'studie247' ); ?></h3>
+
+						<?php if ( $errors ) : ?>
+							<div class="kontakt-errors" role="alert">
+								<span class="kontakt-errors__label"><?php esc_html_e( 'Lige en ting—', 'studie247' ); ?></span>
+								<ul>
+									<?php foreach ( $errors as $e ) : ?><li><?php echo esc_html( $e ); ?></li><?php endforeach; ?>
+								</ul>
+							</div>
+						<?php endif; ?>
+
+						<label class="book-field">
+							<span class="book-field__label"><?php esc_html_e( 'Navn', 'studie247' ); ?></span>
+							<input type="text"  name="s247_name"  value="<?php echo esc_attr( $form_name ); ?>" required>
+						</label>
+						<label class="book-field">
+							<span class="book-field__label"><?php esc_html_e( 'E-mail', 'studie247' ); ?></span>
+							<input type="email" name="s247_email" value="<?php echo esc_attr( $form_email ); ?>" required>
+						</label>
+						<label class="book-field">
+							<span class="book-field__label"><?php esc_html_e( 'Telefon', 'studie247' ); ?></span>
+							<input type="tel"   name="s247_phone" value="<?php echo esc_attr( $form_phone ); ?>">
+						</label>
+						<label class="book-field">
+							<span class="book-field__label"><?php esc_html_e( 'Virksomhed', 'studie247' ); ?> <span class="book-field__optional"><?php esc_html_e( '(valgfrit)', 'studie247' ); ?></span></span>
+							<input type="text" name="s247_company" value="<?php echo esc_attr( $form_company ); ?>" autocomplete="organization">
+						</label>
+						<label class="book-field">
+							<span class="book-field__label"><?php esc_html_e( 'CVR-nummer', 'studie247' ); ?> <span class="book-field__optional"><?php esc_html_e( '(valgfrit)', 'studie247' ); ?></span></span>
+							<input type="text" name="s247_cvr" value="<?php echo esc_attr( $form_cvr ); ?>" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" placeholder="8 cifre">
+						</label>
+						<label class="book-field">
+							<span class="book-field__label"><?php esc_html_e( 'Noter', 'studie247' ); ?></span>
+							<textarea name="s247_notes" rows="3" placeholder="<?php esc_attr_e( 'Ekstra ønsker eller spørgsmål?', 'studie247' ); ?>"><?php echo esc_textarea( $form_notes ); ?></textarea>
+						</label>
+
+						<label class="book-consent book-consent--optional">
+						<input type="checkbox" name="s247_newsletter" value="1" <?php checked( ! empty( $form_newsletter ) && '1' === $form_newsletter ); ?>>
+						<span><?php esc_html_e( 'Ja tak — jeg vil gerne modtage nyhedsbrev fra Studie 247 (ca. 4-6 gange om året).', 'studie247' ); ?></span>
+					</label>
+
+					<?php studie247_consent_field(); ?>
+
+						<button type="submit" class="btn btn--primary btn--lg" data-book-submit disabled>
+							<?php echo $is_product ? esc_html__( 'Send forespørgsel', 'studie247' ) : esc_html__( 'Send booking-anmodning', 'studie247' ); ?>
+							<?php echo studie247_icon( 'arrow-right', 16 ); ?>
+						</button>
+						<p class="book-form__note" data-book-hint><?php echo $is_product ? esc_html__( 'Vælg start-dato og varighed for at fortsætte.', 'studie247' ) : esc_html__( 'Vælg dato, tid og varighed for at fortsætte.', 'studie247' ); ?></p>
+						<?php if ( $is_product ) : ?>
+							<p class="book-form__bulk-hint">
+								<?php esc_html_e( 'Skal du bruge flere produkter?', 'studie247' ); ?>
+								<a href="mailto:udlejning@s247.dk?subject=Udlejning%20%E2%80%94%20flere%20produkter">
+									<?php esc_html_e( 'Send en mail til udlejning@s247.dk', 'studie247' ); ?>
+								</a>
+							</p>
+						<?php endif; ?>
+					</form>
+				</aside>
+			</div>
+		<?php endif; ?>
+	</div>
+</section>
+
+<?php get_footer(); ?>

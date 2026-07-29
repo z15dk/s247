@@ -26,8 +26,10 @@ debug.log
 
 # Backups
 *.bak
+*.bak[0-9]*
 *.orig
 
 # WP local dev stuff that shouldn't live in the theme
 wp-config.php
 uploads/
+deploy.log

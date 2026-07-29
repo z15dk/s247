@@ -2,8 +2,9 @@
 /**
  * Hero — split layout: video venstre, massivt STUDIE 247 display højre.
  */
-$hero_image = get_theme_mod( 's247_hero_image' );
-$hero_video = get_theme_mod( 's247_hero_video' );
+$hero_image         = get_theme_mod( 's247_hero_image' );
+$hero_video         = get_theme_mod( 's247_hero_video' );
+$hero_display_image = get_theme_mod( 's247_hero_display_image' );
 ?>
 <section class="hero hero--split" aria-labelledby="hero-title">
 	<div class="hero__video" aria-hidden="true">
@@ -24,29 +25,44 @@ $hero_video = get_theme_mod( 's247_hero_video' );
 	<div class="hero__stage">
 		<div class="hero__top">
 			<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="hero__brand" aria-label="<?php esc_attr_e( 'Studie 247 forside', 'studie247' ); ?>">
-				<span class="logo__word">STUDIE</span>
-				<span class="logo__num">247</span>
+				<?php if ( has_custom_logo() ) :
+					$logo_id  = get_theme_mod( 'custom_logo' );
+					$logo_src = $logo_id ? wp_get_attachment_image_src( $logo_id, 'full' ) : false;
+					if ( $logo_src ) : ?>
+						<img src="<?php echo esc_url( $logo_src[0] ); ?>" alt="<?php esc_attr_e( 'Studie 247', 'studie247' ); ?>" class="hero__brand-img">
+					<?php endif;
+				else : ?>
+					<span class="logo__word">STUDIE</span>
+					<span class="logo__num">247</span>
+				<?php endif; ?>
 			</a>
 			<button type="button" class="hero-menu-toggle" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" aria-label="<?php esc_attr_e( 'Åbn menu', 'studie247' ); ?>">
 				<?php echo studie247_icon( 'menu', 32 ); ?>
 			</button>
 		</div>
 
-		<h1 id="hero-title" class="hero__display">
-			<span class="hero__display-line"><?php esc_html_e( 'STUDIE', 'studie247' ); ?></span>
-			<span class="hero__display-line hero__display-line--italic"><em>247</em></span>
-		</h1>
+		<?php if ( $hero_display_image ) : ?>
+			<h1 id="hero-title" class="hero__display hero__display--image">
+				<img src="<?php echo esc_url( $hero_display_image ); ?>" alt="<?php esc_attr_e( 'Studie 247', 'studie247' ); ?>" loading="eager" decoding="async">
+			</h1>
+		<?php else : ?>
+			<h1 id="hero-title" class="hero__display">
+				<span class="hero__display-line"><?php esc_html_e( 'STUDIE', 'studie247' ); ?></span>
+				<span class="hero__display-line hero__display-line--italic"><em>247</em></span>
+			</h1>
+		<?php endif; ?>
 
 		<div class="hero__below">
 			<p class="hero__tagline">
-				<?php echo wp_kses_post( __( 'Optag. Skab. <em>Udgiv</em> — døgnet rundt.', 'studie247' ) ); ?>
+				<?php echo wp_kses_post( get_theme_mod( 's247_hero_tagline', __( 'Optag. Skab. <em>Udgiv</em> — døgnet rundt.', 'studie247' ) ) ); ?>
 			</p>
 			<p class="hero__sub">
-				<?php esc_html_e( 'Vi producerer podcasts, SoMe-videoer, online kurser og fotoshoots — fra idé til færdigt resultat.', 'studie247' ); ?>
+				<?php echo wp_kses_post( get_theme_mod( 's247_hero_sub', __( 'Vi producerer podcasts, SoMe-videoer, online kurser og fotoshoots — fra idé til færdigt resultat.', 'studie247' ) ) ); ?>
 			</p>
 			<div class="hero__actions">
-				<a class="btn btn--outline btn--lg" href="<?php echo esc_url( home_url( '/kontakt/' ) ); ?>">
-					<?php esc_html_e( 'Kontakt', 'studie247' ); ?>
+				<a class="btn btn--primary btn--lg" href="<?php echo esc_url( home_url( '/booking-studie/' ) ); ?>">
+					<?php esc_html_e( 'Book studiet', 'studie247' ); ?>
+					<?php echo studie247_icon( 'arrow-right', 16 ); ?>
 				</a>
 				<a class="btn btn--ghost" href="#services">
 					<?php esc_html_e( 'Se services', 'studie247' ); ?>
@@ -57,21 +73,23 @@ $hero_video = get_theme_mod( 's247_hero_video' );
 	</div>
 </section>
 
+<?php
+$marquee_raw   = get_theme_mod( 's247_marquee_items', "Optag\nSkab\nUdgiv\nPodcast\nVideo\nFoto\nKursus" );
+$marquee_lines = array_values( array_filter( array_map( 'trim', preg_split( '/\r\n|\r|\n/', $marquee_raw ) ) ) );
+if ( ! empty( $marquee_lines ) ) :
+	// Dupliker så animationen har nok indhold til at loope uden hul.
+	$marquee_items = array_merge( $marquee_lines, $marquee_lines );
+?>
 <div class="marquee" aria-hidden="true">
 	<div class="marquee__track">
-		<span class="marquee__item"><?php esc_html_e( 'Optag', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Skab', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Udgiv', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Podcast', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Video', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Foto', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Kursus', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Optag', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Skab', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Udgiv', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Podcast', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Video', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Foto', 'studie247' ); ?></span>
-		<span class="marquee__item"><?php esc_html_e( 'Kursus', 'studie247' ); ?></span>
+		<?php foreach ( $marquee_items as $item ) :
+			if ( preg_match( '#^https?://#i', $item ) ) : ?>
+			<span class="marquee__item marquee__item--image">
+				<img src="<?php echo esc_url( $item ); ?>" alt="" loading="lazy" decoding="async">
+			</span>
+		<?php else : ?>
+			<span class="marquee__item"><?php echo esc_html( $item ); ?></span>
+		<?php endif; endforeach; ?>
 	</div>
 </div>
+<?php endif; ?>

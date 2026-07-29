@@ -23,7 +23,6 @@ function studie247_primary_menu_fallback() {
 	$items = array(
 		array( 'label' => __( 'Services', 'studie247' ),  'url' => home_url( '/services/' ) ),
 		array( 'label' => __( 'Studiet', 'studie247' ),   'url' => home_url( '/studiet/' ) ),
-		array( 'label' => __( 'Priser', 'studie247' ),    'url' => home_url( '/priser/' ) ),
 		array( 'label' => __( 'Udlejning', 'studie247' ), 'url' => home_url( '/udlejning/' ) ),
 		array( 'label' => __( 'Om', 'studie247' ),        'url' => home_url( '/om/' ) ),
 		array( 'label' => __( 'Kontakt', 'studie247' ),   'url' => home_url( '/kontakt/' ) ),
