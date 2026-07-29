@@ -494,6 +494,7 @@
 	document.querySelectorAll('[data-studiet-setups]').forEach((root) => {
 		const tabs   = root.querySelectorAll('[data-setup-target]');
 		const panels = root.querySelectorAll('[data-setup-panel]');
+		const stage  = root.querySelector('.studiet-setups__stage');
 		tabs.forEach((tab) => {
 			tab.addEventListener('click', () => {
 				const target = tab.dataset.setupTarget;
@@ -507,6 +508,13 @@
 					p.classList.toggle('is-active', active);
 					if (active) { p.removeAttribute('hidden'); } else { p.setAttribute('hidden', ''); }
 				});
+				// På mobil ligger billedet over tab-listen — scroll det ind i
+				// view så man ser skiftet i stedet for at stå på knapperne.
+				if (stage && window.innerWidth < 900) {
+					const headerOffset = 90;
+					const top = stage.getBoundingClientRect().top + window.scrollY - headerOffset;
+					window.scrollTo({ top, behavior: 'smooth' });
+				}
 			});
 		});
 	});
